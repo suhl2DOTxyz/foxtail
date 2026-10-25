@@ -1,4 +1,5 @@
 # Foxtail OS
+<img width="1279" height="801" alt="image" src="https://github.com/user-attachments/assets/e2600e8e-b2cc-4cea-90bf-6c07ab22531e" />
 
 An Arch-based OS with a macOS-style desktop: a custom Quickshell shell on Hyprland, orange throughout, with a toggleable **Liquid Glass** material.
 
