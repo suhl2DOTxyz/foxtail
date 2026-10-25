@@ -1,0 +1,15 @@
+# Foxtail package-signing key for pacman.
+pkgname=foxtail-keyring
+pkgver=20261025
+pkgrel=1
+pkgdesc="Foxtail OS PGP keyring for pacman"
+arch=('any')
+url="https://github.com/suhl2DOTxyz/foxtail"
+license=('GPL-3.0-or-later')
+install=foxtail-keyring.install
+source=('foxtail.gpg' 'foxtail-trusted' 'foxtail-revoked')
+sha256sums=('SKIP' 'SKIP' 'SKIP')
+
+package() {
+    install -Dm644 -t "$pkgdir/usr/share/pacman/keyrings" foxtail.gpg foxtail-trusted foxtail-revoked
+}

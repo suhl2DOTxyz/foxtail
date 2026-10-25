@@ -80,7 +80,7 @@ FloatingWindow {
         id: installer
         command: ["pkexec", "env",
                   "FT_DISK=/dev/" + win.disk, "FT_USER=" + win.userName, "FT_FULLNAME=" + win.fullName,
-                  "FT_HOST=" + win.hostName, "FT_TZ=" + win.timezone, "/usr/local/bin/foxtail-install"]
+                  "FT_HOST=" + win.hostName, "FT_TZ=" + win.timezone, "/usr/bin/foxtail-install"]
         stdinEnabled: true
         onStarted: { write(win.password + "\n"); }
         stdout: SplitParser {

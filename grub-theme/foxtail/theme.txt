@@ -1,0 +1,43 @@
+# Foxtail GRUB theme. Shown only when Esc/Shift is held at power-on.
+desktop-image: "background.png"
+title-text: ""
+
++ image {
+    left = 50%-48
+    top = 18%
+    width = 96
+    height = 96
+    file = "logo.png"
+}
+
++ label {
+    left = 0
+    top = 18%+110
+    width = 100%
+    align = "center"
+    color = "#FFF3E2"
+    text = "Foxtail"
+}
+
++ boot_menu {
+    left = 50%-320
+    top = 40%
+    width = 640
+    height = 44%
+    item_color = "#E8E1DA"
+    selected_item_color = "#FFFFFF"
+    item_height = 34
+    item_padding = 12
+    item_spacing = 6
+    selected_item_pixmap_style = "sel_*.png"
+    scrollbar = false
+}
+
++ label {
+    left = 0
+    top = 92%
+    width = 100%
+    align = "center"
+    color = "#C9BFB6"
+    text = "↑ ↓ to choose · Enter to start · snapshots are under “Foxtail snapshots”"
+}

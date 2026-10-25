@@ -61,37 +61,9 @@ vulkan-swrast
 vulkan-intel
 vulkan-radeon
 
-# ---- Foxtail desktop ----
-hyprland
-quickshell
-qt6-svg
-qt6-wayland
-qt6-5compat
-xdg-desktop-portal-hyprland
-xdg-desktop-portal-gtk
-hyprpolkitagent
-gnome-keyring
-wtype
-wl-clipboard
-cliphist
-grim
-slurp
-jq
-libnotify
-brightnessctl
-playerctl
-xdg-user-dirs
-xdg-utils
-
-# ---- look ----
-adw-gtk-theme
-inter-font
-ttf-jetbrains-mono
-noto-fonts
-noto-fonts-emoji
-noto-fonts-cjk
-whitesur-icon-theme
-apple_cursor
+# ---- Foxtail desktop (pulls in Hyprland, Quickshell, themes, snapper, grub...) ----
+foxtail-desktop
+foxtail-keyring
 
 # ---- apps ----
 firefox

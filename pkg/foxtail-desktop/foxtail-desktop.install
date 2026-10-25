@@ -1,0 +1,14 @@
+post_install() {
+    # Brand /usr/lib/os-release now (the pacman hook keeps it branded
+    # whenever the `filesystem` package updates).
+    usr/lib/foxtail/os-release
+    # Boot splash (plymouthd.conf belongs to the plymouth package).
+    plymouth-set-default-theme foxtail 2>/dev/null || true
+    gtk-update-icon-cache -q -t -f usr/share/icons/hicolor 2>/dev/null || true
+}
+
+post_upgrade() {
+    post_install
+    # A running shell picks up the new QML on its next start; tell users.
+    echo ":: Foxtail updated. Log out and back in to load the new desktop."
+}

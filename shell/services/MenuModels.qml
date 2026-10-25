@@ -37,6 +37,8 @@ Singleton {
         { text: "About This Foxtail", icon: "info", action: () => Panels.about = true },
         { separator: true },
         { text: "System Settings…", icon: "gear", action: () => Panels.openSettings() },
+        { text: Updates.count ? `Software Update… (${Updates.count})` : "Software Update…", icon: "restart",
+          action: () => { Panels.openSettings("updates"); Updates.check(); } },
         { text: "App Store…", icon: "grid", action: run("gnome-software") },
         { separator: true },
         { text: "Force Quit…", icon: "xmark", shortcut: "⌥⌘⎋", action: () => Panels.forceQuit = true },

@@ -25,6 +25,7 @@ FloatingWindow {
         { id: "bluetooth", name: "Bluetooth", icon: "bluetooth", color: "#0A84FF" },
         { id: "sep" },
         { id: "general", name: "General", icon: "gear", color: "#8E8E93" },
+        { id: "updates", name: "Software Update", icon: "restart", color: "#8E8E93" },
         { id: "appearance", name: "Appearance", icon: "half-circle", color: "#1C1C1E" },
         { id: "desktop", name: "Desktop & Dock", icon: "dock", color: "#1C1C1E" },
         { id: "displays", name: "Displays", icon: "sun", color: "#0A84FF" },
@@ -256,6 +257,7 @@ FloatingWindow {
                     case "wifi": return wifiPane;
                     case "bluetooth": return btPane;
                     case "general": return generalPane;
+                    case "updates": return updatesPane;
                     case "appearance": return appearancePane;
                     case "desktop": return dockPane;
                     case "displays": return displaysPane;
@@ -422,6 +424,168 @@ FloatingWindow {
                 SettingRow { label: "Memory"; Label { text: SystemInfo.memory; color: Theme.textSecondary } }
                 SettingRow { label: "Storage"; Label { text: SystemInfo.disk; color: Theme.textSecondary } }
                 SettingRow { label: "Kernel"; last: true; Label { text: "Linux " + SystemInfo.kernel; color: Theme.textSecondary } }
+            }
+        }
+    }
+
+    Component {
+        id: updatesPane
+        Column {
+            id: upd
+            spacing: 14
+            Component.onCompleted: { if (!Updates.lastChecked.getTime || isNaN(Updates.lastChecked.getTime())) Updates.check(); Updates.refreshSnapshots(); }
+            property int confirmRestore: -1
+
+            Group {
+                Item {
+                    width: parent.width
+                    height: 96
+                    Image {
+                        id: updLogo
+                        x: 18
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 56; height: 56
+                        sourceSize: Qt.size(112, 112)
+                        source: Qt.resolvedUrl("../icons/foxtail-logo.png")
+                        RotationAnimation on rotation {
+                            running: Updates.installing || Updates.checking
+                            from: 0; to: 360; duration: 2400; loops: Animation.Infinite
+                            onStopped: updLogo.rotation = 0
+                        }
+                    }
+                    Column {
+                        anchors.left: updLogo.right
+                        anchors.leftMargin: 14
+                        anchors.right: updButton.left
+                        anchors.rightMargin: 12
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 3
+                        Label {
+                            width: parent.width
+                            font.pixelSize: 15
+                            font.weight: Font.DemiBold
+                            text: Updates.installing ? "Installing updates…"
+                                : Updates.checking ? "Checking for updates…"
+                                : Updates.count === 1 ? "1 update available"
+                                : Updates.count > 1 ? `${Updates.count} updates available`
+                                : "Foxtail is up to date"
+                        }
+                        Label {
+                            width: parent.width
+                            font.pixelSize: 12
+                            color: Theme.textSecondary
+                            text: Updates.installing
+                                ? (Updates.stage === "apps" ? "Updating apps…" : "Updating Foxtail and system software. A snapshot is taken first.")
+                                : `Foxtail ${SystemInfo.version}` + (Updates.lastChecked.getTime && !isNaN(Updates.lastChecked.getTime())
+                                    ? ` · Checked ${Qt.formatTime(Updates.lastChecked, "h:mm AP")}` : "")
+                        }
+                    }
+                    PushButton {
+                        id: updButton
+                        anchors.right: parent.right
+                        anchors.rightMargin: 16
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: !Updates.installing && !Updates.checking
+                        text: Updates.count ? "Update Now" : "Check Now"
+                        onClicked: Updates.count ? Updates.install() : Updates.check()
+                    }
+                }
+            }
+
+            Label {
+                visible: Updates.error !== ""
+                width: parent.width
+                wrapMode: Text.Wrap
+                elide: Text.ElideNone
+                text: Updates.error
+                color: "#FF453A"
+                font.pixelSize: 12
+            }
+
+            Group {
+                visible: !Updates.installing && (Updates.needsRestart || Updates.needsRelogin)
+                SettingRow {
+                    label: Updates.needsRestart ? "Restart to finish updating" : "Log out to finish updating"
+                    sub: Updates.needsRestart ? "A new system kernel was installed." : "A new version of the Foxtail desktop was installed."
+                    last: true
+                    PushButton {
+                        text: Updates.needsRestart ? "Restart…" : "Log Out…"
+                        onClicked: Panels.confirm = Updates.needsRestart ? "restart" : "logout"
+                    }
+                }
+            }
+
+            Group {
+                visible: Updates.count > 0 && !Updates.installing
+                Repeater {
+                    model: Updates.available.slice(0, 12)
+                    SettingRow {
+                        required property var modelData
+                        required property int index
+                        label: modelData.name
+                        sub: modelData.kind === "app" ? "App" : (modelData.from ? `${modelData.from} → ${modelData.to}` : modelData.to)
+                        last: index === Math.min(Updates.count, 12) - 1
+                    }
+                }
+            }
+            Label {
+                visible: Updates.count > 12 && !Updates.installing
+                text: `and ${Updates.count - 12} more`
+                color: Theme.textSecondary
+                font.pixelSize: 12
+            }
+
+            Group {
+                SettingRow {
+                    label: "Check for updates automatically"
+                    sub: "You'll get a notification when updates are ready. Nothing installs without you."
+                    last: true
+                    Switch { checked: Settings.autoCheckUpdates; onToggled: c => Settings.autoCheckUpdates = c }
+                }
+            }
+
+            SectionTitle { text: "Restore an earlier version" }
+            Label {
+                width: parent.width
+                wrapMode: Text.Wrap
+                elide: Text.ElideNone
+                font.pixelSize: 12
+                color: Theme.textSecondary
+                text: "Foxtail saves a snapshot of the system before and after every update. Restoring one rolls back apps and system settings; your files and personal settings stay as they are. You can also pick a snapshot by holding Esc while your computer starts."
+            }
+            Group {
+                visible: Updates.snapshots.length > 0
+                Repeater {
+                    model: Updates.snapshots.slice(0, 8)
+                    SettingRow {
+                        required property var modelData
+                        required property int index
+                        label: modelData.description || ("Snapshot " + modelData.number)
+                        sub: modelData.date
+                        last: index === Math.min(Updates.snapshots.length, 8) - 1
+                        PushButton {
+                            text: upd.confirmRestore === modelData.number ? "Click to confirm" : "Restore…"
+                            onClicked: {
+                                if (upd.confirmRestore === modelData.number) {
+                                    upd.confirmRestore = -1;
+                                    Updates.restore(modelData.number);
+                                } else {
+                                    upd.confirmRestore = modelData.number;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            Label {
+                visible: Updates.snapshots.length === 0
+                text: "No snapshots yet."
+                color: Theme.textSecondary
+                font.pixelSize: 12
+            }
+            Connections {
+                target: Updates
+                function onRestored() { Panels.confirm = "restart"; }
             }
         }
     }

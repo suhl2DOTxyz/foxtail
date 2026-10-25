@@ -1,0 +1,24 @@
+#!/bin/sh
+# foxtail-update: install all available updates - system packages (pacman,
+# including Foxtail itself from [foxtail]) and Flatpak apps. Run as root
+# (System Settings > Software Update runs it through pkexec).
+#
+# snap-pac takes a snapshot before and after the pacman transaction, so the
+# update can be rolled back from System Settings or the GRUB menu.
+# Prints "STAGE <name>" markers and "DONE" for the Settings app.
+set -e
+[ "$(id -u)" -eq 0 ] || { echo "foxtail-update must run as root" >&2; exit 1; }
+
+echo "STAGE system"
+SNAP_PAC_PRE_DESCRIPTION="Before Software Update" \
+SNAP_PAC_POST_DESCRIPTION="After Software Update" \
+    pacman -Syu --noconfirm --noprogressbar
+
+if command -v flatpak >/dev/null 2>&1; then
+    echo "STAGE apps"
+    flatpak update -y --noninteractive || echo "WARN flatpak update failed"
+fi
+
+# Ask the user to restart when the kernel or Foxtail's own shell changed.
+if [ -e /usr/lib/modules/"$(uname -r)" ]; then :; else echo "RESTART kernel"; fi
+echo "DONE"

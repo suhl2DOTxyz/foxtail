@@ -1,0 +1,83 @@
+# Foxtail desktop: the shell, its Hyprland config, theming, branding and
+# system integration. Built from this repository (no download step):
+#   scripts/build-repo.sh
+pkgname=foxtail-desktop
+pkgver=@VERSION@
+pkgrel=@PKGREL@
+pkgdesc="Foxtail OS desktop: macOS-style shell on Hyprland with Liquid Glass"
+arch=('any')
+url="https://github.com/suhl2DOTxyz/foxtail"
+license=('GPL-3.0-or-later')
+install=foxtail-desktop.install
+backup=('etc/sddm.conf.d/foxtail.conf'
+        'etc/mkinitcpio.conf.d/00-foxtail.conf')
+depends=(
+    # desktop
+    'hyprland' 'quickshell' 'qt6-svg' 'qt6-wayland' 'qt6-5compat'
+    'xdg-desktop-portal-hyprland' 'xdg-desktop-portal-gtk' 'hyprpolkitagent'
+    'gnome-keyring' 'wtype' 'wl-clipboard' 'cliphist' 'grim' 'slurp' 'jq'
+    'libnotify' 'brightnessctl' 'playerctl' 'xdg-user-dirs' 'xdg-utils'
+    'sddm' 'plymouth' 'pipewire' 'wireplumber' 'networkmanager' 'bluez'
+    # look
+    'adw-gtk-theme' 'inter-font' 'ttf-jetbrains-mono' 'noto-fonts' 'noto-fonts-emoji'
+    'noto-fonts-cjk' 'whitesur-icon-theme' 'apple_cursor' 'fastfetch'
+    # updates and snapshots
+    'foxtail-keyring' 'pacman-contrib' 'fakeroot' 'flatpak' 'snapper' 'snap-pac'
+    'grub' 'grub-btrfs' 'inotify-tools' 'btrfs-progs'
+)
+optdepends=(
+    'firefox: default web browser'
+    'nautilus: Files'
+    'ptyxis: Terminal'
+    'gnome-software: App Store'
+)
+
+# build-repo.sh exports FOXTAIL_ROOT (the PKGBUILD is built from a copy).
+_root="${FOXTAIL_ROOT:-$startdir/../..}"
+
+package() {
+    cd "$_root"
+    local d="$pkgdir"
+
+    # Shell (QML) and Hyprland config
+    install -d "$d/usr/share/foxtail"
+    cp -a shell "$d/usr/share/foxtail/shell"
+    rm -f "$d/usr/share/foxtail/shell/icons/gen_icons.py"
+    install -Dm644 hypr/foxtail.lua "$d/usr/share/foxtail/hypr/foxtail.lua"
+
+    # Commands
+    install -Dm755 -t "$d/usr/bin" bin/*
+
+    # System integration (session, configs, Firefox defaults, pacman hook)
+    cp -a system/. "$d/"
+    chmod 755 "$d/usr/lib/foxtail/os-release"
+    sed -i "s|@VERSION@|$pkgver|g" "$d/usr/lib/foxtail/os-release"
+
+    # Per-user defaults for new accounts
+    install -Dm644 hypr/hyprland.lua "$d/etc/skel/.config/hypr/hyprland.lua"
+    for v in gtk-3.0 gtk-4.0; do
+        install -Dm644 "theme/$v/gtk.css" "$d/etc/skel/.config/$v/gtk.css"
+        printf '@define-color accent_color #FF7A1A;\n@define-color accent_bg_color #FF7A1A;\n' \
+            > "$d/etc/skel/.config/$v/foxtail-accent.css"
+    done
+    printf '[Settings]\ngtk-theme-name=adw-gtk3\ngtk-icon-theme-name=WhiteSur\ngtk-cursor-theme-name=macOS\ngtk-font-name=Inter 11\ngtk-decoration-layout=close,minimize,maximize:\n' \
+        > "$d/etc/skel/.config/gtk-3.0/settings.ini"
+
+    # Theming
+    install -Dm644 theme/fontconfig/60-foxtail.conf "$d/etc/fonts/conf.d/60-foxtail.conf"
+    install -Dm644 theme/fastfetch/config.jsonc "$d/etc/xdg/fastfetch/config.jsonc"
+    install -Dm644 theme/fastfetch/foxtail.ans "$d/usr/share/foxtail/fastfetch/foxtail.ans"
+    install -d "$d/usr/share/sddm/themes" "$d/usr/share/plymouth/themes"
+    cp -a sddm-theme/foxtail "$d/usr/share/sddm/themes/foxtail"
+    cp -a plymouth/foxtail "$d/usr/share/plymouth/themes/foxtail"
+    install -d "$d/usr/share/grub/themes"
+    cp -a grub-theme/foxtail "$d/usr/share/grub/themes/foxtail"
+
+    # Branding
+    install -Dm644 -t "$d/usr/share/backgrounds/foxtail" branding/wallpapers/*.jpg
+    for s in 16 22 24 32 48 64 128 256 512; do
+        install -Dm644 "branding/icons/foxtail-$s.png" "$d/usr/share/icons/hicolor/${s}x${s}/apps/foxtail.png"
+    done
+    install -Dm644 branding/foxtail-logo.png "$d/usr/share/pixmaps/foxtail.png"
+    install -Dm644 branding/foxtail-glyph.svg "$d/usr/share/icons/hicolor/scalable/apps/foxtail-symbolic.svg"
+}

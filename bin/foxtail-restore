@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# foxtail-restore <snapshot-number>: roll the system back to a snapper
+# snapshot (run as root; System Settings > Software Update runs it via pkexec).
+#
+# How: on the Btrfs top level, the current root subvolume @ is renamed to
+# @before-restore-<date> (kept, so the restore itself can be undone) and a
+# writable copy of @snapshots/<N>/snapshot becomes the new @. The running
+# system is untouched until you restart. /home is a separate subvolume, so
+# your files and settings are never rolled back - only the system.
+set -euo pipefail
+die() { echo "ERROR $*" >&2; exit 1; }
+
+[ "$(id -u)" -eq 0 ] || die "must run as root"
+N=${1:-}
+[[ "$N" =~ ^[0-9]+$ ]] && [ "$N" -gt 0 ] || die "usage: foxtail-restore <snapshot-number>"
+
+# The disk behind / (a subvolume of it, e.g. /dev/sda2[/@]).
+DEV=$(findmnt -no SOURCE /.snapshots | sed 's/\[.*//')
+[ -b "$DEV" ] || die "can't find the Foxtail disk"
+
+TOP=$(mktemp -d /run/foxtail-restore.XXXXXX)
+cleanup() { umount "$TOP" 2>/dev/null || true; rmdir "$TOP" 2>/dev/null || true; }
+trap cleanup EXIT
+mount -o subvolid=5 "$DEV" "$TOP"
+
+SRC="$TOP/@snapshots/$N/snapshot"
+[ -d "$SRC" ] || die "snapshot $N doesn't exist"
+[ -d "$TOP/@" ] || die "unexpected layout: no @ subvolume (installed by an older Foxtail?)"
+
+STAMP=$(date +%Y%m%d-%H%M%S)
+mv "$TOP/@" "$TOP/@before-restore-$STAMP"
+btrfs subvolume snapshot "$SRC" "$TOP/@" >/dev/null
+
+# Restored copies of snapshots are read-only; make sure the new root isn't.
+btrfs property set -ts "$TOP/@" ro false
+
+echo "Restored snapshot $N. The previous system was kept as @before-restore-$STAMP."
+echo "RESTART"

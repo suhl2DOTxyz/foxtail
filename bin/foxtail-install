@@ -8,6 +8,12 @@
 #
 # Prints "PROGRESS <0-100> <message>" lines for the Setup app, and
 # "ERROR <message>" on failure. ERASES FT_DISK ENTIRELY.
+#
+# Layout: GPT with an EFI partition (mounted at /efi) and one Btrfs
+# partition with subvolumes @ (/), @home, @snapshots (/.snapshots), @log and
+# @pkg. Kernels live in /boot inside @, so every snapshot is bootable with
+# the kernel it was taken with: GRUB + grub-btrfs list them, snapper +
+# snap-pac take one before and after every update.
 set -Eeuo pipefail
 
 progress() { echo "PROGRESS $1 $2"; }
@@ -36,7 +42,7 @@ umount -R "$TARGET" 2>/dev/null || true
 swapoff -a || true
 wipefs -af "$FT_DISK"
 sgdisk --zap-all "$FT_DISK"
-sgdisk -n1:0:+1G -t1:ef00 -c1:EFI -n2:0:0 -t2:8304 -c2:Foxtail "$FT_DISK"
+sgdisk -n1:0:+512M -t1:ef00 -c1:EFI -n2:0:0 -t2:8304 -c2:Foxtail "$FT_DISK"
 partprobe "$FT_DISK"
 udevadm settle
 ESP=$(part 1)
@@ -44,11 +50,20 @@ ROOT=$(part 2)
 
 progress 6 "Formatting…"
 mkfs.fat -F32 -n EFI "$ESP"
-mkfs.ext4 -F -L Foxtail "$ROOT"
+mkfs.btrfs -f -L Foxtail "$ROOT"
 mkdir -p "$TARGET"
 mount "$ROOT" "$TARGET"
-mkdir -p "$TARGET/boot"
-mount -o fmask=0077,dmask=0077 "$ESP" "$TARGET/boot"
+for sv in @ @home @snapshots @log @pkg; do btrfs subvolume create "$TARGET/$sv" >/dev/null; done
+umount "$TARGET"
+
+OPTS=noatime,compress=zstd:1,space_cache=v2
+mount -o "$OPTS,subvol=@" "$ROOT" "$TARGET"
+mkdir -p "$TARGET"/{home,.snapshots,var/log,var/cache/pacman/pkg,efi}
+mount -o "$OPTS,subvol=@home" "$ROOT" "$TARGET/home"
+mount -o "$OPTS,subvol=@snapshots" "$ROOT" "$TARGET/.snapshots"
+mount -o "$OPTS,subvol=@log" "$ROOT" "$TARGET/var/log"
+mount -o "$OPTS,subvol=@pkg" "$ROOT" "$TARGET/var/cache/pacman/pkg"
+mount -o fmask=0077,dmask=0077 "$ESP" "$TARGET/efi"
 
 progress 10 "Copying Foxtail…"
 # -percentage prints one number per line; map it onto 10-80%.
@@ -57,6 +72,7 @@ unsquashfs -percentage -f -d "$TARGET" "$SFS" | while IFS= read -r pct; do
 done
 
 progress 81 "Installing kernel…"
+mkdir -p "$TARGET/boot"
 if [ ! -f "$TARGET/boot/vmlinuz-linux" ]; then
     cp "$BOOTMNT/arch/boot/x86_64/vmlinuz-linux" "$TARGET/boot/"
 fi
@@ -66,6 +82,8 @@ done
 
 progress 84 "Removing live-session settings…"
 rm -f "$TARGET/etc/mkinitcpio.conf.d/archiso.conf" \
+      "$TARGET/etc/systemd/system/foxtail-live-user.service" \
+      "$TARGET/etc/systemd/system/multi-user.target.wants/foxtail-live-user.service" \
       "$TARGET/etc/sddm.conf.d/10-live-autologin.conf" \
       "$TARGET/etc/sudoers.d/10-live" \
       "$TARGET/etc/polkit-1/rules.d/49-foxtail-live.rules" \
@@ -84,7 +102,6 @@ EOF
 genfstab -U "$TARGET" > "$TARGET/etc/fstab"
 
 progress 87 "Configuring your system…"
-ROOT_UUID=$(blkid -s UUID -o value "$ROOT")
 arch-chroot "$TARGET" /bin/bash -e <<CHROOT
 systemd-machine-id-setup >/dev/null
 userdel -r liveuser 2>/dev/null || true
@@ -107,29 +124,50 @@ useradd -m -G wheel,audio,video,input,network -s /bin/bash -c "$FT_FULLNAME" "$F
 echo "%wheel ALL=(ALL:ALL) ALL" > /etc/sudoers.d/10-wheel
 chmod 440 /etc/sudoers.d/10-wheel
 
-mkinitcpio -P >/dev/null
-bootctl install --esp-path=/boot >/dev/null
-mkdir -p /boot/loader/entries
-cat > /boot/loader/loader.conf <<EOF
-default foxtail.conf
-timeout 0
-console-mode max
-editor no
-EOF
-cat > /boot/loader/entries/foxtail.conf <<EOF
-title   Foxtail
-linux   /vmlinuz-linux
-initrd  /initramfs-linux.img
-options root=UUID=$ROOT_UUID rw quiet splash loglevel=3 rd.udev.log_level=3 vt.global_cursor_default=0
-EOF
-cat > /boot/loader/entries/foxtail-fallback.conf <<EOF
-title   Foxtail (fallback)
-linux   /vmlinuz-linux
-initrd  /initramfs-linux-fallback.img
-options root=UUID=$ROOT_UUID rw
+# Package trust: Arch's keys plus the Foxtail signing key, and Foxtail's own
+# repository for updates (signatures required).
+pacman-key --init >/dev/null 2>&1
+pacman-key --populate archlinux foxtail >/dev/null 2>&1
+grep -q '^\[foxtail\]' /etc/pacman.conf || cat >> /etc/pacman.conf <<'EOF'
+
+# Foxtail updates (shell, themes, branding). Signed with the Foxtail key.
+[foxtail]
+SigLevel = Required
+Server = https://github.com/suhl2DOTxyz/foxtail/releases/download/repo
 EOF
 
-systemctl enable sddm NetworkManager bluetooth systemd-timesyncd >/dev/null 2>&1 || true
+# Snapshots: snapper's config for /, stored on the @snapshots subvolume that
+# is already mounted at /.snapshots (so no nested .snapshots subvolume).
+# The template is copied by hand because snapper's create-config insists on making
+# its own subvolume there.
+cp /usr/share/snapper/config-templates/default /etc/snapper/configs/root
+sed -i 's/^SNAPPER_CONFIGS=.*/SNAPPER_CONFIGS="root"/' /etc/conf.d/snapper 2>/dev/null \
+    || echo 'SNAPPER_CONFIGS="root"' > /etc/conf.d/snapper
+sed -i -e 's|^SUBVOLUME=.*|SUBVOLUME="/"|' \
+       -e 's/^TIMELINE_CREATE=.*/TIMELINE_CREATE="no"/' \
+       -e 's/^NUMBER_LIMIT=.*/NUMBER_LIMIT="10"/' \
+       -e 's/^NUMBER_LIMIT_IMPORTANT=.*/NUMBER_LIMIT_IMPORTANT="5"/' \
+       -e 's/^ALLOW_GROUPS=.*/ALLOW_GROUPS="wheel"/' /etc/snapper/configs/root
+chmod 750 /.snapshots
+sed -i 's/^#\?GRUB_BTRFS_SUBMENUNAME=.*/GRUB_BTRFS_SUBMENUNAME="Foxtail snapshots"/' /etc/default/grub-btrfs/config 2>/dev/null || true
+
+mkinitcpio -P >/dev/null
+
+# Boot: GRUB, menu hidden unless Esc/Shift is held (snapshots live there).
+sed -i -e 's/^GRUB_DISTRIBUTOR=.*/GRUB_DISTRIBUTOR="Foxtail"/' \
+       -e 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=2/' \
+       -e 's/^GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/' \
+       -e 's|^GRUB_CMDLINE_LINUX_DEFAULT=.*|GRUB_CMDLINE_LINUX_DEFAULT="quiet splash loglevel=3 rd.udev.log_level=3 vt.global_cursor_default=0"|' \
+       -e 's|^#\?GRUB_THEME=.*|GRUB_THEME="/usr/share/grub/themes/foxtail/theme.txt"|' \
+       -e 's/^GRUB_GFXMODE=.*/GRUB_GFXMODE=auto/' /etc/default/grub
+grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id=Foxtail >/dev/null 2>&1 || true
+# Also install to the fallback path, for firmware (and VMs) that forget boot entries.
+grub-install --target=x86_64-efi --efi-directory=/efi --removable >/dev/null
+grub-mkconfig -o /boot/grub/grub.cfg >/dev/null 2>&1
+
+snapper --no-dbus -c root create -d "Fresh install of Foxtail" --cleanup-algorithm number
+
+systemctl enable sddm NetworkManager bluetooth systemd-timesyncd grub-btrfsd snapper-cleanup.timer >/dev/null 2>&1 || true
 CHROOT
 
 # Password is set outside the heredoc so it never lands in a shell history or argv.
