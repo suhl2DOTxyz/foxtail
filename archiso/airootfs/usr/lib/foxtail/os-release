@@ -1,0 +1,15 @@
+#!/bin/sh
+# Re-brand os-release (runs from a pacman hook whenever `filesystem` updates).
+cat > /usr/lib/os-release <<'REL'
+NAME="Foxtail"
+PRETTY_NAME="Foxtail 1.0 (Kit)"
+ID=foxtail
+ID_LIKE=arch
+VERSION="1.0 (Kit)"
+VERSION_ID=1.0
+VERSION_CODENAME=kit
+BUILD_ID=rolling
+ANSI_COLOR="38;2;255;122;26"
+HOME_URL="https://github.com/foxtail-os"
+LOGO=foxtail
+REL

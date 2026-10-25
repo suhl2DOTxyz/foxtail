@@ -1,0 +1,12 @@
+[Unit]
+Description=Create the Foxtail live session user
+Before=display-manager.service systemd-user-sessions.service
+ConditionPathExists=/run/archiso
+ConditionPathExists=!/home/liveuser
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/foxtail/live-setup
+
+[Install]
+WantedBy=multi-user.target

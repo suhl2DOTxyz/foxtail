@@ -1,0 +1,36 @@
+#!/bin/sh
+# Per-user first-login setup. Runs every login but only acts once.
+stamp="$HOME/.config/foxtail/.firstboot-done"
+[ -f "$stamp" ] && exit 0
+mkdir -p "$HOME/.config/foxtail"
+
+# Window controls on the left, macOS order.
+gsettings set org.gnome.desktop.wm.preferences button-layout 'close,minimize,maximize:'
+gsettings set org.gnome.desktop.interface font-name 'Inter 11'
+gsettings set org.gnome.desktop.interface document-font-name 'Inter 11'
+gsettings set org.gnome.desktop.interface monospace-font-name 'JetBrains Mono 11'
+gsettings set org.gnome.desktop.interface icon-theme 'WhiteSur'
+gsettings set org.gnome.desktop.interface cursor-theme 'macOS'
+gsettings set org.gnome.desktop.interface cursor-size 24
+gsettings set org.gnome.desktop.interface font-antialiasing 'rgba'
+gsettings set org.gnome.desktop.interface clock-format '12h'
+gsettings set org.gtk.Settings.FileChooser sort-directories-first true
+gsettings set org.gnome.nautilus.preferences default-folder-viewer 'icon-view' 2>/dev/null
+
+xdg-user-dirs-update
+mkdir -p "$HOME/Pictures/Screenshots"
+
+foxtail-sync-appearance light '#FF7A1A'
+
+# Friendly welcome (give the shell a moment to start its notification server).
+sleep 3
+notify-send -a "Foxtail" -i foxtail "Welcome to Foxtail" \
+    "Press ⌘ Space for Spotlight. Your Super key is ⌘. Open Control Center to try Liquid Glass."
+
+touch "$stamp"
+
+# Live ISO: open the installer after the desktop settles.
+if [ "$USER" = liveuser ]; then
+    sleep 4
+    foxtail-ipc installer
+fi

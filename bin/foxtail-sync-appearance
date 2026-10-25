@@ -1,0 +1,33 @@
+#!/bin/sh
+# foxtail-sync-appearance <light|dark> <#accent>
+# Pushes Foxtail's appearance to GTK 3/4 + libadwaita apps.
+mode="${1:-light}"
+accent="${2:-#FF7A1A}"
+
+if [ "$mode" = dark ]; then
+    gsettings set org.gnome.desktop.interface color-scheme prefer-dark
+    gsettings set org.gnome.desktop.interface gtk-theme adw-gtk3-dark
+else
+    gsettings set org.gnome.desktop.interface color-scheme default
+    gsettings set org.gnome.desktop.interface gtk-theme adw-gtk3
+fi
+
+# libadwaita's built-in accent names; pick the nearest for its own widgets.
+case "$(echo "$accent" | tr a-f A-F)" in
+    "#FF7A1A") name=orange ;;
+    "#FF3B30") name=red ;;
+    "#FF2D55") name=pink ;;
+    "#AF52DE") name=purple ;;
+    "#007AFF") name=blue ;;
+    "#34C759") name=green ;;
+    "#FFCC00") name=yellow ;;
+    *) name=slate ;;
+esac
+gsettings set org.gnome.desktop.interface accent-color "$name"
+
+# The exact accent for our CSS (window controls, selections).
+for v in gtk-3.0 gtk-4.0; do
+    mkdir -p "$HOME/.config/$v"
+    printf '@define-color accent_color %s;\n@define-color accent_bg_color %s;\n' "$accent" "$accent" \
+        > "$HOME/.config/$v/foxtail-accent.css"
+done

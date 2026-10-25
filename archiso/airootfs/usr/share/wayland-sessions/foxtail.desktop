@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Foxtail
+Comment=The Foxtail desktop
+Exec=/usr/local/bin/foxtail-session
+Type=Application
+DesktopNames=Hyprland

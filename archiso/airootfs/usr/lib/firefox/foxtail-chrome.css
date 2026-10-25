@@ -1,0 +1,36 @@
+/* Foxtail: macOS traffic lights for Firefox's titlebar buttons. */
+@-moz-document url("chrome://browser/content/browser.xhtml") {
+  .titlebar-buttonbox {
+    gap: 8px !important;
+    padding-inline: 10px 6px !important;
+    align-items: center !important;
+  }
+  .titlebar-button {
+    appearance: none !important;
+    background: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-width: 12px !important;
+  }
+  .titlebar-button > .toolbarbutton-icon {
+    appearance: none !important;
+    width: 12px !important;
+    height: 12px !important;
+    min-width: 12px !important;
+    min-height: 12px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    list-style-image: none !important;
+    background-image: none !important;
+    box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.15) !important;
+  }
+  .titlebar-close > .toolbarbutton-icon { background-color: #FF5F57 !important; }
+  .titlebar-min > .toolbarbutton-icon { background-color: #FEBC2E !important; }
+  .titlebar-max > .toolbarbutton-icon,
+  .titlebar-restore > .toolbarbutton-icon { background-color: #28C840 !important; }
+  .titlebar-button:hover > .toolbarbutton-icon { filter: brightness(0.9) !important; }
+  :root:-moz-window-inactive .titlebar-button > .toolbarbutton-icon {
+    background-color: rgba(128, 128, 128, 0.35) !important;
+    box-shadow: none !important;
+  }
+}

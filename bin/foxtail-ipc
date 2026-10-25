@@ -1,0 +1,6 @@
+#!/bin/sh
+# foxtail-ipc <function> [args...]   e.g.  foxtail-ipc spotlight
+#                                          foxtail-ipc settings wallpaper
+SHELL_DIR="${FOXTAIL_SHELL_DIR:-/usr/share/foxtail/shell}"
+[ -d "$HOME/.config/foxtail/shell" ] && SHELL_DIR="$HOME/.config/foxtail/shell"
+exec qs -p "$SHELL_DIR" ipc call foxtail "$@"

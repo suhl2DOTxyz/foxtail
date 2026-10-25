@@ -1,0 +1,8 @@
+#!/bin/sh
+# Start (or restart) the Foxtail desktop shell.
+# FOXTAIL_SHELL_DIR lets you point at a working copy while developing.
+SHELL_DIR="${FOXTAIL_SHELL_DIR:-/usr/share/foxtail/shell}"
+[ -d "$HOME/.config/foxtail/shell" ] && SHELL_DIR="$HOME/.config/foxtail/shell"
+
+pkill -x qs; pkill -x quickshell
+exec qs -p "$SHELL_DIR" -d "$@"

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Install Foxtail
+Comment=Install Foxtail on this computer
+Exec=foxtail-ipc installer
+Icon=/usr/share/pixmaps/foxtail.png
+Type=Application
+Categories=System;

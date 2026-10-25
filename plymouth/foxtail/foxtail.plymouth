@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Foxtail
+Description=Foxtail boot splash
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/foxtail
+ScriptFile=/usr/share/plymouth/themes/foxtail/foxtail.script

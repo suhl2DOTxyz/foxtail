@@ -1,0 +1,5 @@
+// Live session only (removed by the installer): the live user may do
+// anything without a password, so "Install Foxtail" can run as root.
+polkit.addRule(function(action, subject) {
+    if (subject.user == "liveuser") return polkit.Result.YES;
+});

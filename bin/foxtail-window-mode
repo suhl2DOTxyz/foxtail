@@ -1,0 +1,8 @@
+#!/bin/sh
+# foxtail-window-mode <float|tile>
+# float: every new window floats and opens centered (macOS behaviour).
+# tile:  Hyprland's dwindle tiling.
+mode="${1:-float}"
+mkdir -p "$HOME/.config/foxtail"
+echo "$mode" > "$HOME/.config/foxtail/window-mode"
+hyprctl reload >/dev/null

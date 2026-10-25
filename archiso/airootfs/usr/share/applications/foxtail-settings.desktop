@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=System Settings
+Comment=Change Foxtail's appearance, Dock, Wi-Fi, sound and more
+Exec=foxtail-ipc settings general
+Icon=preferences-system
+Type=Application
+Categories=Settings;System;
+Keywords=preferences;settings;control;appearance;wallpaper;dock;

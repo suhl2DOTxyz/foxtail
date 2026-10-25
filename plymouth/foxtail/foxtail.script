@@ -1,0 +1,60 @@
+# Foxtail boot splash: the white fox mark on black with a thin progress
+# bar, like a Mac booting. The fox gently "breathes" while waiting.
+
+Window.SetBackgroundTopColor(0, 0, 0);
+Window.SetBackgroundBottomColor(0, 0, 0);
+
+glyph.image = Image("glyph.png");
+glyph.image = glyph.image.Scale(120, 120);
+glyph.sprite = Sprite(glyph.image);
+glyph.x = Window.GetX() + Window.GetWidth() / 2 - glyph.image.GetWidth() / 2;
+glyph.y = Window.GetY() + Window.GetHeight() / 2 - glyph.image.GetHeight() / 2 - 40;
+glyph.sprite.SetPosition(glyph.x, glyph.y, 1);
+
+track.image = Image("track.png");
+track.sprite = Sprite(track.image);
+track.x = Window.GetX() + Window.GetWidth() / 2 - track.image.GetWidth() / 2;
+track.y = glyph.y + glyph.image.GetHeight() + 70;
+track.sprite.SetPosition(track.x, track.y, 1);
+
+bar.original = Image("bar.png");
+bar.sprite = Sprite();
+bar.sprite.SetPosition(track.x, track.y, 2);
+
+progress = 0;
+t = 0;
+
+fun refresh_cb() {
+    t++;
+    glyph.sprite.SetOpacity(0.85 + 0.15 * Math.Sin(t / 25));
+}
+Plymouth.SetRefreshFunction(refresh_cb);
+
+fun progress_cb(duration, p) {
+    if (p > progress) progress = p;
+    w = Math.Int(bar.original.GetWidth() * progress);
+    if (w < 6) w = 6;
+    bar.sprite.SetImage(bar.original.Crop(0, 0, w, bar.original.GetHeight()));
+}
+Plymouth.SetBootProgressFunction(progress_cb);
+
+# Password prompt (encrypted disks)
+prompt.sprite = Sprite();
+fun display_password_cb(prompt_text, bullets) {
+    s = "";
+    for (i = 0; i < bullets; i++) s += "●";
+    img = Image.Text(prompt_text + "   " + s, 1, 1, 1, 1, "Inter 13");
+    prompt.sprite.SetImage(img);
+    prompt.sprite.SetPosition(Window.GetX() + Window.GetWidth() / 2 - img.GetWidth() / 2, track.y + 40, 3);
+}
+Plymouth.SetDisplayPasswordFunction(display_password_cb);
+
+fun display_normal_cb() {
+    prompt.sprite.SetImage(Image.Text("", 1, 1, 1));
+}
+Plymouth.SetDisplayNormalFunction(display_normal_cb);
+
+fun quit_cb() {
+    bar.sprite.SetImage(bar.original);
+}
+Plymouth.SetQuitFunction(quit_cb);

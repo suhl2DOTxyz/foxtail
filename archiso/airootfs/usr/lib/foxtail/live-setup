@@ -1,0 +1,13 @@
+#!/bin/sh
+# Live ISO: create "liveuser" (no password) and pre-pin "Install Foxtail".
+set -e
+useradd -m -G wheel,audio,video,input,network -c "Foxtail Live" -s /bin/bash liveuser
+passwd -d liveuser
+install -d -o liveuser -g liveuser /home/liveuser/.config/foxtail
+cat > /home/liveuser/.config/foxtail/settings.json <<'JSON'
+{
+    "pinnedApps": ["org.gnome.Nautilus", "foxtail-installer", "firefox", "org.gnome.Ptyxis",
+                   "org.gnome.TextEditor", "org.gnome.Calculator", "foxtail-settings"]
+}
+JSON
+chown liveuser:liveuser /home/liveuser/.config/foxtail/settings.json

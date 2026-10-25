@@ -1,0 +1,141 @@
+#!/usr/bin/env bash
+# foxtail-install: install Foxtail from the live ISO to a disk (run as root).
+#
+# Reads settings from the environment:
+#   FT_DISK=/dev/sda  FT_USER=fox  FT_FULLNAME="Fox Tail"  FT_HOST=foxtail
+#   FT_TZ=Europe/Berlin  FT_LOCALE=en_US.UTF-8  FT_KEYMAP=us
+# and the user's password on stdin (one line).
+#
+# Prints "PROGRESS <0-100> <message>" lines for the Setup app, and
+# "ERROR <message>" on failure. ERASES FT_DISK ENTIRELY.
+set -Eeuo pipefail
+
+progress() { echo "PROGRESS $1 $2"; }
+fail() { echo "ERROR $*"; exit 1; }
+trap 'fail "Step failed at line $LINENO: $BASH_COMMAND"' ERR
+
+[ "$(id -u)" -eq 0 ] || fail "must run as root"
+: "${FT_DISK:?}" "${FT_USER:?}" "${FT_HOST:=foxtail}" "${FT_TZ:=UTC}" "${FT_LOCALE:=en_US.UTF-8}" "${FT_KEYMAP:=us}"
+FT_FULLNAME="${FT_FULLNAME:-$FT_USER}"
+[[ "$FT_USER" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || fail "invalid user name"
+[[ "$FT_HOST" =~ ^[A-Za-z0-9-]{1,63}$ ]] || fail "invalid computer name"
+[ -b "$FT_DISK" ] || fail "$FT_DISK is not a block device"
+IFS= read -r FT_PASS || true
+[ -n "$FT_PASS" ] || fail "empty password"
+
+BOOTMNT=/run/archiso/bootmnt
+SFS=$(find "$BOOTMNT/arch" -name airootfs.sfs | head -1)
+[ -f "$SFS" ] || fail "live image not found (are you running the Foxtail live ISO?)"
+TARGET=/mnt/foxtail
+
+# Partition names: /dev/sda1 vs /dev/nvme0n1p1
+part() { if [[ "$FT_DISK" =~ [0-9]$ ]]; then echo "${FT_DISK}p$1"; else echo "${FT_DISK}$1"; fi; }
+
+progress 2 "Preparing disk…"
+umount -R "$TARGET" 2>/dev/null || true
+swapoff -a || true
+wipefs -af "$FT_DISK"
+sgdisk --zap-all "$FT_DISK"
+sgdisk -n1:0:+1G -t1:ef00 -c1:EFI -n2:0:0 -t2:8304 -c2:Foxtail "$FT_DISK"
+partprobe "$FT_DISK"
+udevadm settle
+ESP=$(part 1)
+ROOT=$(part 2)
+
+progress 6 "Formatting…"
+mkfs.fat -F32 -n EFI "$ESP"
+mkfs.ext4 -F -L Foxtail "$ROOT"
+mkdir -p "$TARGET"
+mount "$ROOT" "$TARGET"
+mkdir -p "$TARGET/boot"
+mount -o fmask=0077,dmask=0077 "$ESP" "$TARGET/boot"
+
+progress 10 "Copying Foxtail…"
+# -percentage prints one number per line; map it onto 10-80%.
+unsquashfs -percentage -f -d "$TARGET" "$SFS" | while IFS= read -r pct; do
+    if [[ "$pct" =~ ^[0-9]+$ ]]; then progress $((10 + pct * 70 / 100)) "Copying Foxtail…"; fi
+done
+
+progress 81 "Installing kernel…"
+if [ ! -f "$TARGET/boot/vmlinuz-linux" ]; then
+    cp "$BOOTMNT/arch/boot/x86_64/vmlinuz-linux" "$TARGET/boot/"
+fi
+for ucode in intel-ucode.img amd-ucode.img; do
+    [ -f "$BOOTMNT/boot/$ucode" ] && cp "$BOOTMNT/boot/$ucode" "$TARGET/boot/" || true
+done
+
+progress 84 "Removing live-session settings…"
+rm -f "$TARGET/etc/mkinitcpio.conf.d/archiso.conf" \
+      "$TARGET/etc/sddm.conf.d/10-live-autologin.conf" \
+      "$TARGET/etc/sudoers.d/10-live" \
+      "$TARGET/etc/polkit-1/rules.d/49-foxtail-live.rules" \
+      "$TARGET/usr/share/applications/foxtail-installer.desktop" \
+      "$TARGET/etc/systemd/system/getty@tty1.service.d/autologin.conf"
+rm -f "$TARGET/etc/machine-id"
+# The live mkinitcpio preset points at archiso's config; restore the stock one.
+cat > "$TARGET/etc/mkinitcpio.d/linux.preset" <<'EOF'
+ALL_kver="/boot/vmlinuz-linux"
+PRESETS=('default' 'fallback')
+default_image="/boot/initramfs-linux.img"
+fallback_image="/boot/initramfs-linux-fallback.img"
+fallback_options="-S autodetect"
+EOF
+
+genfstab -U "$TARGET" > "$TARGET/etc/fstab"
+
+progress 87 "Configuring your system…"
+ROOT_UUID=$(blkid -s UUID -o value "$ROOT")
+arch-chroot "$TARGET" /bin/bash -e <<CHROOT
+systemd-machine-id-setup >/dev/null
+userdel -r liveuser 2>/dev/null || true
+
+ln -sf "/usr/share/zoneinfo/$FT_TZ" /etc/localtime
+hwclock --systohc || true
+sed -i "s/^#\\($FT_LOCALE.*\\)/\\1/" /etc/locale.gen
+grep -q "^$FT_LOCALE" /etc/locale.gen || echo "$FT_LOCALE UTF-8" >> /etc/locale.gen
+locale-gen >/dev/null
+echo "LANG=$FT_LOCALE" > /etc/locale.conf
+echo "KEYMAP=$FT_KEYMAP" > /etc/vconsole.conf
+echo "$FT_HOST" > /etc/hostname
+cat > /etc/hosts <<EOF
+127.0.0.1 localhost
+::1       localhost
+127.0.1.1 $FT_HOST.localdomain $FT_HOST
+EOF
+
+useradd -m -G wheel,audio,video,input,network -s /bin/bash -c "$FT_FULLNAME" "$FT_USER"
+echo "%wheel ALL=(ALL:ALL) ALL" > /etc/sudoers.d/10-wheel
+chmod 440 /etc/sudoers.d/10-wheel
+
+mkinitcpio -P >/dev/null
+bootctl install --esp-path=/boot >/dev/null
+mkdir -p /boot/loader/entries
+cat > /boot/loader/loader.conf <<EOF
+default foxtail.conf
+timeout 0
+console-mode max
+editor no
+EOF
+cat > /boot/loader/entries/foxtail.conf <<EOF
+title   Foxtail
+linux   /vmlinuz-linux
+initrd  /initramfs-linux.img
+options root=UUID=$ROOT_UUID rw quiet splash loglevel=3 rd.udev.log_level=3 vt.global_cursor_default=0
+EOF
+cat > /boot/loader/entries/foxtail-fallback.conf <<EOF
+title   Foxtail (fallback)
+linux   /vmlinuz-linux
+initrd  /initramfs-linux-fallback.img
+options root=UUID=$ROOT_UUID rw
+EOF
+
+systemctl enable sddm NetworkManager bluetooth systemd-timesyncd >/dev/null 2>&1 || true
+CHROOT
+
+# Password is set outside the heredoc so it never lands in a shell history or argv.
+printf '%s:%s\n' "$FT_USER" "$FT_PASS" | arch-chroot "$TARGET" chpasswd
+
+progress 97 "Finishing up…"
+sync
+umount -R "$TARGET"
+progress 100 "Foxtail is installed."

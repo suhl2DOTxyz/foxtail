@@ -1,0 +1,17 @@
+#!/bin/sh
+# foxtail-screenshot <screen|area|window>
+# Saves to ~/Pictures/Screenshots, copies to the clipboard, posts a notification.
+dir="${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots"
+mkdir -p "$dir"
+file="$dir/Screenshot $(date '+%Y-%m-%d at %H.%M.%S').png"
+
+case "$1" in
+    area) geom=$(slurp -d -b '#00000040' -c '#FF7A1AFF' -w 2) || exit 0; grim -g "$geom" "$file" ;;
+    window)
+        geom=$(hyprctl -j activewindow | jq -r '"\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"')
+        grim -g "$geom" "$file" ;;
+    *) grim "$file" ;;
+esac || exit 1
+
+wl-copy < "$file"
+notify-send -a "Screenshot" -i "$file" "Screenshot" "Saved to Pictures/Screenshots and copied."
