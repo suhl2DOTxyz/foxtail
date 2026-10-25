@@ -4,6 +4,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Wayland
 import qs.services
 import qs.modules
 import qs.windows
@@ -31,6 +32,30 @@ ShellRoot {
     }
 
     LockScreen {}
+
+    // Auto-lock and display sleep. Idle inhibitors (video playback, a
+    // presentation) are respected, as on macOS. The monitors are recreated
+    // whenever a timeout changes: an idle notification's timeout is fixed
+    // once it has been registered with the compositor.
+    Variants {
+        model: Settings.lockAfter > 0 ? [Settings.lockAfter] : []
+        IdleMonitor {
+            required property int modelData
+            timeout: modelData * 60
+            respectInhibitors: true
+            onIsIdleChanged: if (isIdle) Lock.lock()
+        }
+    }
+    Variants {
+        model: Settings.displayOffAfter > 0 ? [Settings.displayOffAfter] : []
+        IdleMonitor {
+            required property int modelData
+            timeout: modelData * 60
+            respectInhibitors: true
+            onIsIdleChanged: Hypr.dispatch(`hl.dsp.dpms({ action = "${isIdle ? "off" : "on"}" })`)
+        }
+    }
+
     SettingsWindow {}
     AboutWindow {}
     ForceQuitWindow {}
@@ -75,6 +100,7 @@ ShellRoot {
         function lock(): void { Lock.lock(); }
         function power(kind: string): void { Panels.confirm = kind; }
         function closeAll(): void { Panels.closeAll(); }
+        function restoreAll(): void { Hypr.restoreAll(); }
 
         function volumeUp(): void { Audio.setVolume(Audio.volume + 0.0625); }
         function volumeDown(): void { Audio.setVolume(Audio.volume - 0.0625); }

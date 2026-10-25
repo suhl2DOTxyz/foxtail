@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import qs.services
 import qs.components
 
@@ -49,6 +50,12 @@ Item {
                                   run: () => Quickshell.clipboardText = String(c) });
         for (const e of Apps.search(q).slice(0, 8))
             out.push({ kind: "app", name: e.name, sub: e.genericName || "Application", entry: e, run: () => e.execute() });
+        for (const f of files.slice(0, 6)) {
+            const name = f.split("/").pop();
+            const dir = f.slice(0, f.length - name.length - 1).replace(Quickshell.env("HOME"), "~");
+            out.push({ kind: "file", name, sub: dir || "~", glyph: "folder",
+                       run: () => Quickshell.execDetached(["xdg-open", f]) });
+        }
         const ql = q.toLowerCase();
         for (const a of actions)
             if (a.name.toLowerCase().indexOf(ql) >= 0)
@@ -59,6 +66,35 @@ Item {
     }
 
     onItemsChanged: current = 0
+
+    // ---- file search: debounced `find` over the home folder ----
+    property var files: []
+    Timer {
+        id: fileDebounce
+        interval: 180
+        onTriggered: {
+            const q = input.text.trim();
+            if (q.length < 2) { root.files = []; return; }
+            finder.running = false;
+            finder.query = q;
+            finder.running = true;
+        }
+    }
+    Process {
+        id: finder
+        property string query
+        // Skip hidden folders and caches; names only, case-insensitive.
+        command: ["find", Quickshell.env("HOME"), "-maxdepth", "5",
+                  "(", "-name", ".*", "-o", "-name", "node_modules", ")", "-prune", "-o",
+                  "-iname", "*" + query.replace(/[*?\[\]]/g, "") + "*", "-print"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                if (finder.query !== input.text.trim()) return;   // stale result
+                root.files = text.split("\n").filter(l => l).slice(0, 20)
+                    .sort((a, b) => a.split("/").length - b.split("/").length);
+            }
+        }
+    }
 
     function launch(i) {
         const it = items[i];
@@ -113,6 +149,7 @@ Item {
             color: Theme.text
             selectionColor: Theme.accent
             clip: true
+            onTextChanged: fileDebounce.restart()
 
             Label {
                 visible: !input.text

@@ -355,6 +355,23 @@ FloatingWindow {
         }
     }
 
+    // Compact segmented picker: click cycles through the options.
+    component Choice: Rectangle {
+        id: ch
+        property var options: []
+        property var value
+        signal picked(var value)
+        readonly property int idx: Math.max(0, options.findIndex(o => o[0] === value))
+        width: chl.implicitWidth + 34
+        height: 24
+        radius: Theme.liquid ? 12 : 6
+        color: Theme.control
+        border.color: Theme.separator
+        Label { id: chl; x: 12; anchors.verticalCenter: parent.verticalCenter; text: ch.options[ch.idx]?.[1] ?? ""; font.pixelSize: 12 }
+        Icon { anchors.right: parent.right; anchors.rightMargin: 8; anchors.verticalCenter: parent.verticalCenter; size: 10; name: "chevron-down"; color: Theme.textSecondary }
+        MouseArea { anchors.fill: parent; onClicked: ch.picked(ch.options[(ch.idx + 1) % ch.options.length][0]) }
+    }
+
     component PushButton: Rectangle {
         id: pb
         property string text
@@ -755,6 +772,22 @@ FloatingWindow {
         Column {
             spacing: 14
             Group {
+                SettingRow {
+                    label: "Require password after the screen is idle for"
+                    Choice {
+                        options: [[1, "1 minute"], [5, "5 minutes"], [15, "15 minutes"], [60, "1 hour"], [0, "Never"]]
+                        value: Settings.lockAfter
+                        onPicked: v => Settings.lockAfter = v
+                    }
+                }
+                SettingRow {
+                    label: "Turn display off when inactive for"
+                    Choice {
+                        options: [[2, "2 minutes"], [10, "10 minutes"], [30, "30 minutes"], [0, "Never"]]
+                        value: Settings.displayOffAfter
+                        onPicked: v => Settings.displayOffAfter = v
+                    }
+                }
                 SettingRow {
                     label: "Lock Screen now"
                     last: true

@@ -19,6 +19,28 @@ Singleton {
     }
 
     function closeActive() { dispatch("hl.dsp.window.close()"); }
+
+    // ---- minimize (windows live on the hidden "special:minimized" workspace) ----
+    readonly property var minimized: Hyprland.toplevels.values
+        .filter(t => t.workspace?.name === "special:minimized")
+
+    function minimizeActive() {
+        dispatch("hl.dsp.window.move({ workspace = \"special:minimized\", follow = false })");
+    }
+    function restore(t) {
+        const a = "address:" + (t.address.startsWith("0x") ? "" : "0x") + t.address;
+        dispatch(`hl.dsp.window.move({ workspace = "e+0", window = "${a}" })`);
+        dispatch(`hl.dsp.focus({ window = "${a}" })`);
+    }
+    function restoreAll() {
+        for (const t of minimized.slice()) restore(t);
+    }
+    function isMinimized(wayland) {
+        return minimized.some(t => t.wayland === wayland);
+    }
+    function hyprFor(wayland) {
+        return Hyprland.toplevels.values.find(t => t.wayland === wayland) ?? null;
+    }
     function toggleFullscreen() { dispatch("hl.dsp.window.fullscreen()"); }
     function toggleFloat() { dispatch("hl.dsp.window.float({ action = \"toggle\" })"); }
     function workspace(n) { dispatch(`hl.dsp.focus({ workspace = ${n} })`); }

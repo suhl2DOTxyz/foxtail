@@ -13,7 +13,7 @@ Singleton {
 
     readonly property var activeEntry: Apps.entryForToplevel(Hypr.activeToplevel)
     readonly property string appName: {
-        if (!Hypr.activeClass) return "Files";
+        if (!Hypr.activeClass || Hypr.isMinimized(Hypr.activeToplevel)) return "Files";
         if (Apps.isShellWindow(Hypr.activeToplevel)) return activeEntry?.name ?? Hypr.activeTitle;
         return activeEntry?.name ?? prettify(Hypr.activeClass);
     }
@@ -53,8 +53,8 @@ Singleton {
         { text: "Settings…", shortcut: "⌃,", action: keys(["ctrl"], "comma") },
         { separator: true },
         { text: `Hide ${appName}`, shortcut: "⌘H", enabled: !!Hypr.activeClass,
-          action: () => Hypr.dispatch("hl.dsp.window.move({ workspace = \"special:minimized\", follow = false })") },
-        { text: "Show All", action: () => Hypr.dispatch("hl.dsp.workspace.toggle_special(\"minimized\")") },
+          action: () => Hypr.minimizeActive() },
+        { text: "Show All", action: () => Hypr.restoreAll() },
         { separator: true },
         { text: `Quit ${appName}`, shortcut: "⌘Q", enabled: !!Hypr.activeClass, action: () => Hypr.closeActive() }
     ]
@@ -97,13 +97,13 @@ Singleton {
         // Window
         [
             { text: "Minimize", shortcut: "⌘M",
-              action: () => Hypr.dispatch("hl.dsp.window.move({ workspace = \"special:minimized\", follow = false })") },
+              action: () => Hypr.minimizeActive() },
             { text: "Zoom", action: () => Hypr.dispatch("hl.dsp.window.fullscreen({ mode = \"maximized\" })") },
             { text: "Center", action: () => Hypr.dispatch("hl.dsp.window.center()") },
             { separator: true },
             { text: "Float / Tile Window", shortcut: "⌘T", action: () => Hypr.toggleFloat() },
             { separator: true },
-            { text: "Bring All to Front", action: () => Hypr.dispatch("hl.dsp.workspace.toggle_special(\"minimized\")") }
+            { text: "Bring All to Front", action: () => Hypr.restoreAll() }
         ],
         // Help
         [

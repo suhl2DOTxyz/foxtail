@@ -23,6 +23,8 @@ Singleton {
     property alias clockSeconds: adapter.clockSeconds
     property alias doNotDisturb: adapter.doNotDisturb
     property alias reduceTransparency: adapter.reduceTransparency
+    property alias lockAfter: adapter.lockAfter
+    property alias displayOffAfter: adapter.displayOffAfter
 
     readonly property string dir: Quickshell.env("HOME") + "/.config/foxtail"
     readonly property string wallpaperDir: "/usr/share/backgrounds/foxtail"
@@ -63,6 +65,8 @@ Singleton {
             property bool clockSeconds: false
             property bool doNotDisturb: false
             property bool reduceTransparency: false
+            property int lockAfter: 5          // minutes idle before locking; 0 = never
+            property int displayOffAfter: 10   // minutes idle before the display sleeps; 0 = never
         }
     }
 }

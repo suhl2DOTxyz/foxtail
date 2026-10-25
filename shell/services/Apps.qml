@@ -102,9 +102,18 @@ Singleton {
             launch(id);
             return false;
         }
-        const active = wins.findIndex(w => w.activated);
-        const next = wins[(active + 1) % wins.length];
-        next.activate();
+        // Like macOS: clicking an app whose windows are all minimized brings
+        // them back; otherwise cycle through its visible windows.
+        const visible = wins.filter(w => !Hypr.isMinimized(w));
+        if (visible.length === 0) {
+            for (const w of wins) {
+                const h = Hypr.hyprFor(w);
+                if (h) Hypr.restore(h);
+            }
+            return true;
+        }
+        const active = visible.findIndex(w => w.activated);
+        visible[(active + 1) % visible.length].activate();
         return true;
     }
 

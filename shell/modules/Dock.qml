@@ -57,6 +57,9 @@ PanelWindow {
             for (const id of Apps.unpinnedRunning) out.push({ kind: "app", id });
         }
         out.push({ kind: "sep", id: "sep2" });
+        // Minimized windows sit between the separator and Trash, as on macOS.
+        for (const t of Hypr.minimized)
+            out.push({ kind: "min", id: "min:" + t.address, toplevel: t });
         out.push({ kind: "trash", id: "trash" });
         return out;
     }
@@ -160,15 +163,43 @@ PanelWindow {
                     property real bounce: 0
                     transform: Translate { y: -iconBox.bounce }
 
+                    // Minimized window: a small "window" card carrying the app icon.
+                    Rectangle {
+                        visible: cell.modelData.kind === "min"
+                        anchors.fill: parent
+                        anchors.margins: parent.width * 0.08
+                        radius: width * 0.16
+                        color: Theme.dark ? "#2C2C2E" : "#FFFFFF"
+                        border.color: Theme.separator
+                        Rectangle {   // title bar strip with traffic lights
+                            width: parent.width; height: parent.height * 0.18
+                            radius: parent.radius
+                            color: Theme.dark ? "#3A3A3C" : "#ECECEE"
+                            Row {
+                                x: parent.width * 0.1
+                                anchors.verticalCenter: parent.verticalCenter
+                                spacing: parent.height * 0.25
+                                Repeater {
+                                    model: ["#FF5F57", "#FEBC2E", "#28C840"]
+                                    Rectangle { required property string modelData; width: parent.parent.height * 0.42; height: width; radius: width / 2; color: modelData }
+                                }
+                            }
+                        }
+                    }
+
                     Image {
                         anchors.fill: parent
+                        anchors.margins: cell.modelData.kind === "min" ? parent.width * 0.26 : 0
+                        anchors.topMargin: cell.modelData.kind === "min" ? parent.width * 0.32 : 0
                         visible: cell.modelData.kind !== "launchpad"
                         sourceSize: Qt.size(dock.iconSize * dock.magnify * 2, dock.iconSize * dock.magnify * 2)
                         smooth: true
                         mipmap: true
                         source: cell.modelData.kind === "trash"
                             ? Quickshell.iconPath("user-trash", "user-trash-full")
-                            : Apps.iconFor(cell.modelData.id)
+                            : cell.modelData.kind === "min"
+                                ? Apps.iconFor(Apps.idForToplevel(cell.modelData.toplevel.wayland))
+                                : Apps.iconFor(cell.modelData.id)
                         opacity: press.pressed ? 0.7 : 1
                     }
 
@@ -233,6 +264,7 @@ PanelWindow {
                         anchors.centerIn: parent
                         text: cell.modelData.kind === "trash" ? "Trash"
                             : cell.modelData.kind === "launchpad" ? "Launchpad"
+                            : cell.modelData.kind === "min" ? (cell.modelData.toplevel.title || "Window")
                             : Apps.nameFor(cell.modelData.id)
                     }
                 }
@@ -255,6 +287,8 @@ PanelWindow {
                         Panels.closeAll();
                         if (it.kind === "launchpad") {
                             Panels.launchpad = true;
+                        } else if (it.kind === "min") {
+                            Hypr.restore(it.toplevel);
                         } else if (it.kind === "trash") {
                             Quickshell.execDetached(["nautilus", "trash:///"]);
                         } else if (!Apps.activate(it.id) && it.id !== "foxtail-settings") {
