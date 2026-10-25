@@ -478,6 +478,15 @@ FloatingWindow {
                     Switch { checked: Settings.liquidGlass; onToggled: c => Settings.liquidGlass = c }
                 }
                 SettingRow {
+                    label: "Refract windows behind glass"
+                    sub: "Menus and Control Center bend what's actually behind them, not just the wallpaper."
+                    Switch {
+                        checked: Settings.refractWindows
+                        opacity: Settings.liquidGlass ? 1 : 0.4
+                        onToggled: c => Settings.refractWindows = c
+                    }
+                }
+                SettingRow {
                     label: "Reduce transparency"
                     Switch { checked: Settings.reduceTransparency; onToggled: c => Settings.reduceTransparency = c }
                 }
@@ -805,34 +814,36 @@ FloatingWindow {
             Label {
                 width: parent.width
                 wrapMode: Text.Wrap
-                text: "The Super (⊞/⌘) key plays the role of Command."
+                text: "The Super (⊞) key is ⌘ Command, Ctrl is ⌃ Control, Alt is ⌥ Option. ⌘ shortcuts work in every app, and in terminals ⌘C copies instead of interrupting."
                 color: Theme.textSecondary
                 font.pixelSize: 12
             }
             Group {
                 Repeater {
                     model: [
+                        ["Copy, Paste, Cut, Undo, Select All", "⌘C  ⌘V  ⌘X  ⌘Z  ⌘A"],
+                        ["Quit app (all its windows)", "⌘Q"],
+                        ["Close tab or window", "⌘W"],
+                        ["Hide / Minimize", "⌘H  /  ⌘M"],
                         ["Spotlight", "⌘ Space"],
-                        ["Launchpad", "⌘ L  /  F4"],
-                        ["Control Center", "⌘ C"],
-                        ["Quit app", "⌘ Q"],
-                        ["Close window", "⌘ W"],
-                        ["Minimize window", "⌘ M"],
-                        ["Full screen", "⌘ F"],
-                        ["Float / tile window", "⌘ T"],
-                        ["Terminal", "⌘ Return"],
-                        ["Files", "⌘ E"],
-                        ["Lock screen", "⌃ ⌘ Q"],
-                        ["Switch desktop", "⌘ 1 … 9  /  ⌃ ← →"],
-                        ["Move window to desktop", "⇧ ⌘ 1 … 9"],
-                        ["Screenshot (area)", "⇧ ⌘ 4"],
-                        ["Screenshot (screen)", "⇧ ⌘ 3"]
+                        ["Switch app windows", "⌘ Tab"],
+                        ["Line start / end, word jump", "⌘← ⌘→  /  ⌥← ⌥→"],
+                        ["Back / Forward", "⌘[  /  ⌘]"],
+                        ["Full screen", "⌃⌘F"],
+                        ["Switch desktop", "⌃1 … 9  /  ⌃⌘← →"],
+                        ["Move window to desktop", "⌃⇧1 … 9"],
+                        ["Launchpad", "F4  /  ⌥⌘L"],
+                        ["Control Center", "⌥⌘C"],
+                        ["Files  /  Terminal", "⌥⌘Space  /  ⌥⌘Return"],
+                        ["Lock screen", "⌃⌘Q"],
+                        ["Force Quit", "⌥⌘⎋"],
+                        ["Screenshot (screen / area / window)", "⇧⌘3  ⇧⌘4  ⇧⌘5"]
                     ]
                     SettingRow {
                         required property var modelData
                         required property int index
                         label: modelData[0]
-                        last: index === 14
+                        last: index === 16
                         Label { text: modelData[1]; color: Theme.textSecondary; font.family: Theme.font }
                     }
                 }

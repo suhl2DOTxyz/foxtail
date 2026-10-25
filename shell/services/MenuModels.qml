@@ -46,53 +46,53 @@ Singleton {
         { text: "Shut Down…", icon: "power", action: () => Panels.confirm = "shutdown" },
         { separator: true },
         { text: "Lock Screen", icon: "lock", shortcut: "⌃⌘Q", action: () => Lock.lock() },
-        { text: `Log Out ${SystemInfo.fullName || SystemInfo.user}…`, icon: "logout", shortcut: "⇧⌘Q", action: () => Panels.confirm = "logout" }
+        { text: `Log Out ${SystemInfo.fullName || SystemInfo.user}…`, icon: "logout", shortcut: "⌥⇧⌘Q", action: () => Panels.confirm = "logout" }
     ]
 
     readonly property var appNameMenu: [
-        { text: "Settings…", shortcut: "⌃,", action: keys(["ctrl"], "comma") },
+        { text: "Settings…", shortcut: "⌘,", action: keys(["ctrl"], "comma") },
         { separator: true },
         { text: `Hide ${appName}`, shortcut: "⌘H", enabled: !!Hypr.activeClass,
           action: () => Hypr.minimizeActive() },
         { text: "Show All", action: () => Hypr.restoreAll() },
         { separator: true },
-        { text: `Quit ${appName}`, shortcut: "⌘Q", enabled: !!Hypr.activeClass, action: () => Hypr.closeActive() }
+        { text: `Quit ${appName}`, shortcut: "⌘Q", enabled: !!Hypr.activeClass, action: () => Hypr.quitActiveApp() }
     ]
 
     readonly property var appMenus: [
         // File
         [
-            { text: "New Window", shortcut: "⌃N", action: keys(["ctrl"], "n") },
-            { text: "New Tab", shortcut: "⌃T", action: keys(["ctrl"], "t") },
-            { text: "Open…", shortcut: "⌃O", action: keys(["ctrl"], "o") },
+            { text: "New Window", shortcut: "⌘N", action: keys(["ctrl"], "n") },
+            { text: "New Tab", shortcut: "⌘T", action: keys(["ctrl"], "t") },
+            { text: "Open…", shortcut: "⌘O", action: keys(["ctrl"], "o") },
             { separator: true },
-            { text: "Close Window", shortcut: "⌘W", action: () => Hypr.closeActive() },
-            { text: "Save", shortcut: "⌃S", action: keys(["ctrl"], "s") },
-            { text: "Save As…", shortcut: "⇧⌃S", action: keys(["ctrl", "shift"], "s") },
+            { text: "Close Window", shortcut: "⌘W", action: keys(["ctrl"], "w") },
+            { text: "Save", shortcut: "⌘S", action: keys(["ctrl"], "s") },
+            { text: "Save As…", shortcut: "⇧⌘S", action: keys(["ctrl", "shift"], "s") },
             { separator: true },
-            { text: "Print…", shortcut: "⌃P", action: keys(["ctrl"], "p") }
+            { text: "Print…", shortcut: "⌘P", action: keys(["ctrl"], "p") }
         ],
         // Edit
         [
-            { text: "Undo", shortcut: "⌃Z", action: keys(["ctrl"], "z") },
-            { text: "Redo", shortcut: "⇧⌃Z", action: keys(["ctrl", "shift"], "z") },
+            { text: "Undo", shortcut: "⌘Z", action: keys(["ctrl"], "z") },
+            { text: "Redo", shortcut: "⇧⌘Z", action: keys(["ctrl", "shift"], "z") },
             { separator: true },
-            { text: "Cut", shortcut: "⌃X", action: keys(["ctrl"], "x") },
-            { text: "Copy", shortcut: "⌃C", action: keys(["ctrl"], "c") },
-            { text: "Paste", shortcut: "⌃V", action: keys(["ctrl"], "v") },
-            { text: "Select All", shortcut: "⌃A", action: keys(["ctrl"], "a") },
+            { text: "Cut", shortcut: "⌘X", action: keys(["ctrl"], "x") },
+            { text: "Copy", shortcut: "⌘C", action: keys(["ctrl"], "c") },
+            { text: "Paste", shortcut: "⌘V", action: keys(["ctrl"], "v") },
+            { text: "Select All", shortcut: "⌘A", action: keys(["ctrl"], "a") },
             { separator: true },
-            { text: "Find…", shortcut: "⌃F", action: keys(["ctrl"], "f") },
+            { text: "Find…", shortcut: "⌘F", action: keys(["ctrl"], "f") },
             { separator: true },
             { text: "Emoji & Symbols", shortcut: "⌘.", action: run("gnome-characters") }
         ],
         // View
         [
-            { text: "Enter Full Screen", shortcut: "⌘F", action: () => Hypr.toggleFullscreen() },
+            { text: "Enter Full Screen", shortcut: "⌃⌘F", action: () => Hypr.toggleFullscreen() },
             { separator: true },
-            { text: "Zoom In", shortcut: "⌃+", action: keys(["ctrl"], "plus") },
-            { text: "Zoom Out", shortcut: "⌃−", action: keys(["ctrl"], "minus") },
-            { text: "Actual Size", shortcut: "⌃0", action: keys(["ctrl"], "0") }
+            { text: "Zoom In", shortcut: "⌘+", action: keys(["ctrl"], "plus") },
+            { text: "Zoom Out", shortcut: "⌘−", action: keys(["ctrl"], "minus") },
+            { text: "Actual Size", shortcut: "⌘0", action: keys(["ctrl"], "0") }
         ],
         // Window
         [
@@ -101,7 +101,7 @@ Singleton {
             { text: "Zoom", action: () => Hypr.dispatch("hl.dsp.window.fullscreen({ mode = \"maximized\" })") },
             { text: "Center", action: () => Hypr.dispatch("hl.dsp.window.center()") },
             { separator: true },
-            { text: "Float / Tile Window", shortcut: "⌘T", action: () => Hypr.toggleFloat() },
+            { text: "Float / Tile Window", shortcut: "⌥⌘T", action: () => Hypr.toggleFloat() },
             { separator: true },
             { text: "Bring All to Front", action: () => Hypr.restoreAll() }
         ],

@@ -47,7 +47,36 @@ Singleton {
     function exit() { dispatch("hl.dsp.exit()"); }
 
     // Send a key chord to the focused app (used by the global menu bar items).
+    // Terminals take Ctrl+Shift for copy/paste/tabs; plain Ctrl+C would
+    // interrupt the running program. Mirrors TERMINALS in hypr/foxtail.lua.
+    readonly property var terminals: ["org.gnome.Ptyxis", "org.gnome.Console", "kitty",
+                                      "com.mitchellh.ghostty", "Alacritty", "foot",
+                                      "org.wezfurlong.wezterm", "org.kde.konsole"]
+
+    // ⌘Q: close every window of the focused app, like macOS's Quit.
+    function quitActiveApp() {
+        const cls = Hyprland.activeToplevel?.lastIpcObject?.class;
+        if (!cls) { closeActive(); return; }
+        for (const t of Hyprland.toplevels.values)
+            if (t.lastIpcObject?.class === cls)
+                dispatch(`hl.dsp.window.close({ window = "address:${t.address.startsWith("0x") ? "" : "0x"}${t.address}" })`);
+    }
+
+    // Same terminal mapping as TERMINAL_KEYS in hypr/foxtail.lua.
+    readonly property var terminalKeys: ({
+        c: [["ctrl"], "Insert"], x: [["ctrl"], "Insert"], v: [["shift"], "Insert"],
+        a: [["ctrl", "shift"], "a"], f: [["ctrl", "shift"], "f"], n: [["ctrl", "shift"], "n"],
+        t: [["ctrl", "shift"], "t"], w: [["ctrl", "shift"], "w"],
+        plus: [["ctrl"], "plus"], minus: [["ctrl"], "minus"], "0": [["ctrl"], "0"]
+    })
+
     function sendKeys(mods, key) {
+        if (terminals.indexOf(activeClass) >= 0) {
+            const t = mods.length === 1 && mods[0] === "ctrl" ? terminalKeys[key] : null;
+            if (!t) return;          // e.g. Undo would send ^Z (suspend) to the shell
+            mods = t[0];
+            key = t[1];
+        }
         const args = ["wtype"];
         for (const m of mods) args.push("-M", m);
         args.push("-k", key);

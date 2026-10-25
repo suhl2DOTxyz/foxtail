@@ -194,38 +194,125 @@ hl.window_rule({
 hl.window_rule({ name = "pip", match = { title = "^(Picture-in-Picture)$" }, float = true, pin = true })
 
 ---------------------------------------------------------------- keybinds
--- Super plays the role of ⌘.
+-- Super plays the role of ⌘, Ctrl the role of ⌃, Alt the role of ⌥.
+--
+-- Linux apps expect Ctrl shortcuts, so ⌘+key is translated into the
+-- app's own shortcut (Ctrl+key). Terminals are special: Ctrl+C/Z/X reach
+-- the running program as signals, and Ptyxis even passes Ctrl+Shift+C
+-- through as ^C when nothing is selected. So in terminals ⌘C/⌘V use the
+-- VTE copy/paste keys (Ctrl+Insert / Shift+Insert), a few ⌘ keys map to
+-- the terminal's own Ctrl+Shift actions, and the rest do nothing.
 local CMD = "SUPER"
 local ipc = function(fn) return hl.dsp.exec_cmd("foxtail-ipc " .. fn) end
 
+local TERMINALS = {
+    ["org.gnome.Ptyxis"] = true, ["org.gnome.Console"] = true, ["kitty"] = true,
+    ["com.mitchellh.ghostty"] = true, ["Alacritty"] = true, ["foot"] = true,
+    ["org.wezfurlong.wezterm"] = true, ["org.kde.konsole"] = true,
+}
+
+local function in_terminal()
+    local w = hl.get_active_window()
+    return w ~= nil and TERMINALS[w.class] == true
+end
+
+-- Send a fixed key chord to the focused app.
+local function send(mods, key)
+    return function() hl.dispatch(hl.dsp.send_shortcut({ mods = mods, key = key })) end
+end
+
+local TERMINAL_KEYS = {
+    C = { "CTRL", "Insert" }, X = { "CTRL", "Insert" }, V = { "SHIFT", "Insert" },
+    A = { "CTRL SHIFT", "A" }, F = { "CTRL SHIFT", "F" }, N = { "CTRL SHIFT", "N" },
+    T = { "CTRL SHIFT", "T" }, W = { "CTRL SHIFT", "W" },
+    plus = { "CTRL", "plus" }, equal = { "CTRL", "plus" }, minus = { "CTRL", "minus" }, ["0"] = { "CTRL", "0" },
+}
+
+-- ⌘(+⇧)+key  ->  Ctrl(+Shift)+key in the focused app.
+local function app_shortcut(key, shift)
+    return function()
+        if in_terminal() then
+            local t = not shift and TERMINAL_KEYS[key]
+            if t then hl.dispatch(hl.dsp.send_shortcut({ mods = t[1], key = t[2] })) end
+            return
+        end
+        hl.dispatch(hl.dsp.send_shortcut({ mods = shift and "CTRL SHIFT" or "CTRL", key = key }))
+    end
+end
+
+-- ⌘Q: quit the whole app - close every window of that app (same class,
+-- whichever process opened it), like macOS. Apps
+-- still get to ask about unsaved work; Force Quit (⌥⌘⎋) is the hard kill.
+local function quit_app()
+    local active = hl.get_active_window()
+    if not active then return end
+    for _, w in ipairs(hl.get_windows()) do
+        if w.class == active.class then
+            hl.dispatch(hl.dsp.window.close({ window = "address:" .. w.address }))
+        end
+    end
+end
+
+-- Edit, file and navigation shortcuts go to the app.
+for _, key in ipairs({ "A", "B", "C", "D", "F", "G", "I", "K", "L", "N", "O", "P", "R",
+                       "S", "T", "U", "V", "W", "X", "Y", "Z" }) do
+    hl.bind(CMD .. " + " .. key, app_shortcut(key))
+    hl.bind(CMD .. " + SHIFT + " .. key, app_shortcut(key, true))
+end
+for _, key in ipairs({ "comma", "period", "plus", "equal", "minus", "0", "slash", "return" }) do
+    hl.bind(CMD .. " + " .. key, app_shortcut(key))
+end
+for i = 1, 9 do
+    hl.bind(CMD .. " + " .. i, app_shortcut(tostring(i)))        -- tabs, like ⌘1-⌘9
+end
+
+-- macOS text navigation: ⌘←/→ line start/end, ⌘↑/↓ document start/end,
+-- ⌥←/→ by word (⇧ variants select). ⌘[ / ⌘] go back/forward.
+for _, sh in ipairs({ "", "SHIFT + " }) do
+    local s = sh ~= "" and "SHIFT " or ""
+    hl.bind(CMD .. " + " .. sh .. "left", send(s, "Home"))
+    hl.bind(CMD .. " + " .. sh .. "right", send(s, "End"))
+    hl.bind(CMD .. " + " .. sh .. "up", send("CTRL " .. s, "Home"))
+    hl.bind(CMD .. " + " .. sh .. "down", send("CTRL " .. s, "End"))
+    hl.bind("ALT + " .. sh .. "left", send("CTRL " .. s, "left"))
+    hl.bind("ALT + " .. sh .. "right", send("CTRL " .. s, "right"))
+end
+hl.bind(CMD .. " + backspace", function()                 -- delete to line start
+    hl.dispatch(hl.dsp.send_shortcut({ mods = "SHIFT", key = "Home" }))
+    hl.dispatch(hl.dsp.send_shortcut({ mods = "", key = "BackSpace" }))
+end)
+hl.bind("ALT + backspace", send("CTRL", "backspace"))
+hl.bind(CMD .. " + bracketleft", send("ALT", "left"))
+hl.bind(CMD .. " + bracketright", send("ALT", "right"))
+
+-- Foxtail actions (macOS defaults where macOS has one).
+hl.bind(CMD .. " + Q", quit_app, { desc = "Quit app" })
+hl.bind(CMD .. " + H", hl.dsp.window.move({ workspace = "special:minimized", follow = false }), { desc = "Hide" })
+hl.bind(CMD .. " + M", hl.dsp.window.move({ workspace = "special:minimized", follow = false }), { desc = "Minimize" })
+hl.bind(CMD .. " + ALT + M", ipc("restoreAll"), { desc = "Restore minimized windows" })
 hl.bind(CMD .. " + space", ipc("spotlight"), { desc = "Spotlight" })
-hl.bind(CMD .. " + L", ipc("launchpad"), { desc = "Launchpad" })
-hl.bind("F4", ipc("launchpad"))
-hl.bind(CMD .. " + C", ipc("controlCenter"), { desc = "Control Center" })
-hl.bind(CMD .. " + N", ipc("notificationCenter"), { desc = "Notification Center" })
-hl.bind(CMD .. " + comma", ipc("settings appearance"), { desc = "System Settings" })
+hl.bind(CMD .. " + ALT + space", hl.dsp.exec_cmd("nautilus --new-window"), { desc = "Files" })
+hl.bind("F4", ipc("launchpad"), { desc = "Launchpad" })
+hl.bind(CMD .. " + ALT + L", ipc("launchpad"))
+hl.bind(CMD .. " + ALT + C", ipc("controlCenter"), { desc = "Control Center" })
+hl.bind(CMD .. " + ALT + N", ipc("notificationCenter"), { desc = "Notification Center" })
 hl.bind("CTRL + " .. CMD .. " + Q", ipc("lock"), { desc = "Lock Screen" })
 hl.bind("ALT + " .. CMD .. " + escape", ipc("forceQuit"), { desc = "Force Quit" })
-hl.bind(CMD .. " + SHIFT + Q", ipc("power logout"), { desc = "Log Out" })
-
-hl.bind(CMD .. " + Q", hl.dsp.window.close(), { desc = "Quit" })
-hl.bind(CMD .. " + W", hl.dsp.window.close(), { desc = "Close Window" })
-hl.bind(CMD .. " + M", hl.dsp.window.move({ workspace = "special:minimized", follow = false }), { desc = "Minimize" })
-hl.bind(CMD .. " + SHIFT + M", ipc("restoreAll"), { desc = "Restore minimized windows" })
-hl.bind(CMD .. " + F", hl.dsp.window.fullscreen(), { desc = "Full Screen" })
-hl.bind(CMD .. " + T", hl.dsp.window.float({ action = "toggle" }), { desc = "Float / Tile" })
+hl.bind(CMD .. " + SHIFT + ALT + Q", ipc("power logout"), { desc = "Log Out" })
+hl.bind("CTRL + " .. CMD .. " + F", hl.dsp.window.fullscreen(), { desc = "Full Screen" })
+hl.bind(CMD .. " + ALT + T", hl.dsp.window.float({ action = "toggle" }), { desc = "Float / Tile" })
 hl.bind(CMD .. " + tab", hl.dsp.window.cycle_next(), { desc = "Next window" })
-
-hl.bind(CMD .. " + return", hl.dsp.exec_cmd("ptyxis --new-window"), { desc = "Terminal" })
-hl.bind(CMD .. " + E", hl.dsp.exec_cmd("nautilus --new-window"), { desc = "Files" })
+hl.bind(CMD .. " + ALT + return", hl.dsp.exec_cmd("ptyxis --new-window"), { desc = "Terminal" })
 
 hl.bind(CMD .. " + SHIFT + 3", hl.dsp.exec_cmd("foxtail-screenshot screen"), { desc = "Screenshot" })
 hl.bind(CMD .. " + SHIFT + 4", hl.dsp.exec_cmd("foxtail-screenshot area"), { desc = "Screenshot area" })
 hl.bind(CMD .. " + SHIFT + 5", hl.dsp.exec_cmd("foxtail-screenshot window"), { desc = "Screenshot window" })
 
+-- Desktops: ⌃1-9 as on macOS, ⌃⌘←/→ for next/previous (plain ⌃←/→ stays
+-- word-jump in apps). ⌃⇧1-9 moves the window there.
 for i = 1, 9 do
-    hl.bind(CMD .. " + " .. i, hl.dsp.focus({ workspace = i }))
-    hl.bind(CMD .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
+    hl.bind("CTRL + " .. i, hl.dsp.focus({ workspace = i }))
+    hl.bind("CTRL + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
 end
 hl.bind("CTRL + " .. CMD .. " + left", hl.dsp.focus({ workspace = "e-1" }))
 hl.bind("CTRL + " .. CMD .. " + right", hl.dsp.focus({ workspace = "e+1" }))

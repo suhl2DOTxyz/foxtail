@@ -6,9 +6,11 @@ if [ ! -f "$cfg" ]; then
     cp /etc/skel/.config/hypr/hyprland.lua "$cfg"
 fi
 
-# VirtualBox/VMware's vmwgfx GPU: hardware EGL either fails outright (no 3D)
-# or stalls page flips (3D on). Mesa's software renderer works reliably.
-if [ -d /sys/module/vmwgfx ]; then
+# VirtualBox/VMware's vmwgfx GPU: without 3D, hardware EGL fails outright;
+# with 3D on, Mesa's SVGA driver can't create Qt's EGL surfaces (tested on
+# VirtualBox 7.2: black screen). Mesa's software renderer works reliably.
+# `touch /etc/foxtail/try-hw` to test hardware rendering on a newer VM stack.
+if [ -d /sys/module/vmwgfx ] && [ ! -e /etc/foxtail/try-hw ]; then
     export LIBGL_ALWAYS_SOFTWARE=1
     export FOXTAIL_SOFTWARE_RENDERING=1
 fi

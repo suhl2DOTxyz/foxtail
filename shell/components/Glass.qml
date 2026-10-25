@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Effects
+import Quickshell
 import qs.services
 
 // The Foxtail material. Two looks, switched live by Settings.liquidGlass:
@@ -88,6 +89,10 @@ Item {
     }
 
     // ---- liquid glass ----
+    // Prefer the window's live screen snapshot (real windows behind the
+    // glass); fall back to the wallpaper image.
+    readonly property var live: QsWindow.window?.backdrop ?? null
+    readonly property bool useLive: live !== null && live.ready
     Image {
         id: wallTex
         visible: false
@@ -101,11 +106,11 @@ Item {
     }
 
     ShaderEffect {
-        visible: root.liquid && wallTex.status === Image.Ready
+        visible: root.liquid && (root.useLive || wallTex.status === Image.Ready)
         anchors.fill: parent
         fragmentShader: Qt.resolvedUrl("../shaders/liquidglass.frag.qsb")
 
-        property var backdrop: wallTex
+        property var backdrop: root.useLive ? root.live : wallTex
         property size itemSize: Qt.size(width, height)
         property rect screenRect: Qt.rect(root.screenPos.x / root.screenSize.width,
                                           root.screenPos.y / root.screenSize.height,
@@ -126,7 +131,7 @@ Item {
 
     // Fallback while the wallpaper texture loads.
     Rectangle {
-        visible: root.liquid && wallTex.status !== Image.Ready
+        visible: root.liquid && !root.useLive && wallTex.status !== Image.Ready
         anchors.fill: parent
         radius: root.radius
         color: Theme.glassStrong

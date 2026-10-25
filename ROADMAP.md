@@ -64,6 +64,12 @@ Today, an installed Foxtail can't receive Foxtail fixes. That's the #1 blocker.
 ---
 
 ## Known limitations (current)
-- **Liquid Glass refracts only the wallpaper**, not windows behind a panel. Fixing this needs a compositor-side effect (a Hyprland plugin or shader pass).
-- **App menus are generic.** File/Edit/View items send standard shortcuts, because Wayland has no global-menu protocol.
-- **VMs use software rendering**, so animations are slower there than on real hardware.
+- **Liquid Glass refraction uses a snapshot.** Menus, Control Center and Spotlight refract a snapshot of the screen taken just before they open (refreshed when windows change), so moving video behind an open menu won't animate in the glass. The Dock and menu bar refract the wallpaper.
+- **App menus are generic.** File/Edit/View items send each app's standard shortcuts. Wayland has no global-menu protocol, and GTK4 apps don't export their menus. ⌘ shortcuts themselves work everywhere (they're translated per app, and terminals are handled safely).
+- **VMs use software rendering.** VirtualBox's 3D driver can't create Qt's EGL surfaces (tested on VirtualBox 7.2), so VMs fall back to software rendering and animations are slower there. Real hardware uses the GPU.
+
+## Fixed in 1.2
+- ✅ ⌘ shortcuts work like macOS in every app (⌘C/V/X/Z/A/S/F/T/N/W…), with safe terminal handling (⌘C copies instead of interrupting; ⌘Z can't suspend)
+- ✅ ⌘Q quits the whole app (every window); ⌘W closes a tab/window; ⌘H hides; ⌃⌘F full screen; ⌃1–9 switch desktops
+- ✅ macOS text navigation: ⌘←/→, ⌘↑/↓, ⌥←/→, ⌘⌫, ⌘[ / ⌘]
+- ✅ Liquid Glass popovers refract the real windows behind them, not just the wallpaper

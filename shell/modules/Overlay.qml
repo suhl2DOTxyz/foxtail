@@ -26,6 +26,15 @@ PanelWindow {
     color: "transparent"
 
     readonly property size screenSize: Qt.size(width, height)
+
+    // Screen snapshot that Liquid Glass popovers in this window refract
+    // (read by components/Glass.qml through QsWindow.window.backdrop).
+    property Item backdrop: liveBackdrop
+    LiveBackdrop {
+        id: liveBackdrop
+        screen: root.modelData
+        inUse: root.visible
+    }
     readonly property point origin: Qt.point(0, 0)
 
     mask: Region {
