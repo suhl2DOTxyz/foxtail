@@ -7,7 +7,7 @@ import Quickshell.Io
 Singleton {
     id: root
 
-    readonly property string version: "1.0"
+    property string version: ""
     readonly property string codename: "Kit"
     property string cpu: ""
     property string memory: ""
@@ -38,6 +38,7 @@ Singleton {
         run(["sh", "-c", "grep -m1 'model name' /proc/cpuinfo | cut -d: -f2"], t => cpu = t);
         run(["sh", "-c", "awk '/MemTotal/ {printf \"%.0f GB\", $2/1024/1024}' /proc/meminfo"], t => memory = t);
         run(["sh", "-c", "lspci 2>/dev/null | grep -iE 'vga|3d|display' | head -1 | cut -d: -f3"], t => gpu = t || "Unknown");
+        run(["sh", "-c", ". /etc/os-release; echo \"$VERSION_ID\""], t => version = t);
         run(["uname", "-r"], t => kernel = t);
         run(["cat", "/etc/hostname"], t => hostname = t);
         run(["sh", "-c", "getent passwd \"$USER\" | cut -d: -f5 | cut -d, -f1"], t => fullName = t || user);

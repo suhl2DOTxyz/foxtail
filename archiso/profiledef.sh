@@ -6,7 +6,7 @@ iso_name="foxtail"
 iso_label="FOXTAIL_$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y%m)"
 iso_publisher="Foxtail OS"
 iso_application="Foxtail Live/Install"
-iso_version="1.0-$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y.%m.%d)"
+iso_version="@VERSION@-$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y.%m.%d)"
 install_dir="arch"
 bootmodes=('bios.syslinux'
            'uefi.systemd-boot')

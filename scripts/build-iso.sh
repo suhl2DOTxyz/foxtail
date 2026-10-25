@@ -65,6 +65,9 @@ done
 # Foxtail overlay (profiledef, packages, pacman.conf, boot entries, airootfs).
 cp -a "$ROOT/archiso/." "$PROFILE/"
 mkdir -p "$BUILD/pkgcache"
+# Version: one source of truth (VERSION at the repo root).
+VERSION=$(cat "$ROOT/VERSION")
+sed -i "s|@VERSION@|$VERSION|g" "$PROFILE/profiledef.sh" "$PROFILE/airootfs/usr/lib/foxtail/os-release"
 sed -i "s|@LOCALREPO@|$BUILD/repo|; s|@MIRRORLIST@|$PROFILE/mirrorlist|; s|@PKGCACHE@|$BUILD/pkgcache|" "$PROFILE/pacman.conf"
 
 # BIOS boot menu branding.
@@ -89,6 +92,8 @@ done
 printf '[Settings]\ngtk-theme-name=adw-gtk3\ngtk-icon-theme-name=WhiteSur\ngtk-cursor-theme-name=macOS\ngtk-font-name=Inter 11\ngtk-decoration-layout=close,minimize,maximize:\n' \
     > "$A/etc/skel/.config/gtk-3.0/settings.ini"
 install -Dm644 "$ROOT/theme/fontconfig/60-foxtail.conf" "$A/etc/fonts/conf.d/60-foxtail.conf"
+install -Dm644 "$ROOT/theme/fastfetch/config.jsonc" "$A/etc/xdg/fastfetch/config.jsonc"
+install -Dm644 "$ROOT/theme/fastfetch/foxtail.ans" "$A/usr/share/foxtail/fastfetch/foxtail.ans"
 
 install -d "$A/usr/share/backgrounds/foxtail"
 cp "$ROOT"/branding/wallpapers/*.jpg "$A/usr/share/backgrounds/foxtail/"

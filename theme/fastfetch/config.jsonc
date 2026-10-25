@@ -1,0 +1,34 @@
+// Foxtail default fastfetch config (installed to /etc/xdg/fastfetch/).
+// Users can override it with ~/.config/fastfetch/config.jsonc.
+{
+    "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+    "logo": {
+        // Truecolor render of branding/foxtail-logo.png (theme/fastfetch/gen_logo.py).
+        "type": "file-raw",
+        "source": "/usr/share/foxtail/fastfetch/foxtail.ans",
+        "width": 26,
+        "height": 15,
+        "padding": { "top": 0, "right": 3 }
+    },
+    "display": {
+        "separator": "  ",
+        "color": { "keys": "38;2;255;122;26", "title": "38;2;255;122;26" }
+    },
+    "modules": [
+        "title",
+        "separator",
+        { "type": "os", "key": "OS" },
+        { "type": "kernel", "key": "Kernel" },
+        { "type": "uptime", "key": "Uptime" },
+        { "type": "packages", "key": "Packages" },
+        { "type": "shell", "key": "Shell" },
+        { "type": "de", "key": "Desktop", "format": "Foxtail (Hyprland)" },
+        { "type": "terminal", "key": "Terminal" },
+        { "type": "cpu", "key": "CPU", "format": "{name}" },
+        { "type": "gpu", "key": "GPU", "format": "{name}" },
+        { "type": "memory", "key": "Memory" },
+        { "type": "disk", "key": "Disk", "folders": "/", "format": "{size-used} / {size-total} ({size-percentage})" },
+        "break",
+        "colors"
+    ]
+}
