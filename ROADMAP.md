@@ -1,6 +1,6 @@
 # Foxtail roadmap: toward a daily driver
 
-**Goal:** by **v1.5**, Foxtail is something you can install on your main laptop and forget about. **v2.0** is the stable, polished release.
+**Goal:** by **v1.6**, Foxtail is something you can install on your main laptop and forget about. **v2.0** is the stable, polished release.
 
 "Daily driver" means four things, in this order:
 
@@ -9,47 +9,57 @@
 3. **Everyday tasks never need a terminal.** That covers Wi-Fi, Bluetooth, displays, sound, printers, keyboards and users.
 4. **It's fast and stable on real GPUs.** VMs are not the target.
 
-Each release below moves one of those forward. ✅ = done.
+✅ = done (tested in a VM), 🟡 = done but not yet tested on real hardware.
 
 ---
 
-## v1.1 (current)
+## v1.1
 - ✅ Desktop shell: menu bar, Dock, Control Center, Spotlight, Launchpad, Notification Center, lock screen
 - ✅ Liquid Glass / classic glass, Tahoe-style layouts
-- ✅ Graphical installer (erases the whole disk)
+- ✅ Graphical installer
 - ✅ Minimize to Dock, auto-lock, Spotlight file search
 
-## v1.2: Updates (the foundation)
-Today, an installed Foxtail can't receive Foxtail fixes. That's the #1 blocker.
-- [ ] Package Foxtail itself: `foxtail-desktop` (shell + Hyprland config), `foxtail-theme`, `foxtail-branding`, `foxtail-installer`
-- [ ] Host a signed pacman repo (`[foxtail]`), built by GitHub Actions on every tag
-- [ ] Installed systems include the repo and the signing key
-- [ ] **Software Update** pane in System Settings: checks pacman + Flatpak, shows changes, installs with one click, notifies when updates are ready
-- [ ] **Btrfs + snapshots:** the installer creates subvolumes, a snapshot is taken before every update, and older snapshots are bootable from the boot menu
+## v1.2: macOS keyboard
+- ✅ ⌘ shortcuts work like macOS in every app (⌘C/V/X/Z/A/S/F/T/N/W…), with safe terminal handling (⌘C copies instead of interrupting; ⌘Z can't suspend)
+- ✅ ⌘Q quits the whole app (every window); ⌘W closes a tab/window; ⌘H hides; ⌃⌘F full screen; ⌃1–9 switch desktops
+- ✅ macOS text navigation: ⌘←/→, ⌘↑/↓, ⌥←/→, ⌘⌫, ⌘[ / ⌘]
+- ✅ Liquid Glass popovers refract the real windows behind them, not just the wallpaper
+
+## v1.3: Updates (the foundation)
+- ✅ Foxtail ships as packages: `foxtail-desktop` and `foxtail-keyring`
+- ✅ Signed pacman repo (`[foxtail]`), built by `scripts/build-repo.sh`; installed systems require valid signatures
+- ✅ **Software Update** pane: checks pacman + Flatpak, notifies, installs with one click
+- ✅ **Btrfs + snapshots** before and after every update, restorable from System Settings or the boot menu
+- [ ] Publish the repo (`scripts/publish-repo.sh`) and build it in GitHub Actions on every tag
 - [ ] Move per-user defaults out of `/etc/skel` so existing users get new defaults too
 
-## v1.3: Real hardware
-- [ ] GPU detection in the installer and live session: NVIDIA proprietary driver, plus Intel/AMD defaults
-- [ ] Turn hardware rendering back on outside VMs, and test Liquid Glass performance on integrated GPUs
-- [ ] Installer: **install alongside another OS**, **full-disk encryption (LUKS)**, keyboard layout, language, and Wi-Fi during install
-- [ ] Laptops: power profiles, battery menu with time remaining, lid and suspend behaviour, hibernate, brightness/volume keys (partly done)
-- [ ] Tested on at least 5 real machines (Intel, AMD, NVIDIA, and one older laptop)
+## v1.4: Real hardware
+- 🟡 NVIDIA: driver on the ISO and kept only on machines with an NVIDIA GPU (Turing / GTX 16-series and newer; older cards aren't supported by the open driver)
+- ✅ Hardware rendering everywhere except VirtualBox/VMware (whose 3D drivers can't run the shell)
+- ✅ Installer: **language and keyboard** (applied live, so your password uses the right keys)
+- ✅ Installer: **install alongside another OS** in free space, sharing its EFI partition; GRUB offers both at startup
+- ✅ Installer: **full-disk encryption** (one password at startup)
+- ✅ Laptops: battery menu with time remaining, Low Power / Balanced / Performance, Battery settings, low-battery warnings, auto Low Power at 10%
+- ✅ zram compressed swap
+- [ ] Hibernate, and lid-close behaviour settings
+- [ ] Wi-Fi during install (only needed for online extras; installs work offline)
+- [ ] Test on at least 5 real machines (Intel, AMD, NVIDIA, and one older laptop)
 
-## v1.4: No terminal needed
+## v1.5: No terminal needed
 - [ ] **Displays:** resolution, scaling, refresh rate, multi-monitor arrangement, night shift
 - [ ] **Bluetooth:** pairing UI with device icons and battery levels
 - [ ] **Sound:** output/input device switcher in Control Center and Settings
-- [ ] **Keyboard:** layouts and input sources, custom shortcuts
+- [ ] **Keyboard:** layouts and input sources after install, custom shortcuts
 - [ ] **Users & Groups, Date & Time, Printers (CUPS), Default Apps**
-- [ ] **⌘Tab app switcher** with icons, **Mission Control** (window overview), window snapping/tiling menu on the green button
+- [ ] **⌘Tab app switcher** with icons, **Mission Control** (window overview), snapping menu on the green button
 - [ ] **Screenshot UI (⌘⇧5)** and screen recording
 - [ ] Clipboard history
 
-## v1.5: Daily-driver release
+## v1.6: Daily-driver release
 - [ ] Notification grouping, actions and reply
 - [ ] Qt/KDE apps themed to match GTK apps
 - [ ] Accessibility: larger text, zoom, high contrast, reduce motion
-- [ ] Translations (the shell is English-only today)
+- [ ] Translations (the shell is English-only today; apps follow the chosen language)
 - [ ] Crash and diagnostics reporting (local logs plus "Report a problem")
 - [ ] Docs site: install guide, FAQ, troubleshooting
 - [ ] Public beta: issue templates, a testers' channel, triage
@@ -65,11 +75,7 @@ Today, an installed Foxtail can't receive Foxtail fixes. That's the #1 blocker.
 
 ## Known limitations (current)
 - **Liquid Glass refraction uses a snapshot.** Menus, Control Center and Spotlight refract a snapshot of the screen taken just before they open (refreshed when windows change), so moving video behind an open menu won't animate in the glass. The Dock and menu bar refract the wallpaper.
-- **App menus are generic.** File/Edit/View items send each app's standard shortcuts. Wayland has no global-menu protocol, and GTK4 apps don't export their menus. ⌘ shortcuts themselves work everywhere (they're translated per app, and terminals are handled safely).
-- **VMs use software rendering.** VirtualBox's 3D driver can't create Qt's EGL surfaces (tested on VirtualBox 7.2), so VMs fall back to software rendering and animations are slower there. Real hardware uses the GPU.
-
-## Fixed in 1.2
-- ✅ ⌘ shortcuts work like macOS in every app (⌘C/V/X/Z/A/S/F/T/N/W…), with safe terminal handling (⌘C copies instead of interrupting; ⌘Z can't suspend)
-- ✅ ⌘Q quits the whole app (every window); ⌘W closes a tab/window; ⌘H hides; ⌃⌘F full screen; ⌃1–9 switch desktops
-- ✅ macOS text navigation: ⌘←/→, ⌘↑/↓, ⌥←/→, ⌘⌫, ⌘[ / ⌘]
-- ✅ Liquid Glass popovers refract the real windows behind them, not just the wallpaper
+- **App menus are generic.** File/Edit/View items send each app's standard shortcuts. Wayland has no global-menu protocol, and GTK4 apps don't export their menus. ⌘ shortcuts themselves work everywhere.
+- **VMs use software rendering.** VirtualBox's 3D driver can't create Qt's EGL surfaces (tested on VirtualBox 7.2), so animations are slower there. Real hardware uses the GPU.
+- **The encryption password prompt is plain text.** GRUB asks for it before the boot splash, and unlocking takes a few seconds (GRUB's decryption is slow).
+- **Installing alongside needs free space already.** Foxtail doesn't shrink existing partitions; make room first (for example with Windows Disk Management).

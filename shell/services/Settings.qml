@@ -26,6 +26,8 @@ Singleton {
     property alias lockAfter: adapter.lockAfter
     property alias refractWindows: adapter.refractWindows
     property alias autoCheckUpdates: adapter.autoCheckUpdates
+    property alias showBatteryPercent: adapter.showBatteryPercent
+    property alias autoLowPower: adapter.autoLowPower
     property alias displayOffAfter: adapter.displayOffAfter
 
     readonly property string dir: Quickshell.env("HOME") + "/.config/foxtail"
@@ -68,6 +70,8 @@ Singleton {
             property bool doNotDisturb: false
             property bool reduceTransparency: false
             property bool autoCheckUpdates: true
+            property bool showBatteryPercent: true
+            property bool autoLowPower: true
             property bool refractWindows: true  // Liquid Glass popovers refract windows, not just the wallpaper
             property int lockAfter: 5          // minutes idle before locking; 0 = never
             property int displayOffAfter: 10   // minutes idle before the display sleeps; 0 = never

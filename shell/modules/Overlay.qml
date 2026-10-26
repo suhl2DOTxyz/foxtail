@@ -128,6 +128,17 @@ PanelWindow {
         }
     }
 
+    // ---------- Battery ----------
+    Loader {
+        active: Panels.popover === "battery"
+        x: Math.min(Panels.anchorX, root.width - (item?.width ?? 0) - 8)
+        y: Theme.menuBarHeight + 3
+        sourceComponent: BatteryMenu {
+            screenSize: root.screenSize
+            windowOffset: root.origin
+        }
+    }
+
     // ---------- Wi-Fi ----------
     Loader {
         active: Panels.popover === "wifi"

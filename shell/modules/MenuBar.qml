@@ -109,14 +109,18 @@ PanelWindow {
         spacing: 2
 
         BarButton {
-            visible: UPower.displayDevice?.isLaptopBattery ?? false
+            id: batteryButton
+            visible: Power.hasBattery
             width: batteryRow.implicitWidth + 16
+            active: Panels.popover === "battery" && bar.menuOpen
+            onPressed: bar.openMenu("battery", batteryButton)
             Row {
                 id: batteryRow
                 anchors.centerIn: parent
                 spacing: 5
                 Label {
-                    text: Math.round((UPower.displayDevice?.percentage ?? 0) * 100) + "%"
+                    visible: Settings.showBatteryPercent
+                    text: Power.percent + "%"
                     color: bar.fg
                     font.pixelSize: 12
                     anchors.verticalCenter: parent.verticalCenter
@@ -130,7 +134,17 @@ PanelWindow {
                         height: 5.5
                         radius: 1.5
                         width: 15 * (UPower.displayDevice?.percentage ?? 0)
-                        color: (UPower.displayDevice?.percentage ?? 1) < 0.2 ? "#FF453A" : bar.fg
+                        color: Power.mode === "power-saver" ? "#FFD60A"
+                             : Power.charging || Power.full ? "#30D158"
+                             : (UPower.displayDevice?.percentage ?? 1) < 0.2 ? "#FF453A" : bar.fg
+                    }
+                    Icon {
+                        visible: Power.charging
+                        anchors.centerIn: parent
+                        anchors.horizontalCenterOffset: -1
+                        size: 10
+                        name: "bolt"
+                        color: bar.fg
                     }
                 }
             }

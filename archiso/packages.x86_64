@@ -56,6 +56,10 @@ wireplumber
 alsa-utils
 
 # ---- graphics ----
+# NVIDIA: removed by the installer on machines without an NVIDIA GPU.
+nvidia-open
+nvidia-utils
+egl-wayland
 mesa
 vulkan-swrast
 vulkan-intel

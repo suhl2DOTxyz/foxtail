@@ -18,12 +18,42 @@ FloatingWindow {
     minimumSize: Qt.size(720, 520)
     color: "transparent"
 
-    readonly property var steps: ["Introduction", "Destination", "Your Account", "Time Zone", "Installation", "Summary"]
+    readonly property var steps: ["Introduction", "Language", "Destination", "Your Account", "Time Zone", "Installation", "Summary"]
     property int step: 0
 
     // Collected answers
     property var disks: []
     property string disk: ""
+    // Largest free region per disk, in bytes ({ sda: 42e9 }), and whether
+    // the disk already has an EFI partition (needed to install alongside).
+    property var freeSpace: ({})
+    property var hasEsp: ({})
+    property string mode: "erase"          // "erase" | "alongside"
+    property bool encrypt: false
+
+    property string locale: "en_US.UTF-8"
+    property string keymap: "us"
+    property var layouts: []               // [[code, description]]
+    property string layoutFilter: ""
+    readonly property var languages: [
+        ["en_US.UTF-8", "English (US)"], ["en_GB.UTF-8", "English (UK)"], ["de_DE.UTF-8", "Deutsch"],
+        ["fr_FR.UTF-8", "Français"], ["es_ES.UTF-8", "Español"], ["it_IT.UTF-8", "Italiano"],
+        ["pt_BR.UTF-8", "Português (Brasil)"], ["pt_PT.UTF-8", "Português"], ["nl_NL.UTF-8", "Nederlands"],
+        ["pl_PL.UTF-8", "Polski"], ["sv_SE.UTF-8", "Svenska"], ["tr_TR.UTF-8", "Türkçe"],
+        ["uk_UA.UTF-8", "Українська"], ["ru_RU.UTF-8", "Русский"], ["ja_JP.UTF-8", "日本語"],
+        ["ko_KR.UTF-8", "한국어"], ["zh_CN.UTF-8", "简体中文"], ["zh_TW.UTF-8", "繁體中文"]
+    ]
+    // A sensible keyboard for each language (the user can still change it).
+    readonly property var defaultLayout: ({
+        "en_GB.UTF-8": "gb", "de_DE.UTF-8": "de", "fr_FR.UTF-8": "fr", "es_ES.UTF-8": "es",
+        "it_IT.UTF-8": "it", "pt_BR.UTF-8": "br", "pt_PT.UTF-8": "pt", "nl_NL.UTF-8": "us",
+        "pl_PL.UTF-8": "pl", "sv_SE.UTF-8": "se", "tr_TR.UTF-8": "tr", "uk_UA.UTF-8": "ua",
+        "ru_RU.UTF-8": "ru", "ja_JP.UTF-8": "jp", "ko_KR.UTF-8": "kr"
+    })
+
+    // Apply the layout to the live session right away, so the password typed
+    // in "Your Account" uses the same keys as the installed system.
+    onKeymapChanged: Quickshell.execDetached(["hyprctl", "eval", `hl.config({ input = { kb_layout = "${keymap}" } })`])
     property string fullName: ""
     property string userName: ""
     property string hostName: "foxtail"
@@ -42,11 +72,12 @@ FloatingWindow {
     readonly property bool canContinue: {
         switch (step) {
         case 0: return true;
-        case 1: return disk !== "";
-        case 2: return /^[a-z_][a-z0-9_-]{0,31}$/.test(userName) && password.length >= 1 && password === password2
+        case 1: return locale !== "" && keymap !== "";
+        case 2: return disk !== "" && (mode === "erase" || (freeSpace[disk] ?? 0) >= 20e9);
+        case 3: return /^[a-z_][a-z0-9_-]{0,31}$/.test(userName) && password.length >= 1 && password === password2
                        && /^[A-Za-z0-9-]{1,63}$/.test(hostName);
-        case 3: return timezone !== "";
-        case 4: return pct >= 100;
+        case 4: return timezone !== "";
+        case 5: return pct >= 100;
         default: return true;
         }
     }
@@ -66,7 +97,40 @@ FloatingWindow {
                     win.disks = JSON.parse(text).blockdevices
                         .filter(d => d.type === "disk" && !d.ro && d.size > 16e9 && !d.name.startsWith("zram") && !d.name.startsWith("loop"));
                 } catch (e) { win.disks = []; }
+                spaceProbe.running = true;
             }
+        }
+    }
+
+    // Free space and existing EFI partitions, for "install alongside".
+    // (The live session can sudo without a password.)
+    Process {
+        id: spaceProbe
+        command: ["sh", "-c", "for d in $(lsblk -dno NAME -e 7,11,251,252); do " +
+                  "f=$(sudo -n sfdisk --list-free --bytes /dev/$d 2>/dev/null | awk '$1 ~ /^[0-9]+$/ {print $4}' | sort -n | tail -1); " +
+                  "e=$(lsblk -no PARTTYPE /dev/$d | grep -ci c12a7328-f81f-11d2-ba4b-00a0c93ec93b); " +
+                  "echo \"$d ${f:-0} $e\"; done"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const free = {}, esp = {};
+                for (const l of text.trim().split("\n")) {
+                    const [d, f, e] = l.split(" ");
+                    if (!d) continue;
+                    free[d] = Number(f) || 0;
+                    esp[d] = Number(e) > 0;
+                }
+                win.freeSpace = free;
+                win.hasEsp = esp;
+            }
+        }
+    }
+
+    // Keyboard layouts from xkeyboard-config.
+    Process {
+        running: win.visible
+        command: ["sh", "-c", "awk '/^! layout/{f=1;next} /^!/{f=0} f && NF {c=$1; $1=\"\"; sub(/^ +/,\"\"); print c \"\\t\" $0}' /usr/share/X11/xkb/rules/base.lst"]
+        stdout: StdioCollector {
+            onStreamFinished: win.layouts = text.trim().split("\n").map(l => l.split("\t")).filter(x => x.length === 2)
         }
     }
 
@@ -80,7 +144,9 @@ FloatingWindow {
         id: installer
         command: ["pkexec", "env",
                   "FT_DISK=/dev/" + win.disk, "FT_USER=" + win.userName, "FT_FULLNAME=" + win.fullName,
-                  "FT_HOST=" + win.hostName, "FT_TZ=" + win.timezone, "/usr/bin/foxtail-install"]
+                  "FT_HOST=" + win.hostName, "FT_TZ=" + win.timezone, "FT_LOCALE=" + win.locale,
+                  "FT_KEYMAP=" + win.keymap, "FT_MODE=" + win.mode, "FT_ENCRYPT=" + (win.encrypt ? "1" : "0"),
+                  "/usr/bin/foxtail-install"]
         stdinEnabled: true
         onStarted: { write(win.password + "\n"); }
         stdout: SplitParser {
@@ -97,7 +163,7 @@ FloatingWindow {
         onExited: code => {
             win.installing = false;
             if (code !== 0 && !win.error) win.error = "The installer stopped unexpectedly (code " + code + ").";
-            if (code === 0 && win.pct >= 100) win.step = 5;
+            if (code === 0 && win.pct >= 100) win.step = 6;
         }
     }
 
@@ -191,7 +257,7 @@ FloatingWindow {
 
         Loader {
             anchors.fill: parent
-            sourceComponent: [intro, destination, account, tz, install, summary][win.step]
+            sourceComponent: [intro, language, destination, account, tz, install, summary][win.step]
         }
     }
 
@@ -204,19 +270,19 @@ FloatingWindow {
 
         Btn {
             text: "Go Back"
-            visible: win.step > 0 && win.step < 4
+            visible: win.step > 0 && win.step < 5
             onClicked: win.step--
         }
         Btn {
             primary: true
-            visible: win.step !== 4 || win.error !== ""
+            visible: win.step !== 5 || win.error !== ""
             enabled: win.canContinue || win.error !== ""
-            text: win.step === 3 ? "Install" : (win.step === 5 ? "Restart" : (win.error ? "Try Again" : "Continue"))
+            text: win.step === 4 ? "Install" : (win.step === 6 ? "Restart" : (win.error ? "Try Again" : "Continue"))
             onClicked: {
-                if (win.step === 5) { Quickshell.execDetached(["systemctl", "reboot"]); return; }
-                if (win.step === 4) { win.begin(); return; }
+                if (win.step === 6) { Quickshell.execDetached(["systemctl", "reboot"]); return; }
+                if (win.step === 5) { win.begin(); return; }
                 win.step++;
-                if (win.step === 4) win.begin();
+                if (win.step === 5) win.begin();
             }
         }
     }
@@ -237,7 +303,7 @@ FloatingWindow {
                 text: "This assistant will install Foxtail on this computer.\n\n" +
                       "You'll choose a disk, create your account, and pick your time zone. " +
                       "Installing takes a few minutes and works without an internet connection.\n\n" +
-                      "Important: the disk you choose will be completely erased."
+                      "You can erase a disk, or install alongside another system (such as Windows) if there's free space on it."
             }
         }
     }
@@ -251,7 +317,7 @@ FloatingWindow {
                 width: parent.width
                 wrapMode: Text.Wrap
                 elide: Text.ElideNone
-                text: "Choose the disk where you want to install Foxtail. Everything on it will be erased."
+                text: "Choose the disk where you want to install Foxtail."
                 color: Theme.textSecondary
             }
             Flow {
@@ -289,6 +355,118 @@ FloatingWindow {
                 visible: win.disks.length === 0
                 text: "No suitable disks found (at least 16 GB is required)."
                 color: "#FF453A"
+            }
+
+            Column {
+                visible: win.disk !== ""
+                width: parent.width
+                spacing: 8
+                readonly property real free: win.freeSpace[win.disk] ?? 0
+                readonly property bool canAlongside: free >= 20e9 && (win.hasEsp[win.disk] ?? false)
+                onCanAlongsideChanged: if (!canAlongside) win.mode = "erase"
+
+                Choice {
+                    selected: win.mode === "erase"
+                    title: "Erase disk and install Foxtail"
+                    sub: "Everything on /dev/" + win.disk + " will be deleted."
+                    onPicked: win.mode = "erase"
+                }
+                Choice {
+                    enabled: parent.canAlongside
+                    selected: win.mode === "alongside"
+                    title: "Install alongside the existing system"
+                    sub: parent.canAlongside
+                        ? `Uses ${win.human(parent.free)} of free space. Your other system and files stay untouched, and you choose which one to start when the computer turns on.`
+                        : "Needs at least 20 GB of unpartitioned space and an existing EFI system. Shrink a partition first (for example with Windows Disk Management) to make room."
+                    onPicked: win.mode = "alongside"
+                }
+
+                Item { width: 1; height: 4 }
+                Row {
+                    spacing: 10
+                    Switch { checked: win.encrypt; onToggled: c => win.encrypt = c; anchors.verticalCenter: parent.verticalCenter }
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        Label { text: "Encrypt Foxtail (FileVault-style)" }
+                        Label {
+                            text: "Your password will be needed each time the computer starts."
+                            color: Theme.textSecondary
+                            font.pixelSize: 11
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Component {
+        id: language
+        Column {
+            spacing: 12
+            Label { text: "Language & Keyboard"; font.pixelSize: 22; font.weight: Font.Bold }
+            Row {
+                width: parent.width
+                spacing: 14
+                Column {
+                    width: (parent.width - 14) / 2
+                    spacing: 6
+                    Label { text: "Language"; font.weight: Font.DemiBold }
+                    ListBox {
+                        width: parent.width
+                        height: 290
+                        model: win.languages
+                        current: win.locale
+                        onPicked: v => {
+                            win.locale = v;
+                            if (win.defaultLayout[v]) win.keymap = win.defaultLayout[v];
+                        }
+                    }
+                }
+                Column {
+                    width: (parent.width - 14) / 2
+                    spacing: 6
+                    Label { text: "Keyboard"; font.weight: Font.DemiBold }
+                    Rectangle {
+                        width: parent.width; height: 26; radius: 7
+                        color: Theme.control
+                        TextInput {
+                            id: kbSearch
+                            anchors.fill: parent
+                            anchors.leftMargin: 9
+                            verticalAlignment: TextInput.AlignVCenter
+                            color: Theme.text
+                            font.family: Theme.font
+                            font.pixelSize: 12
+                            onTextChanged: win.layoutFilter = text.toLowerCase()
+                            Label { visible: !kbSearch.text; text: "Search layouts"; color: Theme.textTertiary; font.pixelSize: 12 }
+                        }
+                    }
+                    ListBox {
+                        width: parent.width
+                        height: 258
+                        model: win.layouts.filter(l => !win.layoutFilter || l[1].toLowerCase().indexOf(win.layoutFilter) >= 0 || l[0] === win.layoutFilter)
+                        current: win.keymap
+                        onPicked: v => win.keymap = v
+                    }
+                }
+            }
+            Label {
+                text: "Try typing here to check your keyboard:"
+                color: Theme.textSecondary
+                font.pixelSize: 12
+            }
+            Rectangle {
+                width: parent.width; height: 28; radius: 7
+                color: Theme.control
+                border.color: Theme.separator
+                TextInput {
+                    anchors.fill: parent
+                    anchors.leftMargin: 9
+                    verticalAlignment: TextInput.AlignVCenter
+                    color: Theme.text
+                    font.family: Theme.font
+                    font.pixelSize: 13
+                }
             }
         }
     }
@@ -407,6 +585,78 @@ FloatingWindow {
     }
 
     // ---------------- widgets ----------------
+    component Choice: Rectangle {
+        id: ch
+        property bool selected: false
+        property string title
+        property string sub
+        signal picked()
+        width: parent?.width ?? 0
+        height: chCol.implicitHeight + 20
+        radius: 10
+        opacity: enabled ? 1 : 0.5
+        color: selected ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.12) : "transparent"
+        border.width: selected ? 2 : 1
+        border.color: selected ? Theme.accent : Theme.separator
+        Rectangle {
+            id: radio
+            x: 12; y: 12
+            width: 16; height: 16; radius: 8
+            color: ch.selected ? Theme.accent : "transparent"
+            border.width: ch.selected ? 0 : 1.5
+            border.color: Theme.textTertiary
+            Rectangle { anchors.centerIn: parent; width: 6; height: 6; radius: 3; color: "white"; visible: ch.selected }
+        }
+        Column {
+            id: chCol
+            anchors.left: radio.right
+            anchors.leftMargin: 10
+            anchors.right: parent.right
+            anchors.rightMargin: 12
+            y: 10
+            spacing: 2
+            Label { width: parent.width; text: ch.title; font.weight: Font.DemiBold }
+            Label { width: parent.width; text: ch.sub; color: Theme.textSecondary; font.pixelSize: 11; wrapMode: Text.Wrap; elide: Text.ElideNone }
+        }
+        MouseArea { anchors.fill: parent; enabled: ch.enabled; onClicked: ch.picked() }
+    }
+
+    // Scrollable single-choice list of [value, label] pairs.
+    component ListBox: Rectangle {
+        id: lb
+        property var model: []
+        property string current
+        signal picked(string value)
+        radius: 8
+        color: "transparent"
+        border.color: Theme.separator
+        clip: true
+        ListView {
+            id: lbView
+            anchors.fill: parent
+            anchors.margins: 4
+            model: lb.model
+            function reveal() { positionViewAtIndex(Math.max(0, lb.model.findIndex(m => m[0] === lb.current)), ListView.Contain); }
+            Component.onCompleted: reveal()
+            Connections { target: lb; function onCurrentChanged() { lbView.reveal(); } }
+            delegate: Rectangle {
+                required property var modelData
+                width: ListView.view.width
+                height: 26
+                radius: 5
+                color: lb.current === modelData[0] ? Theme.accent : "transparent"
+                Label {
+                    x: 10
+                    width: parent.width - 20
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: modelData[1]
+                    color: lb.current === modelData[0] ? "white" : Theme.text
+                }
+                MouseArea { anchors.fill: parent; onClicked: lb.picked(parent.modelData[0]) }
+            }
+        }
+    }
+
     component Btn: Rectangle {
         id: b
         property string text

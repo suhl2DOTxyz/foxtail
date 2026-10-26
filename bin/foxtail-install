@@ -3,11 +3,16 @@
 #
 # Reads settings from the environment:
 #   FT_DISK=/dev/sda  FT_USER=fox  FT_FULLNAME="Fox Tail"  FT_HOST=foxtail
-#   FT_TZ=Europe/Berlin  FT_LOCALE=en_US.UTF-8  FT_KEYMAP=us
-# and the user's password on stdin (one line).
+#   FT_TZ=Europe/Berlin  FT_LOCALE=en_US.UTF-8  FT_KEYMAP=us (an XKB layout)
+#   FT_MODE=erase|alongside   FT_ENCRYPT=0|1
+# and the user's password on stdin (one line; also the disk passphrase).
 #
 # Prints "PROGRESS <0-100> <message>" lines for the Setup app, and
-# "ERROR <message>" on failure. ERASES FT_DISK ENTIRELY.
+# "ERROR <message>" on failure.
+#   erase:     ERASES FT_DISK ENTIRELY.
+#   alongside: keeps every existing partition; Foxtail goes into the largest
+#              free region and shares the existing EFI partition, and GRUB
+#              offers the other system(s) at startup (os-prober).
 #
 # Layout: GPT with an EFI partition (mounted at /efi) and one Btrfs
 # partition with subvolumes @ (/), @home, @snapshots (/.snapshots), @log and
@@ -23,6 +28,11 @@ trap 'fail "Step failed at line $LINENO: $BASH_COMMAND"' ERR
 [ "$(id -u)" -eq 0 ] || fail "must run as root"
 : "${FT_DISK:?}" "${FT_USER:?}" "${FT_HOST:=foxtail}" "${FT_TZ:=UTC}" "${FT_LOCALE:=en_US.UTF-8}" "${FT_KEYMAP:=us}"
 FT_FULLNAME="${FT_FULLNAME:-$FT_USER}"
+FT_MODE="${FT_MODE:-erase}"
+FT_ENCRYPT="${FT_ENCRYPT:-0}"
+[[ "$FT_MODE" =~ ^(erase|alongside)$ ]] || fail "invalid install mode"
+[[ "$FT_KEYMAP" =~ ^[a-z]{2,8}$ ]] || fail "invalid keyboard layout"
+[[ "$FT_LOCALE" =~ ^[a-z]{2,3}_[A-Z]{2}\.UTF-8$ ]] || fail "invalid language"
 [[ "$FT_USER" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || fail "invalid user name"
 [[ "$FT_HOST" =~ ^[A-Za-z0-9-]{1,63}$ ]] || fail "invalid computer name"
 [ -b "$FT_DISK" ] || fail "$FT_DISK is not a block device"
@@ -40,16 +50,43 @@ part() { if [[ "$FT_DISK" =~ [0-9]$ ]]; then echo "${FT_DISK}p$1"; else echo "${
 progress 2 "Preparing disk…"
 umount -R "$TARGET" 2>/dev/null || true
 swapoff -a || true
-wipefs -af "$FT_DISK"
-sgdisk --zap-all "$FT_DISK"
-sgdisk -n1:0:+512M -t1:ef00 -c1:EFI -n2:0:0 -t2:8304 -c2:Foxtail "$FT_DISK"
-partprobe "$FT_DISK"
-udevadm settle
-ESP=$(part 1)
-ROOT=$(part 2)
+ESP_TYPE=c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+
+if [ "$FT_MODE" = erase ]; then
+    wipefs -af "$FT_DISK"
+    sgdisk --zap-all "$FT_DISK"
+    sgdisk -n1:0:+512M -t1:ef00 -c1:EFI -n2:0:0 -t2:8304 -c2:Foxtail "$FT_DISK"
+    partprobe "$FT_DISK"
+    udevadm settle
+    ESP=$(part 1)
+    ROOT=$(part 2)
+    mkfs.fat -F32 -n EFI "$ESP"
+else
+    ESP=$(lsblk -lnpo NAME,PARTTYPE "$FT_DISK" | awk -v t="$ESP_TYPE" 'tolower($2) == t {print $1; exit}')
+    [ -b "$ESP" ] || fail "no EFI partition on $FT_DISK to share"
+    # Largest free region: sfdisk prints "start end sectors size" (sectors).
+    read -r START END _ < <(sfdisk --list-free "$FT_DISK" | awk '$1 ~ /^[0-9]+$/ {print $1, $2, $3}' | sort -k3 -n | tail -1)
+    [ -n "${START:-}" ] || fail "no free space on $FT_DISK"
+    SECT=$(blockdev --getss "$FT_DISK")
+    [ $(( (END - START + 1) * SECT )) -ge 20000000000 ] || fail "not enough free space (20 GB needed)"
+    before=$(lsblk -lnpo NAME "$FT_DISK" | sort)
+    sgdisk -n0:"$START":"$END" -t0:8304 -c0:Foxtail "$FT_DISK"
+    partprobe "$FT_DISK"
+    udevadm settle
+    ROOT=$(comm -13 <(echo "$before") <(lsblk -lnpo NAME "$FT_DISK" | sort) | head -1)
+    [ -b "$ROOT" ] || fail "couldn't create the Foxtail partition"
+fi
 
 progress 6 "Formatting…"
-mkfs.fat -F32 -n EFI "$ESP"
+ROOT_PART=$ROOT
+if [ "$FT_ENCRYPT" = 1 ]; then
+    # LUKS2 with PBKDF2: GRUB has to unlock it (kernels live inside), and
+    # GRUB can't do Argon2.
+    printf '%s' "$FT_PASS" | cryptsetup luksFormat --batch-mode --type luks2 \
+        --pbkdf pbkdf2 --iter-time 2000 --label FoxtailCrypt "$ROOT_PART" -
+    printf '%s' "$FT_PASS" | cryptsetup open "$ROOT_PART" cryptroot -
+    ROOT=/dev/mapper/cryptroot
+fi
 mkfs.btrfs -f -L Foxtail "$ROOT"
 mkdir -p "$TARGET"
 mount "$ROOT" "$TARGET"
@@ -101,6 +138,29 @@ EOF
 
 genfstab -U "$TARGET" > "$TARGET/etc/fstab"
 
+LUKS_UUID=""
+if [ "$FT_ENCRYPT" = 1 ]; then
+    # Unlock once, in GRUB: a keyfile inside the (encrypted) initramfs lets the
+    # kernel open the disk again without asking a second time.
+    dd if=/dev/urandom of="$TARGET/crypto_keyfile.bin" bs=512 count=4 status=none
+    chmod 000 "$TARGET/crypto_keyfile.bin"
+    printf '%s' "$FT_PASS" | cryptsetup luksAddKey --pbkdf pbkdf2 "$ROOT_PART" "$TARGET/crypto_keyfile.bin" -
+    LUKS_UUID=$(blkid -s UUID -o value "$ROOT_PART")
+    printf '%s\n' "# Encrypted install: unlock the root disk with the embedded keyfile." \
+        "FILES=(/crypto_keyfile.bin)" \
+        "HOOKS=(base udev plymouth autodetect microcode modconf kms keyboard keymap consolefont block encrypt filesystems fsck grub-btrfs-overlayfs)" \
+        > "$TARGET/etc/mkinitcpio.conf.d/10-foxtail-encrypt.conf"
+fi
+
+# Keyboard: console keymap names mostly match XKB layout codes; a few differ.
+case "$FT_KEYMAP" in gb) CONSOLE_KEYMAP=uk ;; jp) CONSOLE_KEYMAP=jp106 ;; *) CONSOLE_KEYMAP="$FT_KEYMAP" ;; esac
+[ -n "$(find "$TARGET/usr/share/kbd/keymaps" -name "$CONSOLE_KEYMAP.map.gz" -print -quit)" ] || CONSOLE_KEYMAP=us
+FT_CONSOLE_KEYMAP=$CONSOLE_KEYMAP
+# Login screen (X11 SDDM) and the Foxtail desktop both read this file.
+mkdir -p "$TARGET/etc/X11/xorg.conf.d"
+printf '%s\n' 'Section "InputClass"' '    Identifier "system-keyboard"' '    MatchIsKeyboard "on"' \
+    "    Option \"XkbLayout\" \"$FT_KEYMAP\"" 'EndSection' > "$TARGET/etc/X11/xorg.conf.d/00-keyboard.conf"
+
 progress 87 "Configuring your system…"
 arch-chroot "$TARGET" /bin/bash -e <<CHROOT
 systemd-machine-id-setup >/dev/null
@@ -112,7 +172,7 @@ sed -i "s/^#\\($FT_LOCALE.*\\)/\\1/" /etc/locale.gen
 grep -q "^$FT_LOCALE" /etc/locale.gen || echo "$FT_LOCALE UTF-8" >> /etc/locale.gen
 locale-gen >/dev/null
 echo "LANG=$FT_LOCALE" > /etc/locale.conf
-echo "KEYMAP=$FT_KEYMAP" > /etc/vconsole.conf
+echo "KEYMAP=$FT_CONSOLE_KEYMAP" > /etc/vconsole.conf
 echo "$FT_HOST" > /etc/hostname
 cat > /etc/hosts <<EOF
 127.0.0.1 localhost
@@ -135,6 +195,11 @@ grep -q '^\[foxtail\]' /etc/pacman.conf || cat >> /etc/pacman.conf <<'EOF'
 SigLevel = Required
 Server = https://github.com/suhl2DOTxyz/foxtail/releases/download/repo
 EOF
+
+# GPU: keep the NVIDIA driver only where there's an NVIDIA display device.
+if ! lspci -n | grep -qE ' 03[0-9a-f]{2}: 10de:'; then
+    pacman -Rns --noconfirm nvidia-open nvidia-utils egl-wayland >/dev/null 2>&1 || true
+fi
 
 # Snapshots: snapper's config for /, stored on the @snapshots subvolume that
 # is already mounted at /.snapshots (so no nested .snapshots subvolume).
@@ -160,14 +225,28 @@ sed -i -e 's/^GRUB_DISTRIBUTOR=.*/GRUB_DISTRIBUTOR="Foxtail"/' \
        -e 's|^GRUB_CMDLINE_LINUX_DEFAULT=.*|GRUB_CMDLINE_LINUX_DEFAULT="quiet splash loglevel=3 rd.udev.log_level=3 vt.global_cursor_default=0"|' \
        -e 's|^#\?GRUB_THEME=.*|GRUB_THEME="/usr/share/grub/themes/foxtail/theme.txt"|' \
        -e 's/^GRUB_GFXMODE=.*/GRUB_GFXMODE=auto/' /etc/default/grub
+if [ "$FT_ENCRYPT" = 1 ]; then
+    sed -i -e 's/^#\?GRUB_ENABLE_CRYPTODISK=.*/GRUB_ENABLE_CRYPTODISK=y/' \
+           -e 's|^GRUB_CMDLINE_LINUX=.*|GRUB_CMDLINE_LINUX="cryptdevice=UUID=$LUKS_UUID:cryptroot cryptkey=rootfs:/crypto_keyfile.bin"|' /etc/default/grub
+    grep -q '^GRUB_ENABLE_CRYPTODISK=y' /etc/default/grub || echo 'GRUB_ENABLE_CRYPTODISK=y' >> /etc/default/grub
+fi
+if [ "$FT_MODE" = alongside ]; then
+    # Show the other system(s) in the startup menu, and show the menu.
+    sed -i -e 's/^#\?GRUB_DISABLE_OS_PROBER=.*/GRUB_DISABLE_OS_PROBER=false/' \
+           -e 's/^GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=menu/' -e 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=5/' /etc/default/grub
+    grep -q '^GRUB_DISABLE_OS_PROBER=false' /etc/default/grub || echo 'GRUB_DISABLE_OS_PROBER=false' >> /etc/default/grub
+fi
 grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id=Foxtail >/dev/null 2>&1 || true
-# Also install to the fallback path, for firmware (and VMs) that forget boot entries.
-grub-install --target=x86_64-efi --efi-directory=/efi --removable >/dev/null
+# Also install to the fallback path, for firmware (and VMs) that forget boot
+# entries - but never over another system's fallback loader.
+if [ "$FT_MODE" = erase ]; then
+    grub-install --target=x86_64-efi --efi-directory=/efi --removable >/dev/null
+fi
 grub-mkconfig -o /boot/grub/grub.cfg >/dev/null 2>&1
 
 snapper --no-dbus -c root create -d "Fresh install of Foxtail" --cleanup-algorithm number
 
-systemctl enable sddm NetworkManager bluetooth systemd-timesyncd grub-btrfsd snapper-cleanup.timer >/dev/null 2>&1 || true
+systemctl enable sddm NetworkManager bluetooth systemd-timesyncd grub-btrfsd snapper-cleanup.timer power-profiles-daemon >/dev/null 2>&1 || true
 CHROOT
 
 # Password is set outside the heredoc so it never lands in a shell history or argv.
@@ -176,4 +255,5 @@ printf '%s:%s\n' "$FT_USER" "$FT_PASS" | arch-chroot "$TARGET" chpasswd
 progress 97 "Finishing up…"
 sync
 umount -R "$TARGET"
+if [ "$FT_ENCRYPT" = 1 ]; then cryptsetup close cryptroot; fi
 progress 100 "Foxtail is installed."

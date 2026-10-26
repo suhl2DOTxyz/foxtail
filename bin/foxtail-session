@@ -15,4 +15,11 @@ if [ -d /sys/module/vmwgfx ] && [ ! -e /etc/foxtail/try-hw ]; then
     export FOXTAIL_SOFTWARE_RENDERING=1
 fi
 
+# NVIDIA (proprietary/open kernel driver): use its GBM/EGL and VA-API paths.
+if [ -d /sys/module/nvidia_drm ]; then
+    export LIBVA_DRIVER_NAME=nvidia
+    export __GLX_VENDOR_LIBRARY_NAME=nvidia
+    export NVD_BACKEND=direct
+fi
+
 exec start-hyprland

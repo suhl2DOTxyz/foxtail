@@ -20,6 +20,15 @@ end
 -- "float" (macOS-like, default) or "tile"; set from System Settings.
 local window_mode = read_file(HOME .. "/.config/foxtail/window-mode") or "float"
 
+-- Keyboard layout chosen in the installer (also used by the login screen).
+local function system_kb_layout()
+    local f = io.open("/etc/X11/xorg.conf.d/00-keyboard.conf", "r")
+    if not f then return "us" end
+    local text = f:read("a")
+    f:close()
+    return text:match('XkbLayout"%s+"([^"]+)"') or "us"
+end
+
 ---------------------------------------------------------------- monitors
 -- Scale 1 by default: "auto" guesses 2x whenever a display reports no
 -- physical size (VMs, many TVs). HiDPI users set e.g. scale = 2 in hyprland.lua.
@@ -90,7 +99,7 @@ hl.config({
     animations = { enabled = true },
 
     input = {
-        kb_layout = "us",
+        kb_layout = system_kb_layout(),
         follow_mouse = 2,         -- focus follows click, like macOS
         float_switch_override_focus = 0,
         sensitivity = 0,

@@ -1,0 +1,17 @@
+# remove from airootfs!
+# ISO build only: packages are installed with the build host's pacman. On
+# CachyOS that pacman records an extra %INSTALLED_DB% field which Arch's
+# pacman (the one in Foxtail) doesn't know, and warns about on every run.
+# Strip it so the live and installed systems have a clean package database.
+# (Runs before archiso's zzzz99 hook, which deletes this file afterwards.)
+
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = *
+
+[Action]
+Description = Normalizing the package database for Foxtail...
+When = PostTransaction
+Exec = /bin/sh -c "sed -i '/^%INSTALLED_DB%$/,/^$/d' /var/lib/pacman/local/*/desc"

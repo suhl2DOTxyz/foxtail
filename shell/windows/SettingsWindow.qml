@@ -29,6 +29,7 @@ FloatingWindow {
         { id: "appearance", name: "Appearance", icon: "half-circle", color: "#1C1C1E" },
         { id: "desktop", name: "Desktop & Dock", icon: "dock", color: "#1C1C1E" },
         { id: "displays", name: "Displays", icon: "sun", color: "#0A84FF" },
+        { id: "battery", name: "Battery", icon: "battery", color: "#30D158" },
         { id: "wallpaper", name: "Wallpaper", icon: "photo", color: "#30B0C7" },
         { id: "sep" },
         { id: "notifications", name: "Notifications", icon: "bell", color: "#FF3B30" },
@@ -257,6 +258,7 @@ FloatingWindow {
                     case "wifi": return wifiPane;
                     case "bluetooth": return btPane;
                     case "general": return generalPane;
+                    case "battery": return batteryPane;
                     case "updates": return updatesPane;
                     case "appearance": return appearancePane;
                     case "desktop": return dockPane;
@@ -424,6 +426,93 @@ FloatingWindow {
                 SettingRow { label: "Memory"; Label { text: SystemInfo.memory; color: Theme.textSecondary } }
                 SettingRow { label: "Storage"; Label { text: SystemInfo.disk; color: Theme.textSecondary } }
                 SettingRow { label: "Kernel"; last: true; Label { text: "Linux " + SystemInfo.kernel; color: Theme.textSecondary } }
+            }
+        }
+    }
+
+    Component {
+        id: batteryPane
+        Column {
+            spacing: 14
+            Group {
+                visible: Power.hasBattery
+                Item {
+                    width: parent.width
+                    height: 84
+                    Column {
+                        x: 18
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 4
+                        Label { text: Power.percent + "%"; font.pixelSize: 26; font.weight: Font.DemiBold }
+                        Label {
+                            text: Power.source + (Power.timeLeft ? " · " + Power.timeLeft : "")
+                            color: Theme.textSecondary
+                            font.pixelSize: 12
+                        }
+                    }
+                    Rectangle {   // big battery gauge
+                        anchors.right: parent.right
+                        anchors.rightMargin: 22
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 120; height: 44; radius: 10
+                        color: "transparent"
+                        border.width: 2
+                        border.color: Theme.textSecondary
+                        Rectangle {
+                            x: 5; y: 5
+                            height: parent.height - 10
+                            width: (parent.width - 10) * Power.percent / 100
+                            radius: 6
+                            color: Power.mode === "power-saver" ? "#FFD60A" : Power.percent < 20 && !Power.charging ? "#FF453A" : "#30D158"
+                        }
+                    }
+                }
+            }
+            Label {
+                visible: !Power.hasBattery
+                text: "This computer doesn't have a battery."
+                color: Theme.textSecondary
+            }
+
+            SectionTitle { text: "Power Mode" }
+            Group {
+                Repeater {
+                    model: [
+                        { id: "power-saver", name: "Low Power", sub: "Reduces energy use for longer battery life. The display and apps may be a little slower." },
+                        { id: "balanced", name: "Balanced", sub: "Good performance with sensible energy use." },
+                        { id: "performance", name: "High Performance", sub: "Maximum speed. Uses more energy and may make fans louder." }
+                    ]
+                    SettingRow {
+                        required property var modelData
+                        required property int index
+                        visible: modelData.id !== "performance" || Power.hasPerformance
+                        label: modelData.name
+                        sub: modelData.sub
+                        last: index === 2 || (index === 1 && !Power.hasPerformance)
+                        Rectangle {
+                            width: 20; height: 20; radius: 10
+                            color: Power.mode === modelData.id ? Theme.accent : "transparent"
+                            border.width: Power.mode === modelData.id ? 0 : 1.5
+                            border.color: Theme.textTertiary
+                            Rectangle { anchors.centerIn: parent; width: 8; height: 8; radius: 4; color: "white"; visible: Power.mode === modelData.id }
+                            MouseArea { anchors.fill: parent; anchors.margins: -6; onClicked: Power.setMode(modelData.id) }
+                        }
+                    }
+                }
+            }
+
+            Group {
+                visible: Power.hasBattery
+                SettingRow {
+                    label: "Show battery percentage in menu bar"
+                    Switch { checked: Settings.showBatteryPercent; onToggled: c => Settings.showBatteryPercent = c }
+                }
+                SettingRow {
+                    label: "Switch to Low Power at 10%"
+                    sub: "You'll also get a warning at 20%, 10% and 5%."
+                    last: true
+                    Switch { checked: Settings.autoLowPower; onToggled: c => Settings.autoLowPower = c }
+                }
             }
         }
     }

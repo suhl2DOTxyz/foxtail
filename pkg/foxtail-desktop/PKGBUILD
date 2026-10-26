@@ -10,6 +10,7 @@ url="https://github.com/suhl2DOTxyz/foxtail"
 license=('GPL-3.0-or-later')
 install=foxtail-desktop.install
 backup=('etc/sddm.conf.d/foxtail.conf'
+        'etc/systemd/zram-generator.conf'
         'etc/mkinitcpio.conf.d/00-foxtail.conf')
 depends=(
     # desktop
@@ -24,6 +25,8 @@ depends=(
     # updates and snapshots
     'foxtail-keyring' 'pacman-contrib' 'fakeroot' 'flatpak' 'snapper' 'snap-pac'
     'grub' 'grub-btrfs' 'inotify-tools' 'btrfs-progs'
+    # hardware
+    'power-profiles-daemon' 'zram-generator' 'cryptsetup' 'os-prober' 'ntfs-3g' 'pciutils'
 )
 optdepends=(
     'firefox: default web browser'
