@@ -246,7 +246,10 @@ grub-mkconfig -o /boot/grub/grub.cfg >/dev/null 2>&1
 
 snapper --no-dbus -c root create -d "Fresh install of Foxtail" --cleanup-algorithm number
 
-systemctl enable sddm NetworkManager bluetooth systemd-timesyncd grub-btrfsd snapper-cleanup.timer power-profiles-daemon >/dev/null 2>&1 || true
+# Printing: CUPS on demand, and network printers found over mDNS.
+sed -i 's/^hosts: mymachines resolve/hosts: mymachines mdns_minimal [NOTFOUND=return] resolve/' /etc/nsswitch.conf
+systemctl enable sddm NetworkManager bluetooth systemd-timesyncd grub-btrfsd snapper-cleanup.timer power-profiles-daemon \
+    cups.socket avahi-daemon >/dev/null 2>&1 || true
 CHROOT
 
 # Password is set outside the heredoc so it never lands in a shell history or argv.

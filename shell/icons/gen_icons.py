@@ -75,6 +75,33 @@ ICONS = {
     "eye": f'''<path {S} d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle {F} cx="12" cy="12" r="3"/>''',
     "arrow-right-circle": f'''<circle {S} cx="12" cy="12" r="9"/><path {S} stroke-width="2" d="M8 12h8m-3-3.5L16.5 12 13 15.5"/>''',
     "music": f'''<path {F} d="M9 17.5V6l11-2.5v11.5"/><circle {F} cx="6.5" cy="17.5" r="2.8"/><circle {F} cx="17.5" cy="15" r="2.8"/>''',
+    "printer": f'''<path {S} d="M7 8V3.5h10V8"/><rect {S} x="3" y="8" width="18" height="8.5" rx="2"/><rect {S} x="7" y="13.5" width="10" height="7" rx="1"/>
+        <circle {F} cx="17.5" cy="11" r="1"/>''',
+    "clock": f'''<circle {S} cx="12" cy="12" r="9"/><path {S} d="M12 7v5.2l3.4 2.2"/>''',
+    "people": f'''<circle {F} cx="9" cy="8.5" r="3.6"/><path {F} d="M2 20a7 7 0 0 1 14 0z"/>
+        <circle {F} opacity=".7" cx="17" cy="9" r="2.8"/><path {F} opacity=".7" d="M15.6 13.4A5.6 5.6 0 0 1 22.5 19h-4.8a8.6 8.6 0 0 0-2.1-5.6z"/>''',
+    "apps": f'''<g {F}><circle cx="6.5" cy="6.5" r="3"/><circle cx="17.5" cy="6.5" r="3"/><circle cx="6.5" cy="17.5" r="3"/><circle cx="17.5" cy="17.5" r="3"/></g>''',
+    "headphones": f'''<path {S} d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect {F} x="3" y="14" width="4.5" height="7" rx="1.8"/><rect {F} x="16.5" y="14" width="4.5" height="7" rx="1.8"/>''',
+    "mic": f'''<rect {F} x="9" y="2.5" width="6" height="11.5" rx="3"/><path {S} d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/>''',
+    "mouse": f'''<rect {S} x="6" y="3" width="12" height="18" rx="6"/><path {S} d="M12 7v3"/>''',
+    "gamepad": f'''<path {S} d="M7 7h10a4.5 4.5 0 0 1 4.4 5.4l-1 4.6a2.4 2.4 0 0 1-4.2 1L14.5 16h-5l-1.7 2a2.4 2.4 0 0 1-4.2-1l-1-4.6A4.5 4.5 0 0 1 7 7z"/>
+        <path {S} d="M8 10.5v3M6.5 12h3"/><circle {F} cx="15.5" cy="11" r="1"/><circle {F} cx="17.5" cy="13" r="1"/>''',
+    "phone": f'''<rect {S} x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path {S} d="M10.5 18.5h3"/>''',
+    "stop": f'''<rect {F} x="6" y="6" width="12" height="12" rx="2.5"/>''',
+    "record": f'''<circle {S} cx="12" cy="12" r="9"/><circle {F} cx="12" cy="12" r="5"/>''',
+    "screen-capture": f'''<rect {S} x="2.5" y="4" width="19" height="13" rx="2"/><path {S} d="M8.5 20.5h7"/><rect {F} opacity=".5" x="5" y="6.5" width="14" height="8" rx="1"/>''',
+    "window-capture": f'''<rect {S} x="2.5" y="4" width="19" height="13" rx="2"/><path {S} d="M8.5 20.5h7"/><rect {F} x="6" y="7" width="9" height="6.5" rx="1"/>''',
+    "selection-capture": f'''<path {S} stroke-dasharray="2.2 2.2" d="M4 5h16v12H4z"/><path {S} d="M8.5 20.5h7"/>''',
+    "screen-record": f'''<rect {S} x="2.5" y="4" width="19" height="13" rx="2"/><path {S} d="M8.5 20.5h7"/><circle {F} cx="12" cy="10.5" r="3.2"/>''',
+    "selection-record": f'''<path {S} stroke-dasharray="2.2 2.2" d="M4 5h16v12H4z"/><path {S} d="M8.5 20.5h7"/><circle {F} cx="12" cy="11" r="3"/>''',
+    "clipboard": f'''<rect {S} x="5" y="4.5" width="14" height="17" rx="2.2"/><rect {F} x="8.5" y="2.5" width="7" height="4" rx="1.2"/>
+        <path {S} stroke-width="1.6" d="M8.5 11h7M8.5 14.5h7M8.5 18h4"/>''',
+    "mission": f'''<rect {S} x="2.5" y="4" width="8.5" height="6.5" rx="1.5"/><rect {S} x="13" y="4" width="8.5" height="6.5" rx="1.5"/>
+        <rect {S} x="2.5" y="13.5" width="8.5" height="6.5" rx="1.5"/><rect {S} x="13" y="13.5" width="8.5" height="6.5" rx="1.5"/>''',
+    "nightshift": f'''<circle {S} cx="12" cy="12" r="4.4"/><path {F} d="M12 7.6a4.4 4.4 0 0 1 0 8.8z"/>
+        <path {S} d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>''',
+    "cursor": f'''<path {F} d="M5 3l14 8.2-6 1.4L9.6 19z"/>''',
+
 }
 
 

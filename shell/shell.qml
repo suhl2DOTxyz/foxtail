@@ -5,6 +5,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import qs.services
 import qs.modules
 import qs.windows
@@ -28,6 +29,9 @@ ShellRoot {
             Launchpad { modelData: perScreen.modelData }
             Banners { modelData: perScreen.modelData }
             Osd { modelData: perScreen.modelData }
+            AppSwitcher { modelData: perScreen.modelData }
+            MissionControl { modelData: perScreen.modelData }
+            CaptureBar { modelData: perScreen.modelData }
         }
     }
 
@@ -54,6 +58,20 @@ ShellRoot {
             respectInhibitors: true
             onIsIdleChanged: Hypr.dispatch(`hl.dsp.dpms({ action = "${isIdle ? "off" : "on"}" })`)
         }
+    }
+
+    // Services that work in the background (Night Shift, generated Hyprland
+    // config, clipboard history) start with the shell, not on first use.
+    readonly property var backgroundServices: [HyprConfig, Displays, Keyboard, Clipboard, Capture]
+
+    // Global shortcuts bound in hypr/foxtail.lua with hl.dsp.global("foxtail:<name>").
+    GlobalShortcut { appid: "foxtail"; name: "switcherNext"; onPressed: Switcher.step(1) }
+    GlobalShortcut { appid: "foxtail"; name: "switcherPrev"; onPressed: Switcher.step(-1) }
+    GlobalShortcut { appid: "foxtail"; name: "switcherCommit"; onPressed: Switcher.commit() }
+    GlobalShortcut {
+        appid: "foxtail"
+        name: "missionControl"
+        onPressed: { Panels.popover = ""; Panels.spotlight = false; Panels.missionControl = !Panels.missionControl; }
     }
 
     SettingsWindow {}
@@ -101,6 +119,18 @@ ShellRoot {
         function power(kind: string): void { Panels.confirm = kind; }
         function closeAll(): void { Panels.closeAll(); }
         function restoreAll(): void { Hypr.restoreAll(); }
+        function missionControl(): void { Panels.missionControl = !Panels.missionControl; }
+        function clipboard(): void {
+            Panels.anchorX = 0;
+            Panels.toggle("clipboard", Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0]);
+        }
+        function screenshotToolbar(): void {
+            Panels.closeAll();
+            if (Capture.recording) Capture.stop();
+            else Panels.screenshotBar = !Panels.screenshotBar;
+        }
+        function stopRecording(): void { Capture.stop(); }
+        function nightShift(): void { Settings.nightShiftNow = !Settings.nightShiftNow; }
 
         function volumeUp(): void { Audio.setVolume(Audio.volume + 0.0625); }
         function volumeDown(): void { Audio.setVolume(Audio.volume - 0.0625); }

@@ -1,8 +1,32 @@
 #!/bin/sh
-# Start (or restart) the Foxtail desktop shell.
+# Start (or restart) the Foxtail desktop shell, and keep it running: if it
+# crashes it is started again (at most 5 times a minute), so a crash never
+# leaves you without a menu bar, Dock or lock screen.
 # FOXTAIL_SHELL_DIR lets you point at a working copy while developing.
 SHELL_DIR="${FOXTAIL_SHELL_DIR:-/usr/share/foxtail/shell}"
 [ -d "$HOME/.config/foxtail/shell" ] && SHELL_DIR="$HOME/.config/foxtail/shell"
+PIDFILE="${XDG_RUNTIME_DIR:-/tmp}/foxtail-shell.pid"
 
+# Replace a running supervisor (and its shell) instead of adding a second one.
+if [ -f "$PIDFILE" ]; then
+    old=$(cat "$PIDFILE")
+    [ -n "$old" ] && [ "$old" != $$ ] && kill "$old" 2>/dev/null
+fi
 pkill -x qs; pkill -x quickshell
-exec qs -p "$SHELL_DIR" -d "$@"
+echo $$ > "$PIDFILE"
+
+trap 'pkill -P $$ -x qs; rm -f "$PIDFILE"; exit 0' TERM INT
+
+crashes=""
+while :; do
+    qs -p "$SHELL_DIR" "$@" &
+    wait $!
+    code=$?
+    # 0 = quit on purpose; 143 = killed by a restart (TERM)
+    [ "$code" = 0 ] || [ "$code" = 143 ] && break
+    now=$(date +%s)
+    crashes="$(for t in $crashes; do [ $((now - t)) -lt 60 ] && echo "$t"; done) $now"
+    [ "$(echo $crashes | wc -w)" -gt 5 ] && { notify-send -u critical "Foxtail" "The desktop shell keeps crashing. Log out and back in to restart it."; break; }
+    sleep 1
+done
+[ "$(cat "$PIDFILE" 2>/dev/null)" = $$ ] && rm -f "$PIDFILE"

@@ -1,0 +1,61 @@
+#!/bin/sh
+# foxtail-users: account changes made from System Settings › Users & Groups.
+# Runs as root through pkexec (polkit action org.foxtail.users).
+#
+#   foxtail-users add <user> <full name> <admin 0|1>    password on stdin
+#   foxtail-users passwd <user>                          password on stdin
+#   foxtail-users admin <user> <0|1>
+#   foxtail-users delete <user> <keep-home 0|1>
+set -eu
+[ "$(id -u)" = 0 ] || { echo "foxtail-users must run as root" >&2; exit 1; }
+
+die() { echo "$*" >&2; exit 1; }
+# Only regular accounts (uid 1000-59999) can be managed here.
+human() {
+    uid=$(id -u "$1" 2>/dev/null) || return 1
+    [ "$uid" -ge 1000 ] && [ "$uid" -lt 60000 ]
+}
+admins() { getent group wheel | cut -d: -f4 | tr ',' '\n' | grep -c . || true; }
+is_admin() { id -nG "$1" | tr ' ' '\n' | grep -qx wheel; }
+caller=$(id -un "${PKEXEC_UID:-0}" 2>/dev/null || echo root)
+
+cmd=${1:-}
+user=${2:-}
+case "$cmd" in
+add)
+    printf '%s' "$user" | grep -Eq '^[a-z_][a-z0-9_-]{0,31}$' || die "Account names use lowercase letters, numbers, - and _."
+    getent passwd "$user" >/dev/null && die "An account named $user already exists."
+    IFS= read -r pw || true
+    [ -n "$pw" ] || die "A password is required."
+    groups=audio,video,input,network
+    [ "${4:-0}" = 1 ] && groups="wheel,$groups"
+    useradd -m -G "$groups" -s /bin/bash -c "${3:-$user}" "$user"
+    printf '%s:%s\n' "$user" "$pw" | chpasswd
+    ;;
+passwd)
+    human "$user" || die "Unknown account $user."
+    IFS= read -r pw || true
+    [ -n "$pw" ] || die "A password is required."
+    printf '%s:%s\n' "$user" "$pw" | chpasswd
+    ;;
+admin)
+    human "$user" || die "Unknown account $user."
+    if [ "${3:-0}" = 1 ]; then
+        gpasswd -a "$user" wheel >/dev/null
+    else
+        is_admin "$user" || exit 0
+        [ "$(admins)" -gt 1 ] || die "At least one administrator is required."
+        gpasswd -d "$user" wheel >/dev/null
+    fi
+    ;;
+delete)
+    human "$user" || die "Unknown account $user."
+    [ "$user" != "$caller" ] && [ "$user" != "${SUDO_USER:-}" ] || die "You can't delete the account you're logged in with."
+    if is_admin "$user"; then [ "$(admins)" -gt 1 ] || die "At least one administrator is required."; fi
+    loginctl terminate-user "$user" 2>/dev/null || true
+    if [ "${3:-0}" = 1 ]; then userdel "$user"; else userdel -r "$user" 2>/dev/null || userdel "$user"; fi
+    ;;
+*)
+    die "usage: foxtail-users add|passwd|admin|delete <user> ..."
+    ;;
+esac

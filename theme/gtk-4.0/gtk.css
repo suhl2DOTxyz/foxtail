@@ -1,11 +1,16 @@
-/* Foxtail: GTK 4 / libadwaita tweaks.
- * Accent comes from foxtail-accent.css (written by foxtail-sync-appearance).
+/* Foxtail: GTK 4 / libadwaita tweaks, installed to
+ * /usr/share/foxtail/gtk-4.0/foxtail.css and imported by each user's
+ * ~/.config/gtk-4.0/gtk.css (with the accent from foxtail-accent.css).
  * Window controls become macOS traffic lights. */
-@import url("foxtail-accent.css");
 
 windowcontrols {
     border-spacing: 8px;
 }
+
+/* macOS spacing: a little in from the window edge, and a clear gap before
+ * the first header-bar button or title. */
+windowcontrols.start { margin-left: 12px; margin-right: 6px; }
+windowcontrols.end { margin-right: 12px; margin-left: 6px; }
 
 windowcontrols > button {
     min-width: 12px;

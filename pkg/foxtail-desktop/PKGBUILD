@@ -10,6 +10,7 @@ url="https://github.com/suhl2DOTxyz/foxtail"
 license=('GPL-3.0-or-later')
 install=foxtail-desktop.install
 backup=('etc/sddm.conf.d/foxtail.conf'
+        'etc/xdg/mimeapps.list'
         'etc/systemd/zram-generator.conf'
         'etc/mkinitcpio.conf.d/00-foxtail.conf')
 depends=(
@@ -27,16 +28,26 @@ depends=(
     'grub' 'grub-btrfs' 'inotify-tools' 'btrfs-progs'
     # hardware
     'power-profiles-daemon' 'zram-generator' 'cryptsetup' 'os-prober' 'ntfs-3g' 'pciutils'
+    # everyday settings (1.5)
+    'hyprsunset' 'wf-recorder' 'cups' 'cups-pk-helper' 'system-config-printer' 'avahi' 'nss-mdns'
 )
 optdepends=(
     'firefox: default web browser'
     'nautilus: Files'
     'ptyxis: Terminal'
     'gnome-software: App Store'
+    'papers: PDF viewer'
+    'loupe: Image Viewer'
+    'showtime: Video player'
+    'decibels: Music player'
 )
 
 # build-repo.sh exports FOXTAIL_ROOT (the PKGBUILD is built from a copy).
 _root="${FOXTAIL_ROOT:-$startdir/../..}"
+
+# Each user's gtk.css only imports the shared theme, so updates reach everyone.
+_gtk_stub='/* Foxtail theme (kept up to date by Foxtail). Add your own CSS below. */
+@import url("foxtail-accent.css");'
 
 package() {
     cd "$_root"
@@ -59,7 +70,10 @@ package() {
     # Per-user defaults for new accounts
     install -Dm644 hypr/hyprland.lua "$d/etc/skel/.config/hypr/hyprland.lua"
     for v in gtk-3.0 gtk-4.0; do
-        install -Dm644 "theme/$v/gtk.css" "$d/etc/skel/.config/$v/gtk.css"
+        install -Dm644 "theme/$v/gtk.css" "$d/usr/share/foxtail/$v/foxtail.css"
+        install -d "$d/etc/skel/.config/$v"
+        printf '%s\n' "$_gtk_stub" "@import url(\"file:///usr/share/foxtail/$v/foxtail.css\");" \
+            > "$d/etc/skel/.config/$v/gtk.css"
         printf '@define-color accent_color #FF7A1A;\n@define-color accent_bg_color #FF7A1A;\n' \
             > "$d/etc/skel/.config/$v/foxtail-accent.css"
     done

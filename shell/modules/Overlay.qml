@@ -15,7 +15,7 @@ PanelWindow {
     screen: modelData
 
     readonly property bool mine: Panels.screen === null || Panels.screen === modelData
-    readonly property bool modal: Panels.spotlight || Panels.confirm !== ""
+    readonly property bool modal: Panels.spotlight || Panels.confirm !== "" || Panels.popover === "clipboard"
     visible: mine && (Panels.popover !== "" || modal)
 
     WlrLayershell.layer: WlrLayer.Overlay
@@ -128,6 +128,28 @@ PanelWindow {
         }
     }
 
+    // ---------- Input sources ----------
+    Loader {
+        active: Panels.popover === "input"
+        x: Math.min(Panels.anchorX, root.width - (item?.width ?? 0) - 8)
+        y: Theme.menuBarHeight + 3
+        sourceComponent: MenuPanel {
+            minWidth: 220
+            windowOffset: root.origin
+            screenSize: root.screenSize
+            onDone: Panels.closeAll()
+            model: {
+                const items = Keyboard.layouts.map((code, i) => ({
+                    text: Keyboard.nameFor(code), checkable: true, checked: i === Keyboard.activeIndex,
+                    action: () => Keyboard.select(i)
+                }));
+                items.push({ separator: true });
+                items.push({ text: "Open Keyboard Settings…", action: () => Panels.openSettings("keyboard") });
+                return items;
+            }
+        }
+    }
+
     // ---------- Battery ----------
     Loader {
         active: Panels.popover === "battery"
@@ -156,6 +178,17 @@ PanelWindow {
         anchors.rightMargin: 8
         y: Theme.menuBarHeight + 4
         sourceComponent: NotificationCenter {
+            screenSize: root.screenSize
+            windowOffset: root.origin
+        }
+    }
+
+    // ---------- Clipboard history ----------
+    Loader {
+        active: Panels.popover === "clipboard"
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: Math.round(root.height * 0.22)
+        sourceComponent: ClipboardMenu {
             screenSize: root.screenSize
             windowOffset: root.origin
         }

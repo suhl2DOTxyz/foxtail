@@ -26,4 +26,15 @@
     </defaults>
     <annotate key="org.freedesktop.policykit.exec.path">/usr/bin/foxtail-restore</annotate>
   </action>
+  <action id="org.foxtail.users">
+    <description>Manage user accounts</description>
+    <message>System Settings wants to make changes to user accounts.</message>
+    <icon_name>foxtail</icon_name>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/bin/foxtail-users</annotate>
+  </action>
 </policyconfig>

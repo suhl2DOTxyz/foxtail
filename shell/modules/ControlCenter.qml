@@ -156,11 +156,13 @@ Item {
                 onClicked: Settings.reduceTransparency = !Settings.reduceTransparency
             }
             Round {
-                icon: "photo"
-                tip: "Screenshot"
+                icon: Capture.recording ? "stop" : "screen-capture"
+                tip: Capture.recording ? "Stop Recording" : "Screenshot"
+                on: Capture.recording
                 onClicked: {
                     Panels.closeAll();
-                    Quickshell.execDetached(["sh", "-c", "sleep 0.3; foxtail-screenshot area"]);
+                    if (Capture.recording) Capture.stop();
+                    else Panels.screenshotBar = true;
                 }
             }
         }
@@ -172,12 +174,82 @@ Item {
             icon: "sun-small"
             value: Brightness.value
             onMoved: v => Brightness.set(v)
+            HeaderToggle {
+                icon: "nightshift"
+                text: "Night Shift"
+                on: Displays.nightShiftActive
+                onClicked: Settings.nightShiftNow = !Displays.nightShiftActive
+            }
+        }
+        // Without a brightness control, Night Shift still gets a home.
+        Tile {
+            visible: !Brightness.available
+            width: root.span4
+            height: 44
+            radius: 22
+            Label { x: 16; anchors.verticalCenter: parent.verticalCenter; text: "Display"; font.weight: Font.DemiBold; font.pixelSize: 12 }
+            HeaderToggle {
+                anchors.verticalCenter: parent.verticalCenter
+                icon: "nightshift"
+                text: "Night Shift"
+                on: Displays.nightShiftActive
+                onClicked: Settings.nightShiftNow = !Displays.nightShiftActive
+            }
         }
         SliderTile {
+            id: soundTile
+            property bool devicesOpen: false
             label: "Sound"
             icon: Audio.muted ? "speaker-mute" : "speaker"
             value: Audio.muted ? 0 : Audio.volume
             onMoved: v => Audio.setVolume(v)
+            height: 74 + (devicesOpen ? deviceList.implicitHeight + 8 : 0)
+            Behavior on height { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
+            HeaderToggle {
+                visible: Audio.sinks.length > 0
+                icon: Audio.deviceIcon(Audio.sink)
+                text: Audio.sinks.length > 1 ? "Output" : Audio.deviceName(Audio.sink)
+                chevron: true
+                on: soundTile.devicesOpen
+                onClicked: soundTile.devicesOpen = !soundTile.devicesOpen
+            }
+            Column {
+                id: deviceList
+                visible: soundTile.devicesOpen
+                x: 12
+                y: 74
+                width: parent.width - 24
+                Repeater {
+                    model: Audio.sinks
+                    Rectangle {
+                        id: dev
+                        required property var modelData
+                        readonly property bool current: Audio.sink === modelData
+                        width: deviceList.width
+                        height: 32
+                        radius: 10
+                        color: devMouse.containsMouse ? Theme.hover : "transparent"
+                        Rectangle {
+                            id: devIcon
+                            x: 6
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 24; height: 24; radius: 12
+                            color: dev.current ? Theme.accent : Theme.controlOff
+                            Icon { anchors.centerIn: parent; size: 13; name: Audio.deviceIcon(dev.modelData); color: dev.current ? "white" : Theme.text }
+                        }
+                        Label {
+                            anchors.left: devIcon.right
+                            anchors.leftMargin: 10
+                            anchors.right: parent.right
+                            anchors.rightMargin: 8
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: Audio.deviceName(dev.modelData)
+                            font.pixelSize: 12
+                        }
+                        MouseArea { id: devMouse; anchors.fill: parent; hoverEnabled: true; onClicked: Audio.setSink(dev.modelData) }
+                    }
+                }
+            }
         }
     }
 
@@ -269,6 +341,38 @@ Item {
         width: 18; height: 18
         Icon { anchors.centerIn: parent; size: 16; name: g.name; color: Theme.text }
         MouseArea { anchors.fill: parent; anchors.margins: -8; onClicked: g.clicked() }
+    }
+
+    // Small pill at the top right of a slider tile (Night Shift, output device).
+    component HeaderToggle: Rectangle {
+        id: ht
+        property string icon
+        property string text
+        property bool on: false
+        property bool chevron: false
+        signal clicked()
+        anchors.right: parent?.right
+        anchors.rightMargin: 12
+        y: 7
+        width: Math.min(htRow.implicitWidth + 16, 170)
+        height: 22
+        radius: 11
+        color: ht.on ? Theme.accent : (htMouse.containsMouse ? Theme.hover : "transparent")
+        Row {
+            id: htRow
+            anchors.centerIn: parent
+            spacing: 5
+            Icon { size: 12; name: ht.icon; color: ht.on ? "white" : Theme.textSecondary; anchors.verticalCenter: parent.verticalCenter }
+            Label {
+                text: ht.text
+                font.pixelSize: 11
+                color: ht.on ? "white" : Theme.textSecondary
+                width: Math.min(implicitWidth, 120)
+                anchors.verticalCenter: parent.verticalCenter
+            }
+            Icon { visible: ht.chevron; size: 9; name: "chevron-down"; color: ht.on ? "white" : Theme.textSecondary; anchors.verticalCenter: parent.verticalCenter; rotation: ht.on ? 180 : 0 }
+        }
+        MouseArea { id: htMouse; anchors.fill: parent; hoverEnabled: true; onClicked: ht.clicked() }
     }
 
     // Labelled capsule slider (Display, Sound).

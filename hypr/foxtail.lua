@@ -51,7 +51,6 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("foxtail-shell")
     hl.exec_cmd("/usr/lib/hyprpolkitagent/hyprpolkitagent")
     hl.exec_cmd("gnome-keyring-daemon --start --components=secrets")
-    hl.exec_cmd("wl-paste --watch cliphist store")
     hl.exec_cmd("foxtail-firstboot")
 end)
 
@@ -122,12 +121,19 @@ hl.config({
         animate_manual_resizes = false,
         animate_mouse_windowdragging = false,
         layers_hog_keyboard_focus = true,
+        -- If the shell crashes while locked, foxtail-shell restarts it and it
+        -- locks again; give it time before Hyprland shows its fallback screen.
+        allow_session_lock_restore = true,
+        lockdead_screen_delay = 6000,
     },
 
     cursor = { inactive_timeout = 0 },
     binds = { workspace_back_and_forth = false },
     ecosystem = { no_update_news = true, no_donation_nag = true },
 })
+
+-- Displays and keyboard as set in System Settings (written by the shell).
+pcall(dofile, HOME .. "/.config/foxtail/hypr/generated.lua")
 
 -- macOS-flavoured motion: windows "genie-pop" in on a spring, spaces slide.
 hl.curve("macSpring", { type = "spring", mass = 1, stiffness = 260, dampening = 26 })
@@ -147,6 +153,7 @@ hl.animation({ leaf = "border", enabled = false })
 
 ---------------------------------------------------------------- gestures
 hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
+hl.gesture({ fingers = 3, direction = "up", action = function() hl.dispatch(hl.dsp.global("foxtail:missionControl")) end })
 
 ---------------------------------------------------------------- layer rules
 -- Blur behind Foxtail's glass. ignore_alpha keeps fully clear pixels (and
@@ -310,12 +317,30 @@ hl.bind("ALT + " .. CMD .. " + escape", ipc("forceQuit"), { desc = "Force Quit" 
 hl.bind(CMD .. " + SHIFT + ALT + Q", ipc("power logout"), { desc = "Log Out" })
 hl.bind("CTRL + " .. CMD .. " + F", hl.dsp.window.fullscreen(), { desc = "Full Screen" })
 hl.bind(CMD .. " + ALT + T", hl.dsp.window.float({ action = "toggle" }), { desc = "Float / Tile" })
-hl.bind(CMD .. " + tab", hl.dsp.window.cycle_next(), { desc = "Next window" })
+-- ⌘Tab app switcher: Tab steps through apps while ⌘ is held; letting go of
+-- ⌘ switches. ⌘` cycles the windows of the current app. These go to the shell
+-- as global shortcuts (one ordered socket, no process per key press).
+local shell = function(name) return hl.dsp.global("foxtail:" .. name) end
+hl.bind(CMD .. " + tab", shell("switcherNext"), { desc = "Switch apps" })
+hl.bind(CMD .. " + SHIFT + tab", shell("switcherPrev"))
+hl.bind(CMD .. " + Super_L", shell("switcherCommit"), { release = true, non_consuming = true })
+hl.bind(CMD .. " + Super_R", shell("switcherCommit"), { release = true, non_consuming = true })
+hl.bind(CMD .. " + grave", hl.dsp.window.cycle_next(), { desc = "Next window of app" })
+
+-- Mission Control: F3, ⌃↑ or a three-finger swipe up.
+hl.bind("F3", shell("missionControl"), { desc = "Mission Control" })
+hl.bind("CTRL + up", shell("missionControl"))
+hl.bind(CMD .. " + ALT + V", ipc("clipboard"), { desc = "Clipboard history" })
+
+-- Input sources: ⌃Space switches keyboard layout when there is more than one.
+if foxtail_layout_shortcut ~= false and (foxtail_layouts or ""):find(",") then
+    hl.bind("CTRL + space", hl.dsp.exec_cmd("hyprctl switchxkblayout all next"), { desc = "Next input source" })
+end
 hl.bind(CMD .. " + ALT + return", hl.dsp.exec_cmd("ptyxis --new-window"), { desc = "Terminal" })
 
 hl.bind(CMD .. " + SHIFT + 3", hl.dsp.exec_cmd("foxtail-screenshot screen"), { desc = "Screenshot" })
 hl.bind(CMD .. " + SHIFT + 4", hl.dsp.exec_cmd("foxtail-screenshot area"), { desc = "Screenshot area" })
-hl.bind(CMD .. " + SHIFT + 5", hl.dsp.exec_cmd("foxtail-screenshot window"), { desc = "Screenshot window" })
+hl.bind(CMD .. " + SHIFT + 5", ipc("screenshotToolbar"), { desc = "Screenshot and recording" })
 
 -- Desktops: ⌃1-9 as on macOS, ⌃⌘←/→ for next/previous (plain ⌃←/→ stays
 -- word-jump in apps). ⌃⇧1-9 moves the window there.

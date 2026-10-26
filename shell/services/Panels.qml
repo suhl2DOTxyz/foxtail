@@ -15,6 +15,8 @@ Singleton {
     property bool about: false
     property bool forceQuit: false
     property bool installer: false
+    property bool missionControl: false
+    property bool screenshotBar: false
     property string settingsPane: "appearance"
     // Pending power confirmation: "" | "restart" | "shutdown" | "logout"
     property string confirm: ""
@@ -46,6 +48,7 @@ Singleton {
         popover = "";
         spotlight = false;
         launchpad = false;
+        missionControl = false;
     }
 
     function openSettings(pane) {

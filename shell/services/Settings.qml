@@ -29,6 +29,19 @@ Singleton {
     property alias showBatteryPercent: adapter.showBatteryPercent
     property alias autoLowPower: adapter.autoLowPower
     property alias displayOffAfter: adapter.displayOffAfter
+    property alias displays: adapter.displays
+    property alias nightShiftNow: adapter.nightShiftNow
+    property alias nightShiftSchedule: adapter.nightShiftSchedule
+    property alias nightShiftFrom: adapter.nightShiftFrom
+    property alias nightShiftTo: adapter.nightShiftTo
+    property alias nightShiftWarmth: adapter.nightShiftWarmth
+    property alias keyboardLayouts: adapter.keyboardLayouts
+    property alias keyRepeatDelay: adapter.keyRepeatDelay
+    property alias keyRepeatRate: adapter.keyRepeatRate
+    property alias layoutSwitchShortcut: adapter.layoutSwitchShortcut
+    property alias clipboardHistory: adapter.clipboardHistory
+    property alias screenshotTimer: adapter.screenshotTimer
+    property alias screenshotPointer: adapter.screenshotPointer
 
     readonly property string dir: Quickshell.env("HOME") + "/.config/foxtail"
     readonly property string wallpaperDir: "/usr/share/backgrounds/foxtail"
@@ -75,6 +88,20 @@ Singleton {
             property bool refractWindows: true  // Liquid Glass popovers refract windows, not just the wallpaper
             property int lockAfter: 5          // minutes idle before locking; 0 = never
             property int displayOffAfter: 10   // minutes idle before the display sleeps; 0 = never
+            // Per-output display settings: { "DP-1": { mode, scale, x, y, transform, mirror, disabled } }
+            property var displays: ({})
+            property bool nightShiftNow: false
+            property bool nightShiftSchedule: false
+            property int nightShiftFrom: 1320  // minutes after midnight (22:00)
+            property int nightShiftTo: 420     // 07:00
+            property real nightShiftWarmth: 0.5
+            property list<string> keyboardLayouts: []  // empty = the layout chosen in the installer
+            property int keyRepeatDelay: 500   // ms
+            property int keyRepeatRate: 30     // keys per second
+            property bool layoutSwitchShortcut: true   // ⌃Space switches input source
+            property bool clipboardHistory: true
+            property int screenshotTimer: 0    // seconds
+            property bool screenshotPointer: false
         }
     }
 }

@@ -62,6 +62,46 @@ Singleton {
         return isShellWindow(t) ? "" : (t?.appId ?? "");
     }
 
+    // Most recently used apps and windows, newest first (for ⌘Tab).
+    property var mruApps: []
+    property var mruWindows: []
+    Connections {
+        target: ToplevelManager
+        function onActiveToplevelChanged() {
+            const t = ToplevelManager.activeToplevel;
+            if (!t || t.parent) return;
+            const id = root.idForToplevel(t);
+            if (!id) return;
+            root.mruApps = [id].concat(root.mruApps.filter(x => x !== id));
+            root.mruWindows = [t].concat(root.mruWindows.filter(x => x !== t && root.toplevels.indexOf(x) >= 0));
+        }
+    }
+
+    // Running apps in most-recently-used order.
+    readonly property var running: {
+        const ids = [];
+        for (const t of toplevels) {
+            const id = idForToplevel(t);
+            if (id && ids.indexOf(id) < 0) ids.push(id);
+        }
+        const recent = mruApps.filter(id => ids.indexOf(id) >= 0);
+        return recent.concat(ids.filter(id => recent.indexOf(id) < 0));
+    }
+
+    // Bring an app forward: its most recent window, restoring it if minimized.
+    function focus(id) {
+        const wins = windowsFor(id);
+        if (wins.length === 0) { launch(id); return; }
+        const ordered = mruWindows.filter(w => wins.indexOf(w) >= 0).concat(wins.filter(w => mruWindows.indexOf(w) < 0));
+        const visible = ordered.filter(w => !Hypr.isMinimized(w));
+        if (visible.length === 0) {
+            const h = Hypr.hyprFor(ordered[0]);
+            if (h) Hypr.restore(h);
+            return;
+        }
+        visible[0].activate();
+    }
+
     function windowsFor(id) {
         return toplevels.filter(t => idForToplevel(t) === id);
     }

@@ -24,6 +24,18 @@ Singleton {
     readonly property var minimized: Hyprland.toplevels.values
         .filter(t => t.workspace?.name === "special:minimized")
 
+    // The yellow button in apps asks the compositor to minimize; Hyprland
+    // only reports the request, so the shell does the minimizing.
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            if (event.name !== "minimized") return;
+            const [addr, on] = event.data.split(",");
+            if (on === "1")
+                root.dispatch(`hl.dsp.window.move({ workspace = "special:minimized", follow = false, window = "address:0x${addr.replace(/^0x/, "")}" })`);
+        }
+    }
+
     function minimizeActive() {
         dispatch("hl.dsp.window.move({ workspace = \"special:minimized\", follow = false })");
     }

@@ -108,6 +108,54 @@ PanelWindow {
         height: parent.height
         spacing: 2
 
+        // Screen recording in progress: click to stop.
+        BarButton {
+            id: recButton
+            visible: Capture.recording
+            width: recRow.implicitWidth + 18
+            onPressed: Capture.stop()
+            Row {
+                id: recRow
+                anchors.centerIn: parent
+                spacing: 6
+                Icon { size: 12; name: "stop"; color: bar.fg; anchors.verticalCenter: parent.verticalCenter }
+                Label {
+                    text: Capture.clock(Capture.elapsed)
+                    color: bar.fg
+                    font.pixelSize: 12
+                    font.features: { "tnum": 1 }
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
+        }
+
+        // Input source (shown when more than one keyboard layout is set up).
+        BarButton {
+            id: inputButton
+            visible: Keyboard.layouts.length > 1
+            width: inputBadge.width + 16
+            active: Panels.popover === "input" && bar.menuOpen
+            onPressed: bar.openMenu("input", inputButton)
+            Rectangle {
+                id: inputBadge
+                anchors.centerIn: parent
+                width: Math.max(20, inputLabel.implicitWidth + 8)
+                height: 16
+                radius: 4
+                color: "transparent"
+                border.width: 1.2
+                border.color: bar.fg
+                Label {
+                    id: inputLabel
+                    anchors.centerIn: parent
+                    text: Keyboard.shortName(Keyboard.active)
+                    font.pixelSize: 9
+                    font.weight: Font.Bold
+                    color: bar.fg
+                }
+            }
+        }
+
         BarButton {
             id: batteryButton
             visible: Power.hasBattery

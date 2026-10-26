@@ -46,14 +46,19 @@
 - [ ] Test on at least 5 real machines (Intel, AMD, NVIDIA, and one older laptop)
 
 ## v1.5: No terminal needed
-- [ ] **Displays:** resolution, scaling, refresh rate, multi-monitor arrangement, night shift
-- [ ] **Bluetooth:** pairing UI with device icons and battery levels
-- [ ] **Sound:** output/input device switcher in Control Center and Settings
-- [ ] **Keyboard:** layouts and input sources after install, custom shortcuts
-- [ ] **Users & Groups, Date & Time, Printers (CUPS), Default Apps**
-- [ ] **⌘Tab app switcher** with icons, **Mission Control** (window overview), snapping menu on the green button
-- [ ] **Screenshot UI (⌘⇧5)** and screen recording
-- [ ] Clipboard history
+- ✅ **Displays:** resolution, refresh rate, scale, rotation, mirroring and arrangement, with a 15-second "Keep these settings?" revert; saved per display
+- 🟡 **Night Shift:** on now, custom schedule, warmth (hyprsunset); not visible in VMs
+- ✅ **Sound:** output and input device pickers in Settings, output picker in Control Center
+- 🟡 **Bluetooth:** scanning, pairing, device icons, battery levels, forget (no Bluetooth in the test VM; devices that ask for a PIN aren't supported yet)
+- ✅ **Keyboard:** input sources (add, remove, switch from the menu bar or ⌃Space), key repeat
+- ✅ **Users & Groups** (add, password, admin, delete, with safety checks), **Date & Time**, **Printers & Scanners** (CUPS + network discovery), **Default Apps**
+- ✅ **⌘Tab app switcher** (most recent first), **Mission Control** (F3 / ⌃↑ / three-finger swipe up: live thumbnails, desktops, drag windows between desktops)
+- ✅ **Screenshot toolbar (⇧⌘5)** and **screen recording** with a stop button in the menu bar
+- ✅ **Clipboard history** (⌥⌘V)
+- ✅ The shell restarts itself if it crashes, and locks again if it was locked
+- ✅ GTK theme fixes now reach existing users (the theme lives in /usr/share instead of being copied to each account)
+- [ ] Snapping menu on the green button (GTK draws its own buttons; needs a compositor-side menu)
+- [ ] Custom keyboard shortcuts
 
 ## v1.6: Daily-driver release
 - [ ] Notification grouping, actions and reply
@@ -78,4 +83,5 @@
 - **App menus are generic.** File/Edit/View items send each app's standard shortcuts. Wayland has no global-menu protocol, and GTK4 apps don't export their menus. ⌘ shortcuts themselves work everywhere.
 - **VMs use software rendering.** VirtualBox's 3D driver can't create Qt's EGL surfaces (tested on VirtualBox 7.2), so animations are slower there. Real hardware uses the GPU.
 - **The encryption password prompt is plain text.** GRUB asks for it before the boot splash, and unlocking takes a few seconds (GRUB's decryption is slow).
+- **The yellow (minimize) button is greyed out in GTK apps.** Hyprland doesn't tell apps it can minimize, so GTK disables the button. ⌘M and the Window menu minimize to the Dock.
 - **Installing alongside needs free space already.** Foxtail doesn't shrink existing partitions; make room first (for example with Windows Disk Management).

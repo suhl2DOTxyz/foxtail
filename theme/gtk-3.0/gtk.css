@@ -1,5 +1,6 @@
-/* Foxtail: GTK 3 (adw-gtk3) tweaks. macOS traffic-light titlebar buttons. */
-@import url("foxtail-accent.css");
+/* Foxtail: GTK 3 (adw-gtk3) tweaks, installed to
+ * /usr/share/foxtail/gtk-3.0/foxtail.css and imported by each user's
+ * ~/.config/gtk-3.0/gtk.css. macOS traffic-light titlebar buttons. */
 
 headerbar button.titlebutton,
 .titlebar button.titlebutton {
@@ -16,6 +17,11 @@ headerbar button.titlebutton,
 }
 
 headerbar button.titlebutton image { -gtk-icon-transform: scale(0.6); }
+
+/* macOS spacing: in from the window edge, and a gap before the next button
+ * (the buttons are laid out close, minimize, maximize). */
+headerbar button.titlebutton.close { margin-left: 16px; }
+headerbar button.titlebutton.maximize { margin-right: 6px; }
 
 headerbar button.titlebutton.close { background-color: #FF5F57; }
 headerbar button.titlebutton.minimize { background-color: #FEBC2E; }

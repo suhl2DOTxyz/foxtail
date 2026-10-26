@@ -28,6 +28,14 @@ gsettings set org.gnome.desktop.interface accent-color "$name"
 # The exact accent for our CSS (window controls, selections).
 for v in gtk-3.0 gtk-4.0; do
     mkdir -p "$HOME/.config/$v"
+    # Accounts made before 1.5 got a copy of the theme; point them at the
+    # shared one so theme fixes in updates reach them too.
+    css="$HOME/.config/$v/gtk.css"
+    if [ -f "/usr/share/foxtail/$v/foxtail.css" ] && { [ ! -e "$css" ] || head -1 "$css" | grep -q '^/\* Foxtail: GTK'; }; then
+        printf '%s\n' '/* Foxtail theme (kept up to date by Foxtail). Add your own CSS below. */' \
+            '@import url("foxtail-accent.css");' \
+            "@import url(\"file:///usr/share/foxtail/$v/foxtail.css\");" > "$css"
+    fi
     printf '@define-color accent_color %s;\n@define-color accent_bg_color %s;\n' "$accent" "$accent" \
         > "$HOME/.config/$v/foxtail-accent.css"
 done

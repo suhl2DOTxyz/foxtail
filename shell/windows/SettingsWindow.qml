@@ -6,6 +6,7 @@ import Quickshell.Networking
 import Quickshell.Bluetooth
 import qs.services
 import qs.components
+import qs.settings
 
 // System Settings, modelled on macOS Ventura+: translucent sidebar with a
 // search field and user card, panes of inset-grouped rows on the right.
@@ -16,7 +17,7 @@ FloatingWindow {
     visible: Panels.settings
     onVisibleChanged: if (!visible) Panels.settings = false
     implicitWidth: 760
-    implicitHeight: 620
+    implicitHeight: 680
     minimumSize: Qt.size(680, 480)
     color: "transparent"
 
@@ -37,7 +38,12 @@ FloatingWindow {
         { id: "focus", name: "Focus", icon: "moon", color: "#5E5CE6" },
         { id: "sep" },
         { id: "lock", name: "Lock Screen", icon: "lock", color: "#1C1C1E" },
-        { id: "keyboard", name: "Keyboard", icon: "keyboard", color: "#8E8E93" }
+        { id: "users", name: "Users & Groups", icon: "people", color: "#0A84FF" },
+        { id: "datetime", name: "Date & Time", icon: "clock", color: "#0A84FF" },
+        { id: "sep" },
+        { id: "keyboard", name: "Keyboard", icon: "keyboard", color: "#8E8E93" },
+        { id: "printers", name: "Printers & Scanners", icon: "printer", color: "#8E8E93" },
+        { id: "defaultapps", name: "Default Apps", icon: "apps", color: "#FF7A1A" }
     ]
     property string filter: ""
 
@@ -257,6 +263,10 @@ FloatingWindow {
                     switch (Panels.settingsPane) {
                     case "wifi": return wifiPane;
                     case "bluetooth": return btPane;
+                    case "users": return usersPane;
+                    case "datetime": return dateTimePane;
+                    case "printers": return printersPane;
+                    case "defaultapps": return defaultAppsPane;
                     case "general": return generalPane;
                     case "battery": return batteryPane;
                     case "updates": return updatesPane;
@@ -274,119 +284,6 @@ FloatingWindow {
                 }
             }
         }
-    }
-
-    // ================= building blocks =================
-    component Group: Rectangle {
-        default property alias rows: groupCol.data
-        width: parent?.width ?? 0
-        height: groupCol.implicitHeight
-        radius: Theme.liquid ? 18 : 9
-        color: Theme.dark ? Qt.rgba(1, 1, 1, 0.05) : Qt.rgba(0, 0, 0, 0.03)
-        border.color: Theme.separator
-        Column { id: groupCol; width: parent.width }
-    }
-
-    component SettingRow: Item {
-        id: sr
-        property string label
-        property string sub: ""
-        property bool last: false
-        default property alias control: ctl.data
-        width: parent?.width ?? 0
-        height: sub ? 52 : 40
-        Column {
-            x: 14
-            anchors.verticalCenter: parent.verticalCenter
-            width: parent.width - ctl.width - 40
-            Label { width: parent.width; text: sr.label }
-            Label { visible: sr.sub !== ""; width: parent.width; text: sr.sub; font.pixelSize: 11; color: Theme.textSecondary; wrapMode: Text.Wrap; elide: Text.ElideNone }
-        }
-        Item {
-            id: ctl
-            anchors.right: parent.right
-            anchors.rightMargin: 14
-            anchors.verticalCenter: parent.verticalCenter
-            width: childrenRect.width
-            height: childrenRect.height
-        }
-        Rectangle {
-            visible: !sr.last
-            anchors.bottom: parent.bottom
-            x: 14
-            width: parent.width - 28
-            height: 1
-            color: Theme.separator
-        }
-    }
-
-    component SectionTitle: Label {
-        font.weight: Font.Bold
-        topPadding: 8
-    }
-
-    component PlainSlider: Item {
-        id: ps
-        property real value: 0.5
-        property real from: 0
-        property real to: 1
-        signal moved(real value)
-        width: 200
-        height: 20
-        readonly property real t: (value - from) / (to - from)
-        Rectangle {
-            anchors.verticalCenter: parent.verticalCenter
-            width: parent.width; height: 4; radius: 2
-            color: Theme.controlOff
-            Rectangle { width: parent.width * ps.t; height: parent.height; radius: 2; color: Theme.accent }
-        }
-        Rectangle {
-            x: ps.t * (parent.width - width)
-            anchors.verticalCenter: parent.verticalCenter
-            width: 20; height: 20; radius: 10
-            color: "white"
-            border.color: Qt.rgba(0, 0, 0, 0.15)
-        }
-        MouseArea {
-            anchors.fill: parent
-            function upd(mx) {
-                const v = ps.from + Math.max(0, Math.min(1, mx / width)) * (ps.to - ps.from);
-                ps.value = v;
-                ps.moved(v);
-            }
-            onPressed: m => upd(m.x)
-            onPositionChanged: m => { if (pressed) upd(m.x); }
-        }
-    }
-
-    // Compact segmented picker: click cycles through the options.
-    component Choice: Rectangle {
-        id: ch
-        property var options: []
-        property var value
-        signal picked(var value)
-        readonly property int idx: Math.max(0, options.findIndex(o => o[0] === value))
-        width: chl.implicitWidth + 34
-        height: 24
-        radius: Theme.liquid ? 12 : 6
-        color: Theme.control
-        border.color: Theme.separator
-        Label { id: chl; x: 12; anchors.verticalCenter: parent.verticalCenter; text: ch.options[ch.idx]?.[1] ?? ""; font.pixelSize: 12 }
-        Icon { anchors.right: parent.right; anchors.rightMargin: 8; anchors.verticalCenter: parent.verticalCenter; size: 10; name: "chevron-down"; color: Theme.textSecondary }
-        MouseArea { anchors.fill: parent; onClicked: ch.picked(ch.options[(ch.idx + 1) % ch.options.length][0]) }
-    }
-
-    component PushButton: Rectangle {
-        id: pb
-        property string text
-        signal clicked()
-        width: pbl.implicitWidth + 24
-        height: 24
-        radius: Theme.liquid ? 12 : 6
-        color: pbm.pressed ? Theme.pressed : Theme.control
-        border.color: Theme.separator
-        Label { id: pbl; anchors.centerIn: parent; text: pb.text; font.pixelSize: 12 }
-        MouseArea { id: pbm; anchors.fill: parent; onClicked: pb.clicked() }
     }
 
     // ================= panes =================
@@ -763,17 +660,6 @@ FloatingWindow {
                 }
             }
 
-            Group {
-                SettingRow {
-                    label: "Use 24-hour time"
-                    Switch { checked: Settings.clock24h; onToggled: c => Settings.clock24h = c }
-                }
-                SettingRow {
-                    label: "Show seconds in menu bar"
-                    last: true
-                    Switch { checked: Settings.clockSeconds; onToggled: c => Settings.clockSeconds = c }
-                }
-            }
         }
     }
 
@@ -923,80 +809,11 @@ FloatingWindow {
         }
     }
 
-    Component {
-        id: btPane
-        Column {
-            id: btCol
-            spacing: 14
-            readonly property var adapter: Bluetooth.defaultAdapter
-            Group {
-                SettingRow {
-                    label: "Bluetooth"
-                    sub: btCol.adapter ? "" : "No Bluetooth adapter found"
-                    last: true
-                    Switch {
-                        checked: Bluetooth.defaultAdapter?.enabled ?? false
-                        onToggled: c => { if (Bluetooth.defaultAdapter) Bluetooth.defaultAdapter.enabled = c; }
-                    }
-                }
-            }
-            SectionTitle { text: "Devices"; visible: btCol.adapter?.enabled ?? false }
-            Group {
-                visible: btCol.adapter?.enabled ?? false
-                Repeater {
-                    model: Bluetooth.devices.values.filter(d => d.name)
-                    SettingRow {
-                        required property var modelData
-                        label: modelData.name
-                        sub: modelData.connected ? "Connected" : (modelData.paired ? "Not connected" : "")
-                        PushButton {
-                            text: modelData.connected ? "Disconnect" : (modelData.paired ? "Connect" : "Pair")
-                            onClicked: modelData.connected ? modelData.disconnect() : (modelData.paired ? modelData.connect() : modelData.pair())
-                        }
-                    }
-                }
-            }
-        }
-    }
+    Component { id: btPane; BluetoothPane {} }
 
-    Component {
-        id: displaysPane
-        Column {
-            spacing: 14
-            Group {
-                SettingRow {
-                    label: "Brightness"
-                    sub: Brightness.available ? "" : "This display doesn't support brightness control"
-                    last: true
-                    PlainSlider { enabled: Brightness.available; value: Brightness.value; onMoved: v => Brightness.set(v) }
-                }
-            }
-        }
-    }
+    Component { id: displaysPane; DisplaysPane {} }
 
-    Component {
-        id: soundPane
-        Column {
-            spacing: 14
-            SectionTitle { text: "Output" }
-            Group {
-                SettingRow {
-                    label: "Output volume"
-                    PlainSlider { value: Audio.volume; onMoved: v => Audio.setVolume(v) }
-                }
-                SettingRow {
-                    label: "Mute"
-                    last: true
-                    Switch { checked: Audio.muted; onToggled: Audio.toggleMute() }
-                }
-            }
-            Label {
-                text: "Output device: " + (Audio.sink?.description ?? "None")
-                color: Theme.textSecondary
-                font.pixelSize: 12
-            }
-        }
-    }
+    Component { id: soundPane; SoundPane {} }
 
     Component {
         id: notificationsPane
@@ -1059,48 +876,9 @@ FloatingWindow {
         }
     }
 
-    Component {
-        id: keyboardPane
-        Column {
-            spacing: 14
-            SectionTitle { text: "Keyboard Shortcuts" }
-            Label {
-                width: parent.width
-                wrapMode: Text.Wrap
-                text: "The Super (⊞) key is ⌘ Command, Ctrl is ⌃ Control, Alt is ⌥ Option. ⌘ shortcuts work in every app, and in terminals ⌘C copies instead of interrupting."
-                color: Theme.textSecondary
-                font.pixelSize: 12
-            }
-            Group {
-                Repeater {
-                    model: [
-                        ["Copy, Paste, Cut, Undo, Select All", "⌘C  ⌘V  ⌘X  ⌘Z  ⌘A"],
-                        ["Quit app (all its windows)", "⌘Q"],
-                        ["Close tab or window", "⌘W"],
-                        ["Hide / Minimize", "⌘H  /  ⌘M"],
-                        ["Spotlight", "⌘ Space"],
-                        ["Switch app windows", "⌘ Tab"],
-                        ["Line start / end, word jump", "⌘← ⌘→  /  ⌥← ⌥→"],
-                        ["Back / Forward", "⌘[  /  ⌘]"],
-                        ["Full screen", "⌃⌘F"],
-                        ["Switch desktop", "⌃1 … 9  /  ⌃⌘← →"],
-                        ["Move window to desktop", "⌃⇧1 … 9"],
-                        ["Launchpad", "F4  /  ⌥⌘L"],
-                        ["Control Center", "⌥⌘C"],
-                        ["Files  /  Terminal", "⌥⌘Space  /  ⌥⌘Return"],
-                        ["Lock screen", "⌃⌘Q"],
-                        ["Force Quit", "⌥⌘⎋"],
-                        ["Screenshot (screen / area / window)", "⇧⌘3  ⇧⌘4  ⇧⌘5"]
-                    ]
-                    SettingRow {
-                        required property var modelData
-                        required property int index
-                        label: modelData[0]
-                        last: index === 16
-                        Label { text: modelData[1]; color: Theme.textSecondary; font.family: Theme.font }
-                    }
-                }
-            }
-        }
-    }
+    Component { id: keyboardPane; KeyboardPane {} }
+    Component { id: usersPane; UsersPane {} }
+    Component { id: dateTimePane; DateTimePane {} }
+    Component { id: printersPane; PrintersPane {} }
+    Component { id: defaultAppsPane; DefaultAppsPane {} }
 }

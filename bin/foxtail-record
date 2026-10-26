@@ -1,0 +1,15 @@
+#!/bin/sh
+# foxtail-record <screen|area> <file>
+# Records the focused display or a dragged-out region until interrupted
+# (SIGINT), which the shell sends when you click Stop in the menu bar.
+mode=${1:-screen}
+file=${2:?usage: foxtail-record <screen|area> <file>}
+mkdir -p "$(dirname "$file")"
+case "$mode" in
+    area)
+        geom=$(slurp -d -b '#00000040' -c '#FF7A1AFF' -w 2) || exit 3
+        exec wf-recorder -y -g "$geom" -f "$file" ;;
+    *)
+        output=$(hyprctl -j monitors | jq -r '.[] | select(.focused) | .name')
+        exec wf-recorder -y -o "$output" -f "$file" ;;
+esac
