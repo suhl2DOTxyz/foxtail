@@ -201,7 +201,7 @@ sudo ./scripts/build-iso.sh       # -> out/foxtail-<version>-<date>-x86_64.iso
 
 ## 🗺️ Where it's heading
 
-Foxtail is young: **1.6** is the first release meant to be a daily driver, and **2.0** is the stable one. See the **[roadmap](ROADMAP.md)** for what's done, what's next and the known limitations.
+Foxtail is young. Everything is building toward **2.0**: the stable release you can use as your everyday computer. See the **[roadmap](ROADMAP.md)** for what's done, what's next and the known limitations.
 
 <br>
 

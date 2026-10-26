@@ -1,6 +1,6 @@
 # Foxtail roadmap: toward a daily driver
 
-**Goal:** by **v1.6**, Foxtail is something you can install on your main laptop and forget about. **v2.0** is the stable, polished release.
+**Goal:** **v2.0** is the stable, daily-driver release: something you can install on your main laptop and forget about. Every 1.x release builds toward it.
 
 "Daily driver" means four things, in this order:
 
@@ -70,7 +70,7 @@
 - [ ] Snapping menu on the green button (GTK draws its own buttons; needs a compositor-side menu)
 - [ ] Custom keyboard shortcuts
 
-## v1.6: Daily-driver release
+## v1.6: Polish and public beta
 - [ ] Notification grouping, actions and reply
 - [ ] Qt/KDE apps themed to match GTK apps
 - [ ] Accessibility: larger text, zoom, high contrast, reduce motion
@@ -79,7 +79,8 @@
 - [ ] Docs site: install guide, FAQ, troubleshooting
 - [ ] Public beta: issue templates, a testers' channel, triage
 
-## v2.0: Stable
+## v2.0: Stable daily driver
+- [ ] Runs well on at least 5 real machines (Intel, AMD, NVIDIA, an older laptop), with every 🟡 above confirmed on real hardware
 - [ ] Fixed, reliable update cadence (stable vs. testing channels)
 - [ ] Automated tests: QML lint in CI, an ISO boot test in a VM, installer test
 - [ ] Performance budget: shell idle CPU and RAM, animation frame times on integrated GPUs
