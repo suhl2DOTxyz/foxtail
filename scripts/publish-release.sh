@@ -10,6 +10,6 @@ V="${1:?usage: publish-release.sh <version>}"
 DIR="out/release-$V"
 
 [ -f "$DIR/notes.md" ] || { echo "missing $DIR/notes.md" >&2; exit 1; }
-gh release create "v$V" --repo "$REPO_SLUG" --latest \
+gh release create "v$V" --repo "$REPO_SLUG" ${LATEST:---latest} \
     --title "Foxtail $V" --notes-file "$DIR/notes.md" \
     "$DIR"/*.iso.part* "$DIR/SHA256SUMS"
