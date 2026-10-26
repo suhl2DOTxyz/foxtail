@@ -12,6 +12,7 @@ A macOS-style desktop on Arch Linux: a hand-built shell, orange through and thro
 [![Arch Linux](https://img.shields.io/badge/based_on-Arch_Linux-1793D1?style=for-the-badge&logo=archlinux&logoColor=white)](https://archlinux.org)
 [![Hyprland](https://img.shields.io/badge/compositor-Hyprland-58E1FF?style=for-the-badge)](https://hyprland.org)
 [![Quickshell](https://img.shields.io/badge/shell-Quickshell_(QML)-41CD52?style=for-the-badge&logo=qt&logoColor=white)](https://quickshell.org)
+[![License](https://img.shields.io/badge/license-GPL--3.0-8E8E93?style=for-the-badge)](LICENSE)
 
 [**Download**](https://github.com/suhl2DOTxyz/foxtail/releases/latest) · [Features](#features) · [Shortcuts](#shortcuts) · [Build it yourself](#build) · [Roadmap](ROADMAP.md)
 
@@ -210,6 +211,8 @@ Foxtail is young. Everything is building toward **2.0**: the stable release you 
 <img src="branding/foxtail-logo.png" width="40" alt="">
 
 **Foxtail** · Comes full circle.
+
+<sub>Licensed under the [GNU GPL v3.0 or later](LICENSE).</sub>
 
 <sub>Foxtail is an independent project and isn't affiliated with Apple. macOS, Mac and Liquid Glass are Apple's names, used here only to describe the look.</sub>
 
