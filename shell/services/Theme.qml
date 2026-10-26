@@ -40,10 +40,10 @@ Singleton {
 
     readonly property color menuBar: Settings.reduceTransparency
         ? (dark ? "#1E1E1E" : "#EDEDED")
-        : liquid ? Qt.rgba(0, 0, 0, 0.0)  // Tahoe: the bar itself is fully clear
+        : liquid && !Settings.menuBarBackground ? Qt.rgba(0, 0, 0, 0.0)  // Tahoe: the bar itself is fully clear
                  : (dark ? Qt.rgba(0.12, 0.12, 0.12, 0.45) : Qt.rgba(1, 1, 1, 0.45))
     // Menu bar text sits on the wallpaper when clear, so it follows wallpaper brightness.
-    readonly property color menuBarText: liquid ? (wallpaperDark ? "#FFFFFF" : "#000000") : text
+    readonly property color menuBarText: liquid && !Settings.menuBarBackground ? (wallpaperDark ? "#FFFFFF" : "#000000") : text
     property bool wallpaperDark: Settings.wallpaper.indexOf("dusk") >= 0 || Settings.wallpaper.indexOf("ember") >= 0
 
     readonly property string font: "Inter"

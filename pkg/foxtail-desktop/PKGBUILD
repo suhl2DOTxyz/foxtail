@@ -30,6 +30,8 @@ depends=(
     'power-profiles-daemon' 'zram-generator' 'cryptsetup' 'os-prober' 'ntfs-3g' 'pciutils'
     # everyday settings (1.5)
     'hyprsunset' 'wf-recorder' 'cups' 'cups-pk-helper' 'system-config-printer' 'avahi' 'nss-mdns'
+    # macOS touches (1.5): Quick Look in Files, interface sounds, emoji
+    'sushi' 'sound-theme-freedesktop' 'pipewire-audio'
 )
 optdepends=(
     'firefox: default web browser'
@@ -92,6 +94,7 @@ package() {
 
     # Branding
     install -Dm644 -t "$d/usr/share/backgrounds/foxtail" branding/wallpapers/*.jpg
+    install -Dm644 branding/sounds/foxtail-startup.wav "$d/usr/share/sounds/foxtail/startup.wav"
     for s in 16 22 24 32 48 64 128 256 512; do
         install -Dm644 "branding/icons/foxtail-$s.png" "$d/usr/share/icons/hicolor/${s}x${s}/apps/foxtail.png"
     done

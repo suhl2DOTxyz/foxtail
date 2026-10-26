@@ -1,8 +1,25 @@
 #!/bin/sh
 # Per-user first-login setup. Runs every login but only acts once.
 stamp="$HOME/.config/foxtail/.firstboot-done"
-[ -f "$stamp" ] && exit 0
 mkdir -p "$HOME/.config/foxtail"
+
+# Finder-style Favorites in the Files sidebar: Desktop, Documents, Downloads,
+# Pictures, Music, Videos. Once per account (accounts made before 1.5 too),
+# and never over bookmarks you already have.
+if [ ! -f "$HOME/.config/foxtail/.favorites-done" ]; then
+    xdg-user-dirs-update
+    bm="$HOME/.config/gtk-3.0/bookmarks"
+    if [ ! -s "$bm" ]; then
+        mkdir -p "$(dirname "$bm")"
+        for d in DESKTOP DOCUMENTS DOWNLOAD PICTURES MUSIC VIDEOS; do
+            p=$(xdg-user-dir "$d")
+            [ -d "$p" ] && [ "$p" != "$HOME" ] && printf 'file://%s\n' "$p" | sed 's/ /%20/g' >> "$bm"
+        done
+    fi
+    touch "$HOME/.config/foxtail/.favorites-done"
+fi
+
+[ -f "$stamp" ] && exit 0
 
 # Window controls on the left, macOS order.
 gsettings set org.gnome.desktop.wm.preferences button-layout 'close,minimize,maximize:'
@@ -18,7 +35,7 @@ gsettings set org.gtk.Settings.FileChooser sort-directories-first true
 gsettings set org.gnome.nautilus.preferences default-folder-viewer 'icon-view' 2>/dev/null
 
 xdg-user-dirs-update
-mkdir -p "$HOME/Pictures/Screenshots"
+mkdir -p "$HOME/Pictures/Screenshots" "$(xdg-user-dir DESKTOP)"
 
 foxtail-sync-appearance light '#FF7A1A'
 

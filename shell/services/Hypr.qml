@@ -39,6 +39,37 @@ Singleton {
     function minimizeActive() {
         dispatch("hl.dsp.window.move({ workspace = \"special:minimized\", follow = false })");
     }
+
+    // Lua helpers defined in hypr/foxtail.lua (window tiling, hide).
+    function lua(code) {
+        Quickshell.execDetached(["hyprctl", "eval", code]);
+    }
+
+    // ---- hide (⌘H): the app's windows wait on "special:hidden" until the app
+    // is activated again (Dock, ⌘Tab, Spotlight) or Show All ----
+    readonly property var hidden: Hyprland.toplevels.values
+        .filter(t => t.workspace?.name === "special:hidden" || t.workspace?.name === "special:desktop")
+
+    // Show Desktop (hot corner, F11): windows step aside; again brings them back.
+    function showDesktop() { lua("foxtail_show_desktop()"); }
+    function isHidden(wayland) {
+        return hidden.some(t => t.wayland === wayland);
+    }
+    function hideActiveApp() { lua("foxtail_hide(false)"); }
+    function hideOthers() { lua("foxtail_hide(true)"); }
+    function hideApp(appId) { lua(`foxtail_hide_class(${JSON.stringify(appId)})`); }
+    function showAll() {
+        for (const t of hidden.slice()) {
+            const a = "address:" + (t.address.startsWith("0x") ? "" : "0x") + t.address;
+            dispatch(`hl.dsp.window.move({ workspace = "e+0", window = "${a}" })`);
+        }
+    }
+    function minimizeApp() { lua("foxtail_minimize_app()"); }
+
+    // Window ▸ Move & Resize: fill, center, left, right, top, bottom,
+    // top_left, top_right, bottom_left, bottom_right, restore.
+    function tile(where) { lua(`foxtail_tile("${where}")`); }
+    function zoom() { dispatch("hl.dsp.window.fullscreen({ mode = \"maximized\" })"); }
     function restore(t) {
         const a = "address:" + (t.address.startsWith("0x") ? "" : "0x") + t.address;
         dispatch(`hl.dsp.window.move({ workspace = "e+0", window = "${a}" })`);

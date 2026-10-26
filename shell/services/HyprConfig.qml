@@ -20,6 +20,11 @@ Singleton {
         lines.push(`foxtail_layouts = ${q(layouts)}`);
         lines.push(`foxtail_layout_shortcut = ${Settings.layoutSwitchShortcut}`);
         lines.push(`hl.config({ input = { kb_layout = ${q(layouts)}, repeat_delay = ${Math.round(Settings.keyRepeatDelay)}, repeat_rate = ${Math.round(Settings.keyRepeatRate)} } })`);
+        // Mouse & Trackpad
+        lines.push(`hl.config({ input = { sensitivity = ${Math.max(-1, Math.min(1, Settings.pointerSpeed)).toFixed(2)}, natural_scroll = ${Settings.mouseNaturalScroll}, `
+                   + `touchpad = { natural_scroll = ${Settings.trackpadNaturalScroll}, tap_to_click = ${Settings.tapToClick}, `
+                   + `clickfinger_behavior = ${Settings.twoFingerSecondary}, scroll_factor = ${Settings.trackpadScrollSpeed.toFixed(2)} } } })`);
+        lines.push(`foxtail_gestures = ${Settings.trackpadGestures}`);
         const d = Settings.displays;
         for (const name of Object.keys(d).sort()) {
             const c = d[name];

@@ -151,6 +151,16 @@ PanelWindow {
                 id: optCol
                 x: 6; y: 6
                 width: parent.width - 12
+                OptHeader { text: "Save to" }
+                Repeater {
+                    model: [["desktop", "Desktop"], ["documents", "Documents"], ["pictures", "Pictures"], ["clipboard", "Clipboard"]]
+                    OptItem {
+                        required property var modelData
+                        text: modelData[1]
+                        checked: Settings.screenshotSaveTo === modelData[0]
+                        onClicked: Settings.screenshotSaveTo = modelData[0]
+                    }
+                }
                 OptHeader { text: "Timer" }
                 Repeater {
                     model: [[0, "None"], [5, "5 Seconds"], [10, "10 Seconds"]]

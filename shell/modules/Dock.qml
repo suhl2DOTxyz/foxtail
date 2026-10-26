@@ -1,12 +1,16 @@
 import QtQuick
+import Quickshell.Io
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import qs.services
 import qs.components
 
 // The Dock. Pinned apps, then running apps that aren't pinned, then Trash.
 // Hover magnification follows the pointer like macOS's; launching bounces the
-// icon until the app's first window appears; a dot marks running apps.
+// icon until the app's first window appears; a dot marks running apps and a
+// red badge counts its notifications. Drag pinned apps to reorder them, or
+// up and out of the Dock to remove them. Downloads sits beside the Trash.
 PanelWindow {
     id: dock
 
@@ -60,8 +64,78 @@ PanelWindow {
         // Minimized windows sit between the separator and Trash, as on macOS.
         for (const t of Hypr.minimized)
             out.push({ kind: "min", id: "min:" + t.address, toplevel: t });
+        out.push({ kind: "downloads", id: "downloads" });
         out.push({ kind: "trash", id: "trash" });
         return out;
+    }
+
+    // ---- Trash and Downloads ----
+    // Whether the Trash has anything in it. Emptying the Trash removes its
+    // folder, which a folder model can't follow, so check every few seconds
+    // (and right away after Move to Trash / Empty Trash).
+    property bool trashFull: false
+    Process {
+        id: trashCheck
+        command: ["sh", "-c", 'test -n "$(ls -A "$HOME/.local/share/Trash/files" 2>/dev/null)"']
+        onExited: code => dock.trashFull = code === 0
+    }
+    Timer {
+        interval: 4000
+        repeat: true
+        running: true
+        triggeredOnStart: true
+        onTriggered: trashCheck.running = true
+    }
+    Connections {
+        target: Sounds
+        function onPlayed(kind) { if (kind === "trash") recheck.restart(); }
+    }
+    Timer { id: recheck; interval: 600; onTriggered: trashCheck.running = true }
+
+    // ---- reordering: drag a pinned app along the Dock, or out to remove ----
+    property string dragId: ""
+    property point dragPos: Qt.point(0, 0)      // pointer, in window coordinates
+    readonly property bool dragOut: dragId !== "" && dragPos.y < body.y - iconSize * 0.9
+    property bool justDragged: false
+    function dropIndex() {
+        // Insertion point among the pinned apps (in un-magnified coordinates).
+        const bx = (dragPos.x - body.x) / body.width * baseWidth;
+        let n = 0;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].kind !== "app" || Settings.pinnedApps.indexOf(items[i].id) < 0) continue;
+            if (bx > baseCenters[i]) n = Settings.pinnedApps.indexOf(items[i].id) + 1;
+        }
+        return n;
+    }
+    function finishDrag() {
+        const id = dragId;
+        dragId = "";
+        justDragged = true;
+        clearJustDragged.restart();
+        if (dragOut) {
+            if (id !== "org.gnome.Nautilus") Apps.unpin(id);   // Files stays, like Finder
+            return;
+        }
+        const list = Settings.pinnedApps.filter(p => p !== id);
+        let at = dropIndex();
+        if (Settings.pinnedApps.indexOf(id) < at) at--;
+        list.splice(Math.max(0, Math.min(at, list.length)), 0, id);
+        Settings.pinnedApps = list;
+    }
+    Timer { id: clearJustDragged; interval: 50; onTriggered: dock.justDragged = false }
+
+    // An app asking for attention bounces its icon, as on macOS.
+    signal attention(string appId)
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            if (event.name !== "urgent") return;
+            const t = Hyprland.toplevels.values.find(t => t.address.replace(/^0x/, "") === event.data.replace(/^0x/, ""));
+            if (t?.wayland && !t.wayland.activated) {
+                dock.attention(Apps.idForToplevel(t.wayland));
+                Sounds.play("attention");
+            }
+        }
     }
 
     // Un-magnified centers, used to compute magnification without feedback.
@@ -108,8 +182,9 @@ PanelWindow {
             pointer: dockHover.hovered ? Qt.point(dockHover.point.position.x / width, -0.6) : Qt.point(-1, -1)
             screenSize: Qt.size(dock.width, dock.screen.height)
             windowOffset: Qt.point(0, dock.screen.height - dock.height)
-            bezel: 26
-            refraction: 26
+            bezel: 20
+            refraction: 16
+            adapt: 0.35   // icons, not text: let the wallpaper's color through
         }
 
         HoverHandler {
@@ -196,11 +271,38 @@ PanelWindow {
                         smooth: true
                         mipmap: true
                         source: cell.modelData.kind === "trash"
-                            ? Quickshell.iconPath("user-trash", "user-trash-full")
+                            ? Quickshell.iconPath(dock.trashFull ? "user-trash-full" : "user-trash", "user-trash")
+                            : cell.modelData.kind === "downloads"
+                            ? Quickshell.iconPath("folder-download", "folder")
                             : cell.modelData.kind === "min"
                                 ? Apps.iconFor(Apps.idForToplevel(cell.modelData.toplevel.wayland))
                                 : Apps.iconFor(cell.modelData.id)
-                        opacity: press.pressed ? 0.7 : 1
+                        opacity: dock.dragId === cell.modelData.id ? 0.25 : (press.pressed ? 0.7 : 1)
+                    }
+
+                    // Red badge: unread notifications from this app.
+                    Rectangle {
+                        readonly property int count: cell.modelData.kind === "app" ? Notifs.countFor(cell.modelData.id) : 0
+                        visible: count > 0
+                        anchors.right: parent.right
+                        anchors.top: parent.top
+                        anchors.rightMargin: -parent.width * 0.06
+                        anchors.topMargin: -parent.width * 0.06
+                        width: Math.max(height, badgeLabel.implicitWidth + 10)
+                        height: Math.round(parent.width * 0.38)
+                        radius: height / 2
+                        color: "#FF3B30"
+                        border.width: 1
+                        border.color: Qt.rgba(1, 1, 1, 0.5)
+                        Text {
+                            id: badgeLabel
+                            anchors.centerIn: parent
+                            text: parent.count > 99 ? "99+" : parent.count
+                            color: "white"
+                            font.family: Theme.font
+                            font.pixelSize: Math.round(parent.height * 0.6)
+                            font.weight: Font.DemiBold
+                        }
                     }
 
                     // Launchpad tile drawn in QML: a glass rounded square with a grid of dots.
@@ -263,6 +365,7 @@ PanelWindow {
                         id: tipLabel
                         anchors.centerIn: parent
                         text: cell.modelData.kind === "trash" ? "Trash"
+                            : cell.modelData.kind === "downloads" ? "Downloads"
                             : cell.modelData.kind === "launchpad" ? "Launchpad"
                             : cell.modelData.kind === "min" ? (cell.modelData.toplevel.title || "Window")
                             : Apps.nameFor(cell.modelData.id)
@@ -275,8 +378,34 @@ PanelWindow {
                     enabled: cell.modelData.kind !== "sep"
                     hoverEnabled: true
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    property point pressAt
+                    onPressed: m => pressAt = Qt.point(m.x, m.y)
+                    onPositionChanged: m => {
+                        const it = cell.modelData;
+                        if (!(pressedButtons & Qt.LeftButton) || it.kind !== "app" || Settings.pinnedApps.indexOf(it.id) < 0) return;
+                        if (dock.dragId === "" && Math.hypot(m.x - pressAt.x, m.y - pressAt.y) < 8) return;
+                        dock.dragId = it.id;
+                        dock.dragPos = mapToItem(null, m.x, m.y);
+                    }
+                    onReleased: if (dock.dragId === cell.modelData.id) dock.finishDrag()
                     onClicked: m => {
                         const it = cell.modelData;
+                        if (dock.justDragged) return;
+                        if (m.button === Qt.RightButton && it.kind === "trash") {
+                            const p = cell.mapToItem(null, cell.width / 2, 0);
+                            Panels.showContext([
+                                { text: "Open", action: () => Quickshell.execDetached(["nautilus", "trash:///"]) },
+                                { separator: true },
+                                { text: "Empty Trash", enabled: dock.trashFull, action: () => Panels.confirm = "emptyTrash" }
+                            ], p.x - 90, dock.screen.height - Settings.dockIconSize - 110, dock.modelData);
+                            return;
+                        }
+                        if (it.kind === "downloads") {
+                            const p = cell.mapToItem(null, cell.width / 2, 0);
+                            Panels.downloadsX = p.x;
+                            Panels.toggle("downloads", dock.modelData);
+                            return;
+                        }
                         if (m.button === Qt.RightButton && it.kind === "app") {
                             const p = cell.mapToItem(null, cell.width / 2, 0);
                             Panels.dockMenuApp = it.id;
@@ -298,6 +427,13 @@ PanelWindow {
                 }
 
                 Connections {
+                    target: dock
+                    function onAttention(appId) {
+                        if (cell.modelData.kind === "app" && cell.modelData.id === appId) bounceAnim.restart();
+                    }
+                }
+
+                Connections {
                     target: Apps
                     function onToplevelsChanged() {
                         if (cell.running && bounceAnim.running) {
@@ -307,6 +443,35 @@ PanelWindow {
                     }
                 }
             }
+        }
+    }
+
+    // The app being dragged follows the pointer; "Remove" once it's pulled
+    // far enough out of the Dock.
+    Item {
+        visible: dock.dragId !== ""
+        x: dock.dragPos.x - width / 2
+        y: dock.dragPos.y - height / 2
+        width: dock.iconSize
+        height: dock.iconSize
+        z: 100
+        Image {
+            anchors.fill: parent
+            sourceSize: Qt.size(dock.iconSize * 2, dock.iconSize * 2)
+            source: dock.dragId ? Apps.iconFor(dock.dragId) : ""
+            opacity: dock.dragOut ? 0.6 : 1
+        }
+        Rectangle {
+            visible: dock.dragOut && dock.dragId !== "org.gnome.Nautilus"
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.top
+            anchors.bottomMargin: 6
+            width: removeLabel.implicitWidth + 18
+            height: 22
+            radius: 11
+            color: Theme.glassStrong
+            border.color: Theme.glassOutline
+            Label { id: removeLabel; anchors.centerIn: parent; text: "Remove"; font.pixelSize: 12 }
         }
     }
 }

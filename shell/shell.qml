@@ -23,6 +23,7 @@ ShellRoot {
             id: perScreen
             required property var modelData
             Wallpaper { modelData: perScreen.modelData }
+            Desktop { modelData: perScreen.modelData }
             MenuBar { modelData: perScreen.modelData }
             Dock { modelData: perScreen.modelData }
             Overlay { modelData: perScreen.modelData }
@@ -32,6 +33,8 @@ ShellRoot {
             AppSwitcher { modelData: perScreen.modelData }
             MissionControl { modelData: perScreen.modelData }
             CaptureBar { modelData: perScreen.modelData }
+            ScreenshotThumb { modelData: perScreen.modelData }
+            HotCorners { modelData: perScreen.modelData }
         }
     }
 
@@ -60,6 +63,20 @@ ShellRoot {
         }
     }
 
+    // Appearance "Auto": Light by day, Dark from 7 PM to 7 AM. (macOS follows
+    // sunset; Foxtail has no location service, so it uses fixed hours.)
+    Timer {
+        interval: 60000
+        repeat: true
+        triggeredOnStart: true
+        running: Settings.appearanceAuto
+        onTriggered: {
+            const h = new Date().getHours();
+            const dark = h >= 19 || h < 7;
+            if (Settings.darkMode !== dark) Settings.darkMode = dark;
+        }
+    }
+
     // Services that work in the background (Night Shift, generated Hyprland
     // config, clipboard history) start with the shell, not on first use.
     readonly property var backgroundServices: [HyprConfig, Displays, Keyboard, Clipboard, Capture]
@@ -82,10 +99,24 @@ ShellRoot {
     // Keep GTK/libadwaita apps in step with Foxtail's appearance settings.
     Connections {
         target: Settings
-        function onDarkModeChanged() { root.syncGtk(); }
+        function onDarkModeChanged() {
+            root.syncGtk();
+            // Dynamic wallpaper follows the appearance.
+            if (Settings.dynamicWallpaper)
+                Settings.wallpaper = Settings.wallpaperDir + (Settings.darkMode ? "/foxtail-dusk.jpg" : "/foxtail-dawn.jpg");
+        }
         function onAccentChanged() { root.syncGtk(); }
     }
-    Component.onCompleted: syncGtk()
+    Component.onCompleted: {
+        syncGtk();
+        Sounds.startup();
+        // Dynamic wallpaper: on for the Foxtail pictures that have a light and
+        // a dark version; a wallpaper picked before it existed stays put.
+        if (Settings.dynamicWallpaper) {
+            if (!/foxtail-(dawn|dusk)\.jpg$/.test(Settings.wallpaper)) Settings.dynamicWallpaper = false;
+            else Settings.wallpaper = Settings.wallpaperDir + (Settings.darkMode ? "/foxtail-dusk.jpg" : "/foxtail-dawn.jpg");
+        }
+    }
 
     function syncGtk() {
         Quickshell.execDetached(["foxtail-sync-appearance",
@@ -97,8 +128,10 @@ ShellRoot {
 
         function spotlight(): void {
             Panels.popover = "";
+            Panels.launchpad = false;
             Panels.spotlight = !Panels.spotlight;
         }
+        function spotlightMode(index: int): void { Panels.spotlightMode(index); }
         function launchpad(): void {
             Panels.popover = "";
             Panels.spotlight = false;
@@ -120,6 +153,9 @@ ShellRoot {
         function closeAll(): void { Panels.closeAll(); }
         function restoreAll(): void { Hypr.restoreAll(); }
         function missionControl(): void { Panels.missionControl = !Panels.missionControl; }
+        function emoji(): void {
+            Panels.toggle("emoji", Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0]);
+        }
         function clipboard(): void {
             Panels.anchorX = 0;
             Panels.toggle("clipboard", Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0]);
@@ -130,16 +166,20 @@ ShellRoot {
             else Panels.screenshotBar = !Panels.screenshotBar;
         }
         function stopRecording(): void { Capture.stop(); }
+        function desktopKey(key: string): void { Panels.desktopKey(key); }
+        function desktopBlur(): void { Panels.desktopActive = false; }
+        function screenshot(kind: string): void { Capture.shoot(kind, 0, false, false); }
+        function screenshotToClipboard(kind: string): void { Capture.shoot(kind, 0, false, true); }
         function nightShift(): void { Settings.nightShiftNow = !Settings.nightShiftNow; }
 
-        function volumeUp(): void { Audio.setVolume(Audio.volume + 0.0625); }
-        function volumeDown(): void { Audio.setVolume(Audio.volume - 0.0625); }
+        function volumeUp(): void { Audio.setVolume(Audio.volume + 0.0625); Sounds.volumeChanged(); }
+        function volumeDown(): void { Audio.setVolume(Audio.volume - 0.0625); Sounds.volumeChanged(); }
         function volumeMute(): void { Audio.toggleMute(); }
         function brightnessUp(): void { Brightness.set(Brightness.value + 0.0625); }
         function brightnessDown(): void { Brightness.set(Brightness.value - 0.0625); }
 
         function toggleLiquidGlass(): void { Settings.liquidGlass = !Settings.liquidGlass; }
-        function toggleDarkMode(): void { Settings.darkMode = !Settings.darkMode; }
+        function toggleDarkMode(): void { Settings.appearanceAuto = false; Settings.darkMode = !Settings.darkMode; }
         function liquidGlass(): bool { return Settings.liquidGlass; }
     }
 }

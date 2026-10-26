@@ -14,7 +14,12 @@ Item {
     property bool separator: false
     property bool header: false
     property string icon: ""
+    // Has a submenu (macOS chevron); `open` while that submenu is showing.
+    property bool hasSubmenu: false
+    property bool open: false
+    readonly property bool highlighted: (mouse.containsMouse || open) && available
     signal triggered()
+    signal entered()
 
     implicitHeight: separator ? 11 : (header ? 24 : 24)
     implicitWidth: separator ? 0 : row.implicitWidth + 24
@@ -34,7 +39,7 @@ Item {
         anchors.leftMargin: 5
         anchors.rightMargin: 5
         radius: Theme.liquid ? 8 : 4
-        color: mouse.containsMouse && root.available ? Theme.accent : "transparent"
+        color: root.highlighted ? Theme.accent : "transparent"
     }
 
     Row {
@@ -61,7 +66,7 @@ Item {
             text: root.text
             color: root.header ? Theme.textSecondary
                  : !root.available ? Theme.textTertiary
-                 : (mouse.containsMouse ? "white" : Theme.text)
+                 : (root.highlighted ? "white" : Theme.text)
             font.weight: root.header ? Font.DemiBold : Font.Normal
             font.pixelSize: root.header ? 11 : Theme.fontSize
             anchors.verticalCenter: parent.verticalCenter
@@ -69,12 +74,22 @@ Item {
     }
 
     Label {
-        visible: root.shortcut !== "" && !root.separator
+        visible: root.shortcut !== "" && !root.separator && !root.hasSubmenu
         anchors.right: parent.right
         anchors.rightMargin: 14
         anchors.verticalCenter: parent.verticalCenter
         text: root.shortcut
-        color: mouse.containsMouse && root.available ? Qt.rgba(1, 1, 1, 0.8) : Theme.textTertiary
+        color: root.highlighted ? Qt.rgba(1, 1, 1, 0.8) : Theme.textTertiary
+    }
+
+    Icon {
+        visible: root.hasSubmenu
+        anchors.right: parent.right
+        anchors.rightMargin: 14
+        anchors.verticalCenter: parent.verticalCenter
+        size: 10
+        name: "chevron-right"
+        color: root.highlighted ? "white" : Theme.textSecondary
     }
 
     MouseArea {
@@ -82,7 +97,8 @@ Item {
         anchors.fill: parent
         enabled: !root.separator && !root.header
         hoverEnabled: true
-        onClicked: if (root.available) {
+        onEntered: root.entered()
+        onClicked: if (root.available && !root.hasSubmenu) {
             if (root.checkable) root.checked = !root.checked;
             root.triggered();
         }

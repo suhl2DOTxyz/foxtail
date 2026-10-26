@@ -35,9 +35,9 @@ Item {
         color: Theme.glassStrong
         windowOffset: root.windowOffset
         screenSize: root.screenSize
-        rimOpacity: 0.55
-        bezel: 24
-        refraction: 20
+        rimOpacity: 0.85
+        bezel: 20
+        refraction: 14
     }
 
     Item {

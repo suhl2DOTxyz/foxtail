@@ -12,13 +12,79 @@ Singleton {
     id: root
 
     readonly property var activeEntry: Apps.entryForToplevel(Hypr.activeToplevel)
+    // The focused window is actually on screen (not minimized or hidden).
+    readonly property bool frontWindow: !!Hypr.activeClass && !Hypr.isMinimized(Hypr.activeToplevel) && !Hypr.isHidden(Hypr.activeToplevel)
     readonly property string appName: {
-        if (!Hypr.activeClass || Hypr.isMinimized(Hypr.activeToplevel)) return "Files";
-        if (Apps.isShellWindow(Hypr.activeToplevel)) return activeEntry?.name ?? Hypr.activeTitle;
-        return activeEntry?.name ?? prettify(Hypr.activeClass);
+        if (Panels.desktopActive || !frontWindow) return "Files";
+        if (Apps.isShellWindow(Hypr.activeToplevel)) return activeEntry ? Apps.title(activeEntry) : Hypr.activeTitle;
+        return activeEntry ? Apps.title(activeEntry) : prettify(Hypr.activeClass);
     }
 
-    readonly property var menuTitles: ["File", "Edit", "View", "Window", "Help"]
+    // Files (and the desktop, which belongs to Files as it does to Finder)
+    // gets Finder's menus, Go included.
+    readonly property bool filesActive: Panels.desktopActive || !frontWindow || Hypr.activeClass === "org.gnome.Nautilus"
+    readonly property bool filesWindow: !Panels.desktopActive && frontWindow && Hypr.activeClass === "org.gnome.Nautilus"
+    readonly property var menuTitles: filesActive ? ["File", "Edit", "View", "Go", "Window", "Help"]
+                                                  : ["File", "Edit", "View", "Window", "Help"]
+
+    // Go menu: in a Files window, type the place into its location bar;
+    // from the desktop, open a new window there.
+    function goTo(place) {
+        return () => {
+            if (filesWindow) {
+                Hypr.sendKeys(["ctrl"], "l");
+                Quickshell.execDetached(["sh", "-c", 'sleep 0.3; p="$1"; case "$p" in xdg:*) p=$(xdg-user-dir "${p#xdg:}");; esac; wtype -- "$p"; wtype -k Return', "sh", place]);
+            } else {
+                Quickshell.execDetached(["sh", "-c", 'p="$1"; case "$p" in xdg:*) p=$(xdg-user-dir "${p#xdg:}");; esac; exec nautilus --new-window "$p"', "sh", place]);
+            }
+        };
+    }
+
+    readonly property var filesMenus: [
+        // File
+        [
+            { text: "New Files Window", shortcut: "⌘N", action: filesWindow ? keys(["ctrl"], "n") : run("nautilus --new-window") },
+            { text: "New Folder", shortcut: "⇧⌘N", action: filesWindow ? keys(["ctrl", "shift"], "n") : () => Panels.desktopNewFolder() },
+            { text: "New Tab", shortcut: "⌘T", enabled: filesWindow, action: keys(["ctrl"], "t") },
+            { text: "Open", shortcut: "⌘↓", enabled: filesWindow, action: keys([], "Return") },
+            { separator: true },
+            { text: "Close Window", shortcut: "⌘W", enabled: filesWindow, action: keys(["ctrl"], "w") },
+            { separator: true },
+            { text: "Get Info", shortcut: "⌘I", enabled: filesWindow, action: keys(["alt"], "Return") },
+            { text: "Rename", enabled: filesWindow, action: keys([], "F2") },
+            { separator: true },
+            { text: "Move to Trash", shortcut: "⌘⌫", enabled: filesWindow, action: keys([], "Delete") },
+            { separator: true },
+            { text: "Find", shortcut: "⌘F", enabled: filesWindow, action: keys(["ctrl"], "f") }
+        ],
+        null,   // Edit (shared)
+        // View
+        [
+            { text: "as Icons", shortcut: "⌘1", enabled: filesWindow, action: keys(["ctrl"], "1") },
+            { text: "as List", shortcut: "⌘2", enabled: filesWindow, action: keys(["ctrl"], "2") },
+            { separator: true },
+            { text: "Show Hidden Files", shortcut: "⇧⌘.", enabled: filesWindow, action: keys(["ctrl"], "h") },
+            { separator: true },
+            { text: "Zoom In", shortcut: "⌘+", enabled: filesWindow, action: keys(["ctrl"], "plus") },
+            { text: "Zoom Out", shortcut: "⌘−", enabled: filesWindow, action: keys(["ctrl"], "minus") }
+        ],
+        // Go
+        [
+            { text: "Back", shortcut: "⌘[", enabled: filesWindow, action: keys(["alt"], "Left") },
+            { text: "Forward", shortcut: "⌘]", enabled: filesWindow, action: keys(["alt"], "Right") },
+            { text: "Enclosing Folder", shortcut: "⌘↑", enabled: filesWindow, action: keys(["alt"], "Up") },
+            { separator: true },
+            { text: "Recents", icon: "clock", action: goTo("recent:///") },
+            { text: "Documents", icon: "folder", shortcut: "⇧⌘O", action: goTo("xdg:DOCUMENTS") },
+            { text: "Desktop", icon: "display", shortcut: "⇧⌘D", action: goTo("xdg:DESKTOP") },
+            { text: "Downloads", icon: "arrow-right-circle", shortcut: "⌥⌘L", action: goTo("xdg:DOWNLOAD") },
+            { text: "Home", icon: "person", shortcut: "⇧⌘H", action: goTo(Quickshell.env("HOME")) },
+            { text: "Network", icon: "globe", action: goTo("network:///") },
+            { text: "Trash", icon: "trash", action: goTo("trash:///") },
+            { separator: true },
+            { text: "Go to Folder…", shortcut: "⇧⌘G", action: filesWindow ? keys(["ctrl"], "l") : goTo(Quickshell.env("HOME")) }
+        ]
+    ]
 
     function prettify(cls) {
         const last = cls.split(".").pop();
@@ -41,6 +107,8 @@ Singleton {
           action: () => { Panels.openSettings("updates"); Updates.check(); } },
         { text: "App Store…", icon: "grid", action: run("gnome-software") },
         { separator: true },
+        { text: "Recent Items", icon: "clock", submenu: recentItems },
+        { separator: true },
         { text: "Force Quit…", icon: "xmark", shortcut: "⌥⌘⎋", action: () => Panels.forceQuit = true },
         { separator: true },
         { text: "Sleep", icon: "moon", action: run("systemctl suspend") },
@@ -51,12 +119,23 @@ Singleton {
         { text: `Log Out ${SystemInfo.fullName || SystemInfo.user}…`, icon: "logout", shortcut: "⌥⇧⌘Q", action: () => Panels.confirm = "logout" }
     ]
 
+    // Apple menu ▸ Recent Items: the apps used most recently this session.
+    readonly property var recentItems: {
+        const apps = Apps.mruApps.filter(id => Apps.entry(id)).slice(0, 10);
+        if (!apps.length) return [{ text: "No Recent Items", enabled: false }];
+        return [{ header: true, text: "Applications" }].concat(apps.map(id => ({
+            text: Apps.nameFor(id), action: () => Apps.focus(id)
+        })));
+    }
+
     readonly property var appNameMenu: [
         { text: "Settings…", shortcut: "⌘,", action: keys(["ctrl"], "comma") },
         { separator: true },
         { text: `Hide ${appName}`, shortcut: "⌘H", enabled: !!Hypr.activeClass,
-          action: () => Hypr.minimizeActive() },
-        { text: "Show All", action: () => Hypr.restoreAll() },
+          action: () => Hypr.hideActiveApp() },
+        { text: "Hide Others", shortcut: "⌥⌘H", enabled: !!Hypr.activeClass,
+          action: () => Hypr.hideOthers() },
+        { text: "Show All", enabled: Hypr.hidden.length > 0, action: () => Hypr.showAll() },
         { separator: true },
         { text: `Quit ${appName}`, shortcut: "⌘Q", enabled: !!Hypr.activeClass, action: () => Hypr.quitActiveApp() }
     ]
@@ -86,7 +165,7 @@ Singleton {
             { separator: true },
             { text: "Find…", shortcut: "⌘F", action: keys(["ctrl"], "f") },
             { separator: true },
-            { text: "Emoji & Symbols", shortcut: "⌘.", action: run("gnome-characters") }
+            { text: "Emoji & Symbols", shortcut: "⌃⌘Space", action: () => Panels.toggle("emoji", Panels.screen) }
         ],
         // View
         [
@@ -97,16 +176,7 @@ Singleton {
             { text: "Actual Size", shortcut: "⌘0", action: keys(["ctrl"], "0") }
         ],
         // Window
-        [
-            { text: "Minimize", shortcut: "⌘M",
-              action: () => Hypr.minimizeActive() },
-            { text: "Zoom", action: () => Hypr.dispatch("hl.dsp.window.fullscreen({ mode = \"maximized\" })") },
-            { text: "Center", action: () => Hypr.dispatch("hl.dsp.window.center()") },
-            { separator: true },
-            { text: "Float / Tile Window", shortcut: "⌥⌘T", action: () => Hypr.toggleFloat() },
-            { separator: true },
-            { text: "Bring All to Front", action: () => Hypr.restoreAll() }
-        ],
+        windowMenu,
         // Help
         [
             { header: true, text: "Foxtail Help" },
@@ -115,10 +185,58 @@ Singleton {
         ]
     ]
 
+    // Window menu, macOS Sequoia style: tiling, then the app's windows.
+    readonly property var windowMenu: {
+        const has = !!Hypr.activeClass;
+        const tile = where => () => Hypr.tile(where);
+        const items = [
+            { text: "Minimize", shortcut: "⌘M", enabled: has, action: () => Hypr.minimizeActive() },
+            { text: "Zoom", enabled: has, action: () => Hypr.zoom() },
+            { text: "Fill", shortcut: "⌃⌥F", enabled: has, action: tile("fill") },
+            { text: "Center", shortcut: "⌃⌥C", enabled: has, action: tile("center") },
+            { separator: true },
+            { text: "Move & Resize", enabled: has, submenu: [
+                { header: true, text: "Halves" },
+                { text: "Left", shortcut: "⌃⌥←", action: tile("left") },
+                { text: "Right", shortcut: "⌃⌥→", action: tile("right") },
+                { text: "Top", shortcut: "⌃⌥↑", action: tile("top") },
+                { text: "Bottom", shortcut: "⌃⌥↓", action: tile("bottom") },
+                { separator: true },
+                { header: true, text: "Quarters" },
+                { text: "Top Left", action: tile("top_left") },
+                { text: "Top Right", action: tile("top_right") },
+                { text: "Bottom Left", action: tile("bottom_left") },
+                { text: "Bottom Right", action: tile("bottom_right") },
+                { separator: true },
+                { text: "Return to Previous Size", shortcut: "⌃⌥R", action: tile("restore") }
+            ] },
+            { text: "Float / Tile Window", shortcut: "⌥⌘T", enabled: has, action: () => Hypr.toggleFloat() },
+            { separator: true },
+            { text: "Bring All to Front", enabled: has, action: () => {
+                const id = Apps.idForToplevel(Hypr.activeToplevel);
+                for (const w of Apps.windowsFor(id)) w.activate();
+                Hypr.activeToplevel?.activate();
+            } }
+        ];
+        const wins = Apps.windowsFor(Apps.idForToplevel(Hypr.activeToplevel))
+            .filter(w => !Hypr.isHidden(w));
+        if (wins.length) {
+            items.push({ separator: true });
+            for (const w of wins)
+                items.push({ text: w.title || appName, checkable: true, checked: w.activated, action: () => w.activate() });
+        }
+        return items;
+    }
+
     function model(key) {
         if (key === "fox") return foxMenu;
         if (key === "app:name") return appNameMenu;
-        if (key.startsWith("app:")) return appMenus[parseInt(key.slice(4))] ?? [];
-        return [];
+        if (!key.startsWith("app:")) return [];
+        const i = parseInt(key.slice(4));
+        if (filesActive) {
+            // File, Edit, View, Go, Window, Help
+            return [filesMenus[0], appMenus[1], filesMenus[2], filesMenus[3], windowMenu, appMenus[4]][i] ?? [];
+        }
+        return appMenus[i] ?? [];
     }
 }

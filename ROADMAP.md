@@ -57,6 +57,16 @@
 - ✅ **Clipboard history** (⌥⌘V)
 - ✅ The shell restarts itself if it crashes, and locks again if it was locked
 - ✅ GTK theme fixes now reach existing users (the theme lives in /usr/share instead of being copied to each account)
+- ✅ **More like macOS:**
+  - Liquid Glass rebuilt: edges lens what's behind them (Snell's-law refraction over a squircle bevel), clear at the rim and frosted in the middle, a thin light sheen, a tint that adapts so text stays readable, glow on press, and Clear / Tinted styles (macOS 26.1)
+  - Files on the desktop (from the Desktop folder): thumbnails, select, drag, rename, New Folder, Get Info, Clean Up, Sort By; clicking the desktop makes Files the front app
+  - Screenshots land on the Desktop as "Screenshot … at ….png" with the floating thumbnail; ⌃⇧⌘3/4 copy instead; Save to Desktop / Documents / Pictures / Clipboard
+  - Window tiling (Window ▸ Move & Resize, Fill, Center, ⌃⌥ arrows); the green button zooms; ⌘H hides the app, ⌥⌘H hides others; Show Desktop (F11); windows snap to edges
+  - Spotlight in the Tahoe style: grouped results with a preview, System Settings panes, and browsing Applications / Files / Actions / Clipboard (⌘1–⌘4)
+  - Dock: Downloads stack, full/empty Trash with Empty Trash, notification badges, drag to reorder or out to remove, Options ▸ Open at Login, bounce on attention
+  - Hot Corners, Emoji & Symbols (⌃⌘Space), submenus, Apple-menu Recent Items, Finder's Go menu and shortcuts in Files
+  - Notification Center widgets (clock, batteries), interface sounds and a startup chime, Auto appearance, Dynamic wallpaper
+  - System Settings: Menu Bar, Trackpad and Mouse panes, Login Items, Hot Corners, sound effects
 - [ ] Snapping menu on the green button (GTK draws its own buttons; needs a compositor-side menu)
 - [ ] Custom keyboard shortcuts
 
@@ -79,7 +89,9 @@
 ---
 
 ## Known limitations (current)
-- **Liquid Glass refraction uses a snapshot.** Menus, Control Center and Spotlight refract a snapshot of the screen taken just before they open (refreshed when windows change), so moving video behind an open menu won't animate in the glass. The Dock and menu bar refract the wallpaper.
+- **Liquid Glass refraction uses a snapshot.** Menus, Control Center and Spotlight lens a snapshot of the screen taken just before they open (refreshed when windows change), so moving video behind an open menu won't animate in the glass edges (the frosted middle is live). The Dock lenses the wallpaper.
+- **Desktop items are on the main display only**, and dragging files between the desktop and Files windows isn't supported yet (use copy and paste).
+- **Window tiling uses ⌃⌥ instead of Fn⌃** (PC keyboards don't pass the Fn/Globe key to the system).
 - **App menus are generic.** File/Edit/View items send each app's standard shortcuts. Wayland has no global-menu protocol, and GTK4 apps don't export their menus. ⌘ shortcuts themselves work everywhere.
 - **VMs use software rendering.** VirtualBox's 3D driver can't create Qt's EGL surfaces (tested on VirtualBox 7.2), so animations are slower there. Real hardware uses the GPU.
 - **The encryption password prompt is plain text.** GRUB asks for it before the boot splash, and unlocking takes a few seconds (GRUB's decryption is slow).

@@ -32,7 +32,7 @@ Item {
         color: Theme.glassStrong
         windowOffset: root.windowOffset
         screenSize: root.screenSize
-        rimOpacity: 0.55
+        rimOpacity: 0.85
         bezel: 12
     }
 

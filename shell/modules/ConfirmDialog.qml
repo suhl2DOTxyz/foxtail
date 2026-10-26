@@ -17,13 +17,16 @@ Item {
     readonly property var kinds: ({
         restart: { title: "Are you sure you want to restart your computer now?", button: "Restart", cmd: ["systemctl", "reboot"] },
         shutdown: { title: "Are you sure you want to shut down your computer now?", button: "Shut Down", cmd: ["systemctl", "poweroff"] },
-        logout: { title: "Are you sure you want to quit all applications and log out now?", button: "Log Out", cmd: ["hyprctl", "dispatch", "hl.dsp.exit()"] }
+        logout: { title: "Are you sure you want to quit all applications and log out now?", button: "Log Out", cmd: ["hyprctl", "dispatch", "hl.dsp.exit()"] },
+        emptyTrash: { title: "Are you sure you want to permanently erase the items in the Trash?", button: "Empty Trash",
+                      note: "You can't undo this action.", noTimer: true, icon: "user-trash-full", cmd: ["gio", "trash", "--empty"] }
     })
     readonly property var kind: kinds[Panels.confirm] ?? kinds.shutdown
     property int seconds: 60
 
     function go() {
         const cmd = kind.cmd;
+        if (Panels.confirm === "emptyTrash") Sounds.play("trash");
         Panels.confirm = "";
         Quickshell.execDetached(cmd);
     }
@@ -31,7 +34,7 @@ Item {
     Timer {
         interval: 1000
         repeat: true
-        running: true
+        running: !root.kind.noTimer
         onTriggered: if (--root.seconds <= 0) root.go()
     }
 
@@ -62,7 +65,7 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             width: 64; height: 64
             sourceSize: Qt.size(128, 128)
-            source: Qt.resolvedUrl("../icons/foxtail-logo.png")
+            source: root.kind.icon ? Quickshell.iconPath(root.kind.icon, "user-trash") : Qt.resolvedUrl("../icons/foxtail-logo.png")
         }
 
         Text {
@@ -82,7 +85,7 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
-            text: `If you do nothing, the computer will ${root.kind.button.toLowerCase()} automatically in ${root.seconds} seconds.`
+            text: root.kind.note ?? `If you do nothing, the computer will ${root.kind.button.toLowerCase()} automatically in ${root.seconds} seconds.`
             font.family: Theme.font
             font.pixelSize: 11
             color: Theme.textSecondary

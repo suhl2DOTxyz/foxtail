@@ -148,7 +148,7 @@ PanelWindow {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 width: parent.width - 10
                                 horizontalAlignment: Text.AlignHCenter
-                                text: cell.modelData.name
+                                text: Apps.title(cell.modelData)
                                 color: "white"
                                 font.pixelSize: 12
                                 style: Text.Raised

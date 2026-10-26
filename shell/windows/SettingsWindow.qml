@@ -21,30 +21,7 @@ FloatingWindow {
     minimumSize: Qt.size(680, 480)
     color: "transparent"
 
-    readonly property var panes: [
-        { id: "wifi", name: "Wi-Fi", icon: "wifi", color: "#0A84FF" },
-        { id: "bluetooth", name: "Bluetooth", icon: "bluetooth", color: "#0A84FF" },
-        { id: "sep" },
-        { id: "general", name: "General", icon: "gear", color: "#8E8E93" },
-        { id: "updates", name: "Software Update", icon: "restart", color: "#8E8E93" },
-        { id: "appearance", name: "Appearance", icon: "half-circle", color: "#1C1C1E" },
-        { id: "desktop", name: "Desktop & Dock", icon: "dock", color: "#1C1C1E" },
-        { id: "displays", name: "Displays", icon: "sun", color: "#0A84FF" },
-        { id: "battery", name: "Battery", icon: "battery", color: "#30D158" },
-        { id: "wallpaper", name: "Wallpaper", icon: "photo", color: "#30B0C7" },
-        { id: "sep" },
-        { id: "notifications", name: "Notifications", icon: "bell", color: "#FF3B30" },
-        { id: "sound", name: "Sound", icon: "speaker", color: "#FF2D55" },
-        { id: "focus", name: "Focus", icon: "moon", color: "#5E5CE6" },
-        { id: "sep" },
-        { id: "lock", name: "Lock Screen", icon: "lock", color: "#1C1C1E" },
-        { id: "users", name: "Users & Groups", icon: "people", color: "#0A84FF" },
-        { id: "datetime", name: "Date & Time", icon: "clock", color: "#0A84FF" },
-        { id: "sep" },
-        { id: "keyboard", name: "Keyboard", icon: "keyboard", color: "#8E8E93" },
-        { id: "printers", name: "Printers & Scanners", icon: "printer", color: "#8E8E93" },
-        { id: "defaultapps", name: "Default Apps", icon: "apps", color: "#FF7A1A" }
-    ]
+    readonly property var panes: Panels.settingsPanes
     property string filter: ""
 
     function startMove() {
@@ -279,6 +256,9 @@ FloatingWindow {
                     case "focus": return focusPane;
                     case "lock": return lockPane;
                     case "keyboard": return keyboardPane;
+                    case "menubar": return menuBarPane;
+                    case "trackpad": return trackpadPane;
+                    case "mouse": return mousePane;
                     }
                     return generalPane;
                 }
@@ -323,6 +303,30 @@ FloatingWindow {
                 SettingRow { label: "Memory"; Label { text: SystemInfo.memory; color: Theme.textSecondary } }
                 SettingRow { label: "Storage"; Label { text: SystemInfo.disk; color: Theme.textSecondary } }
                 SettingRow { label: "Kernel"; last: true; Label { text: "Linux " + SystemInfo.kernel; color: Theme.textSecondary } }
+            }
+
+            SectionTitle { text: "Open at Login" }
+            Group {
+                Repeater {
+                    model: LoginItems.items
+                    SettingRow {
+                        required property string modelData
+                        required property int index
+                        label: Apps.nameFor(modelData)
+                        PushButton { text: "Remove"; onClicked: LoginItems.remove(modelData) }
+                    }
+                }
+                SettingRow {
+                    label: LoginItems.items.length ? "Add an app" : "No apps open when you log in"
+                    sub: "Apps here open automatically when you log in."
+                    last: true
+                    Choice {
+                        menuWidth: 240
+                        options: Apps.all.filter(e => !LoginItems.has(e.id)).map(e => [e.id, e.name])
+                        value: ""
+                        onPicked: v => LoginItems.add(v)
+                    }
+                }
             }
         }
     }
@@ -591,14 +595,18 @@ FloatingWindow {
                         y: 12
                         spacing: 16
                         Repeater {
-                            model: [{ n: "Light", d: false }, { n: "Dark", d: true }]
+                            // Auto follows the time of day: dark from 7 PM to 7 AM.
+                            model: [{ n: "Auto", mode: "auto" }, { n: "Light", mode: "light" }, { n: "Dark", mode: "dark" }]
                             Column {
+                                id: modeChoice
                                 required property var modelData
+                                readonly property bool chosen: modelData.mode === "auto" ? Settings.appearanceAuto
+                                    : !Settings.appearanceAuto && Settings.darkMode === (modelData.mode === "dark")
                                 spacing: 6
                                 Rectangle {
                                     width: 84; height: 56; radius: 8
-                                    border.width: Settings.darkMode === modelData.d ? 3 : 1
-                                    border.color: Settings.darkMode === modelData.d ? Theme.accent : Theme.separator
+                                    border.width: modeChoice.chosen ? 3 : 1
+                                    border.color: modeChoice.chosen ? Theme.accent : Theme.separator
                                     clip: true
                                     Image {
                                         anchors.fill: parent; anchors.margins: 3
@@ -606,15 +614,34 @@ FloatingWindow {
                                         sourceSize: Qt.size(160, 100)
                                         fillMode: Image.PreserveAspectCrop
                                     }
-                                    Rectangle {
-                                        x: 14; y: 14; width: 56; height: 34; radius: 4
-                                        color: modelData.d ? "#2A2A2C" : "#F5F5F7"
-                                        Rectangle { x: 0; y: 0; width: parent.width; height: 6; radius: 3; color: modelData.d ? "#3A3A3C" : "#E5E5EA" }
-                                        Rectangle { x: 6; y: 12; width: 26; height: 4; radius: 2; color: Theme.accent }
+                                    // A little window, light, dark or split for Auto.
+                                    Repeater {
+                                        model: modeChoice.modelData.mode === "auto" ? [false, true] : [modeChoice.modelData.mode === "dark"]
+                                        Item {
+                                            required property bool modelData
+                                            required property int index
+                                            x: 14 + (modeChoice.modelData.mode === "auto" ? index * 28 : 0)
+                                            y: 14
+                                            width: modeChoice.modelData.mode === "auto" ? 28 : 56
+                                            height: 34
+                                            clip: true
+                                            Rectangle {
+                                                x: -parent.x + 14; width: 56; height: 34; radius: 4
+                                                color: parent.modelData ? "#2A2A2C" : "#F5F5F7"
+                                                Rectangle { width: parent.width; height: 6; radius: 3; color: parent.parent.modelData ? "#3A3A3C" : "#E5E5EA" }
+                                                Rectangle { x: 6; y: 12; width: 26; height: 4; radius: 2; color: Theme.accent }
+                                            }
+                                        }
                                     }
-                                    MouseArea { anchors.fill: parent; onClicked: Settings.darkMode = modelData.d }
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        onClicked: {
+                                            Settings.appearanceAuto = modeChoice.modelData.mode === "auto";
+                                            if (!Settings.appearanceAuto) Settings.darkMode = modeChoice.modelData.mode === "dark";
+                                        }
+                                    }
                                 }
-                                Label { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.n; font.pixelSize: 11 }
+                                Label { anchors.horizontalCenter: parent.horizontalCenter; text: modeChoice.modelData.n; font.pixelSize: 11 }
                             }
                         }
                     }
@@ -624,8 +651,19 @@ FloatingWindow {
             Group {
                 SettingRow {
                     label: "Liquid Glass"
-                    sub: "Clear, refractive glass for the menu bar, Dock, menus and Control Center. Turn off for classic frosted translucency."
+                    sub: "Clear, refractive glass for the Dock, menus, Spotlight and Control Center. Turn off for classic frosted translucency."
                     Switch { checked: Settings.liquidGlass; onToggled: c => Settings.liquidGlass = c }
+                }
+                SettingRow {
+                    label: "Glass style"
+                    sub: "Clear shows more of what's behind the glass. Tinted is more opaque, with more contrast."
+                    opacity: Settings.liquidGlass ? 1 : 0.4
+                    Segmented {
+                        enabled: Settings.liquidGlass
+                        options: [{ text: "Clear", value: false }, { text: "Tinted", value: true }]
+                        value: Settings.glassTinted
+                        onPicked: v => Settings.glassTinted = v
+                    }
                 }
                 SettingRow {
                     label: "Refract windows behind glass"
@@ -694,6 +732,39 @@ FloatingWindow {
                     Switch { checked: Settings.dockAutoHide; onToggled: c => Settings.dockAutoHide = c }
                 }
             }
+            SectionTitle { text: "Desktop" }
+            Group {
+                SettingRow {
+                    label: "Show items on the desktop"
+                    sub: "Files in your Desktop folder appear on the wallpaper. Screenshots are saved there."
+                    last: true
+                    Switch { checked: Settings.showDesktopItems; onToggled: c => Settings.showDesktopItems = c }
+                }
+            }
+            SectionTitle { text: "Hot Corners" }
+            Group {
+                Repeater {
+                    model: [["tl", "Top left"], ["tr", "Top right"], ["bl", "Bottom left"], ["br", "Bottom right"]]
+                    SettingRow {
+                        required property var modelData
+                        required property int index
+                        label: modelData[1]
+                        last: index === 3
+                        Choice {
+                            menuWidth: 200
+                            options: [["", "—"], ["mission", "Mission Control"], ["desktop", "Desktop"],
+                                      ["notifications", "Notification Center"], ["launchpad", "Launchpad"],
+                                      ["lock", "Lock Screen"], ["sleep", "Put Display to Sleep"]]
+                            value: Settings.hotCorners[modelData[0]] ?? ""
+                            onPicked: v => {
+                                const c = Object.assign({}, Settings.hotCorners);
+                                c[modelData[0]] = v;
+                                Settings.hotCorners = c;
+                            }
+                        }
+                    }
+                }
+            }
             SectionTitle { text: "Windows" }
             Group {
                 SettingRow {
@@ -738,6 +809,54 @@ FloatingWindow {
                 property var files: []
                 width: parent.width
                 spacing: 12
+                // Dynamic: Dawn in Light mode, Dusk in Dark mode, like macOS's
+                // dynamic desktops.
+                Rectangle {
+                    width: (grid.width - 36) / 4
+                    height: width * 0.62
+                    radius: 8
+                    color: "transparent"
+                    border.width: Settings.dynamicWallpaper ? 3 : 0
+                    border.color: Theme.accent
+                    Item {
+                        anchors.fill: parent
+                        anchors.margins: 3
+                        clip: true
+                        Image {
+                            anchors.fill: parent
+                            source: "file://" + Settings.wallpaperDir + "/foxtail-dawn.jpg"
+                            sourceSize: Qt.size(240, 150)
+                            fillMode: Image.PreserveAspectCrop
+                        }
+                        Image {   // the dark half
+                            width: parent.width / 2
+                            height: parent.height
+                            x: parent.width / 2
+                            source: "file://" + Settings.wallpaperDir + "/foxtail-dusk.jpg"
+                            sourceSize: Qt.size(240, 150)
+                            fillMode: Image.PreserveAspectCrop
+                            horizontalAlignment: Image.AlignRight
+                        }
+                    }
+                    Label {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: 6
+                        text: "Dynamic"
+                        color: "white"
+                        style: Text.Outline
+                        styleColor: Qt.rgba(0, 0, 0, 0.3)
+                        font.pixelSize: 11
+                        font.weight: Font.DemiBold
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            Settings.dynamicWallpaper = true;
+                            Settings.wallpaper = Settings.wallpaperDir + (Settings.darkMode ? "/foxtail-dusk.jpg" : "/foxtail-dawn.jpg");
+                        }
+                    }
+                }
                 Repeater {
                     model: grid.files
                     Rectangle {
@@ -746,7 +865,7 @@ FloatingWindow {
                         height: width * 0.62
                         radius: 8
                         color: "transparent"
-                        border.width: Settings.wallpaper === modelData ? 3 : 0
+                        border.width: !Settings.dynamicWallpaper && Settings.wallpaper === modelData ? 3 : 0
                         border.color: Theme.accent
                         Image {
                             anchors.fill: parent
@@ -756,7 +875,7 @@ FloatingWindow {
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true
                         }
-                        MouseArea { anchors.fill: parent; onClicked: Settings.wallpaper = parent.modelData }
+                        MouseArea { anchors.fill: parent; onClicked: { Settings.dynamicWallpaper = false; Settings.wallpaper = parent.modelData; } }
                     }
                 }
             }
@@ -877,6 +996,9 @@ FloatingWindow {
     }
 
     Component { id: keyboardPane; KeyboardPane {} }
+    Component { id: menuBarPane; MenuBarPane {} }
+    Component { id: trackpadPane; TrackpadPane {} }
+    Component { id: mousePane; MousePane {} }
     Component { id: usersPane; UsersPane {} }
     Component { id: dateTimePane; DateTimePane {} }
     Component { id: printersPane; PrintersPane {} }

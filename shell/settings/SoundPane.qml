@@ -75,4 +75,26 @@ Column {
         }
     }
     Note { visible: Audio.sources.length === 0; text: "No microphones found." }
+
+    SectionTitle { text: "Sound Effects" }
+    Group {
+        SettingRow {
+            label: "Play sound on startup"
+            Switch { checked: Settings.startupSound; onToggled: c => Settings.startupSound = c }
+        }
+        SettingRow {
+            label: "Play user interface sound effects"
+            sub: "Screenshots, emptying the Trash and other actions."
+            Switch { checked: Settings.uiSounds; onToggled: c => Settings.uiSounds = c }
+        }
+        SettingRow {
+            label: "Play feedback when volume is changed"
+            Switch { checked: Settings.volumeFeedback; onToggled: c => Settings.volumeFeedback = c }
+        }
+        SettingRow {
+            label: "Play sound for notifications"
+            last: true
+            Switch { checked: Settings.notificationSounds; onToggled: c => Settings.notificationSounds = c }
+        }
+    }
 }

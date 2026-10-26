@@ -20,7 +20,7 @@ Item {
         radius: Theme.liquid ? 24 : 16
         windowOffset: root.windowOffset
         screenSize: root.screenSize
-        rimOpacity: 0.55
+        rimOpacity: 0.85
         bezel: 16
     }
 

@@ -8,13 +8,31 @@ Singleton {
     id: root
 
     // Developer/terminal tools that clutter Launchpad and Spotlight.
+    // Printer tools are covered by System Settings ▸ Printers & Scanners.
     readonly property var hidden: ["qvidcap", "qv4l2", "lstopo", "htop", "vim", "gvim",
                                    "gnome-system-monitor-kde", "avahi-discover", "bssh", "bvnc",
-                                   "cmake-gui", "nm-connection-editor", "xgps", "xgpsspeed"]
+                                   "cmake-gui", "nm-connection-editor", "xgps", "xgpsspeed",
+                                   "system-config-printer", "cups"]
+
+    // The names macOS uses for the equivalent apps (English only: other
+    // languages keep each app's own translated name).
+    readonly property bool english: /^(en|C)([_.@]|$)/.test(Quickshell.env("LC_MESSAGES") || Quickshell.env("LANG") || "C")
+    readonly property var macNames: ({
+        "org.gnome.Ptyxis": "Terminal",
+        "org.gnome.SystemMonitor": "Activity Monitor",
+        "org.gnome.DiskUtility": "Disk Utility",
+        "org.gnome.Software": "App Store",
+        "org.gnome.FileRoller": "Archive Utility",
+        "org.gnome.Characters": "Character Viewer"
+    })
+    function title(e) {
+        if (!e) return "";
+        return (english && macNames[e.id]) || e.name;
+    }
 
     readonly property var all: DesktopEntries.applications.values
         .filter(e => !e.noDisplay && hidden.indexOf(e.id) < 0)
-        .sort((a, b) => a.name.localeCompare(b.name))
+        .sort((a, b) => title(a).localeCompare(title(b)))
 
     // App windows only: dialogs (windows with a parent) and portal helpers
     // such as the GTK file chooser never get their own Dock icon, as on macOS.
@@ -90,8 +108,10 @@ Singleton {
 
     // Bring an app forward: its most recent window, restoring it if minimized.
     function focus(id) {
+        Panels.desktopActive = false;
         const wins = windowsFor(id);
         if (wins.length === 0) { launch(id); return; }
+        if (unhide(wins)) return;
         const ordered = mruWindows.filter(w => wins.indexOf(w) >= 0).concat(wins.filter(w => mruWindows.indexOf(w) < 0));
         const visible = ordered.filter(w => !Hypr.isMinimized(w));
         if (visible.length === 0) {
@@ -100,6 +120,17 @@ Singleton {
             return;
         }
         visible[0].activate();
+    }
+
+    // Bring back an app hidden with ⌘H (all of its hidden windows). Returns
+    // whether there was anything to bring back.
+    function unhide(wins) {
+        const hiddenWins = wins.filter(w => Hypr.isHidden(w));
+        for (const w of hiddenWins) {
+            const h = Hypr.hyprFor(w);
+            if (h) Hypr.restore(h);
+        }
+        return hiddenWins.length > 0;
     }
 
     function windowsFor(id) {
@@ -132,18 +163,21 @@ Singleton {
 
     function nameFor(id) {
         const e = entry(id);
-        return e?.name ?? id;
+        return e ? title(e) : id;
     }
 
     // Click on a Dock icon: focus (cycle) running windows, or launch.
     function activate(id) {
+        Panels.desktopActive = false;
         const wins = windowsFor(id);
         if (wins.length === 0) {
             launch(id);
             return false;
         }
-        // Like macOS: clicking an app whose windows are all minimized brings
-        // them back; otherwise cycle through its visible windows.
+        // Like macOS: clicking a hidden app shows it again; clicking an app
+        // whose windows are all minimized brings them back; otherwise cycle
+        // through its visible windows.
+        if (unhide(wins)) return true;
         const visible = wins.filter(w => !Hypr.isMinimized(w));
         if (visible.length === 0) {
             for (const w of wins) {
@@ -185,7 +219,7 @@ Singleton {
         if (!q) return [];
         const scored = [];
         for (const e of all) {
-            const name = e.name.toLowerCase();
+            const name = title(e).toLowerCase();
             let s = 0;
             if (name.startsWith(q)) s = 100;
             else if (name.split(/[\s\-_.]/).some(w => w.startsWith(q))) s = 80;

@@ -9,6 +9,9 @@
 
 local HOME = os.getenv("HOME") or ""
 
+-- Window positions and sizes come as { x, y } or { [1], [2] }.
+local function xy(v) return v.x or v[1], v.y or v[2] end
+
 local function read_file(path)
     local ok, f = pcall(io.open, path, "r")
     if not ok or not f then return nil end
@@ -52,6 +55,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("/usr/lib/hyprpolkitagent/hyprpolkitagent")
     hl.exec_cmd("gnome-keyring-daemon --start --components=secrets")
     hl.exec_cmd("foxtail-firstboot")
+    hl.exec_cmd("foxtail-autostart")     -- Login Items
 end)
 
 ---------------------------------------------------------------- look & feel
@@ -63,6 +67,8 @@ hl.config({
         resize_on_border = true,
         extend_border_grab_area = 12,
         layout = "dwindle",
+        -- Dragged windows snap to screen edges and to each other.
+        snap = { enabled = true, window_gap = 10, monitor_gap = 10 },
     },
 
     decoration = {
@@ -120,7 +126,9 @@ hl.config({
         focus_on_activate = true,
         animate_manual_resizes = false,
         animate_mouse_windowdragging = false,
-        layers_hog_keyboard_focus = true,
+        -- Off: clicking a window must take keyboard focus back from the desktop
+        -- (an on-demand layer). Spotlight and dialogs grab focus exclusively.
+        layers_hog_keyboard_focus = false,
         -- If the shell crashes while locked, foxtail-shell restarts it and it
         -- locks again; give it time before Hyprland shows its fallback screen.
         allow_session_lock_restore = true,
@@ -152,8 +160,11 @@ hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 4, bezier = "m
 hl.animation({ leaf = "border", enabled = false })
 
 ---------------------------------------------------------------- gestures
-hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
-hl.gesture({ fingers = 3, direction = "up", action = function() hl.dispatch(hl.dsp.global("foxtail:missionControl")) end })
+-- Off in System Settings ▸ Trackpad sets foxtail_gestures = false (generated.lua).
+if foxtail_gestures ~= false then
+    hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
+    hl.gesture({ fingers = 3, direction = "up", action = function() hl.dispatch(hl.dsp.global("foxtail:missionControl")) end })
+end
 
 ---------------------------------------------------------------- layer rules
 -- Blur behind Foxtail's glass. ignore_alpha keeps fully clear pixels (and
@@ -167,7 +178,7 @@ for _, ns in ipairs({ "menubar", "dock", "popover", "banner", "osd", "launchpad"
         ignore_alpha = 0.15,
     })
 end
-hl.layer_rule({ name = "foxtail-wallpaper-noanim", match = { namespace = "^foxtail-wallpaper$" }, no_anim = true })
+hl.layer_rule({ name = "foxtail-wallpaper-noanim", match = { namespace = "^foxtail-(wallpaper|desktop)$" }, no_anim = true })
 hl.layer_rule({ name = "foxtail-popover-noanim", match = { namespace = "^foxtail-popover$" }, no_anim = true })
 hl.layer_rule({ name = "foxtail-launchpad-anim", match = { namespace = "^foxtail-launchpad$" }, animation = "fade" })
 
@@ -181,7 +192,9 @@ if window_mode ~= "tile" then
     })
 end
 
-hl.window_rule({ name = "foxtail-no-maximize-requests", match = { class = ".*" }, suppress_event = "maximize" })
+-- Maximize requests (the green button, double-clicking a title bar) zoom
+-- the window to fill the screen between the menu bar and the Dock, like
+-- macOS's Zoom; doing it again puts it back.
 
 -- Keep floating windows inside the usable area: apps (and portal dialogs) that
 -- ask for a huge default size would otherwise be centered under the menu bar.
@@ -245,8 +258,71 @@ local TERMINAL_KEYS = {
 }
 
 -- ⌘(+⇧)+key  ->  Ctrl(+Shift)+key in the focused app.
+-- Files behaves like Finder: a few ⌘ shortcuts mean something else there.
+local FILES = "org.gnome.Nautilus"
+local function in_files()
+    local w = hl.get_active_window()
+    return w ~= nil and w.class == FILES
+end
+local function shortcut_now(mods, key) hl.dispatch(hl.dsp.send_shortcut({ mods = mods, key = key })) end
+-- Finder's Go menu: type a folder into Files' location bar.
+local function go_to(dir_cmd)
+    shortcut_now("CTRL", "L")
+    hl.exec_cmd('sleep 0.25; wtype -- "$(' .. dir_cmd .. ')"; wtype -k Return')
+end
+local FILES_KEYS = {
+    I = function() shortcut_now("ALT", "Return") end,               -- ⌘I  Get Info
+    ["SHIFT+G"] = function() shortcut_now("CTRL", "L") end,         -- ⇧⌘G Go to Folder
+    ["SHIFT+H"] = function() shortcut_now("ALT", "Home") end,       -- ⇧⌘H Home
+    ["SHIFT+D"] = function() go_to("xdg-user-dir DESKTOP") end,     -- ⇧⌘D Desktop
+    ["SHIFT+O"] = function() go_to("xdg-user-dir DOCUMENTS") end,   -- ⇧⌘O Documents
+}
+
+-- The desktop has keyboard focus (set by the shell): ⌘ keys act on desktop
+-- items, and must not reach the window that was in front before.
+foxtail_desktop = false
+local DESKTOP_KEYS = { A = true, I = true, O = true, C = true, ["SHIFT+N"] = true }
+
+-- While the desktop has the keyboard, a click on a window hands it back.
+-- (A global shortcut can't be used here: they aren't sent for mouse binds.)
+local function window_under_cursor()
+    local c = hl.get_cursor_pos()
+    if not c then return nil end
+    for _, w in ipairs(hl.get_windows()) do
+        local ws = w.workspace
+        if w.mapped and not w.hidden and ws and not ws.special and ws.visible then
+            local x, y = xy(w.at)
+            local sw, sh = xy(w.size)
+            if c.x >= x and c.x < x + sw and c.y >= y and c.y < y + sh then return w end
+        end
+    end
+    return nil
+end
+hl.bind("mouse:272", function()
+    if foxtail_desktop and window_under_cursor() then
+        foxtail_desktop = false
+        hl.exec_cmd("foxtail-ipc desktopBlur")
+    end
+end, { non_consuming = true })
+
+-- Spotlight is open (set by the shell): ⌘1–⌘4 pick what it browses.
+foxtail_spotlight = false
+
 local function app_shortcut(key, shift)
     return function()
+        if foxtail_spotlight and not shift and key:match("^[1-4]$") then
+            hl.exec_cmd("foxtail-ipc spotlightMode " .. key)
+            return
+        end
+        if foxtail_desktop then
+            local k = (shift and "SHIFT+" or "") .. key
+            if DESKTOP_KEYS[k] then hl.exec_cmd("foxtail-ipc desktopKey " .. k) end
+            return
+        end
+        if in_files() then
+            local f = FILES_KEYS[(shift and "SHIFT+" or "") .. key]
+            if f then f(); return end
+        end
         if in_terminal() then
             local t = not shift and TERMINAL_KEYS[key]
             if t then hl.dispatch(hl.dsp.send_shortcut({ mods = t[1], key = t[2] })) end
@@ -261,7 +337,7 @@ end
 -- still get to ask about unsaved work; Force Quit (⌥⌘⎋) is the hard kill.
 local function quit_app()
     local active = hl.get_active_window()
-    if not active then return end
+    if not active or foxtail_desktop then return end   -- Files (the desktop) can't quit
     for _, w in ipairs(hl.get_windows()) do
         if w.class == active.class then
             hl.dispatch(hl.dsp.window.close({ window = "address:" .. w.address }))
@@ -284,16 +360,31 @@ end
 
 -- macOS text navigation: ⌘←/→ line start/end, ⌘↑/↓ document start/end,
 -- ⌥←/→ by word (⇧ variants select). ⌘[ / ⌘] go back/forward.
+-- In Files, ⌘↑ goes to the enclosing folder and ⌘↓ opens, as in Finder.
+local function files_or(files_mods, files_key, fallback, desktop_key)
+    return function()
+        if foxtail_desktop then
+            if desktop_key then hl.exec_cmd("foxtail-ipc desktopKey " .. desktop_key) end
+        elseif in_files() then shortcut_now(files_mods, files_key) else fallback() end
+    end
+end
 for _, sh in ipairs({ "", "SHIFT + " }) do
     local s = sh ~= "" and "SHIFT " or ""
     hl.bind(CMD .. " + " .. sh .. "left", send(s, "Home"))
     hl.bind(CMD .. " + " .. sh .. "right", send(s, "End"))
-    hl.bind(CMD .. " + " .. sh .. "up", send("CTRL " .. s, "Home"))
-    hl.bind(CMD .. " + " .. sh .. "down", send("CTRL " .. s, "End"))
+    if sh == "" then
+        hl.bind(CMD .. " + up", files_or("ALT", "Up", send("CTRL", "Home")))
+        hl.bind(CMD .. " + down", files_or("", "Return", send("CTRL", "End"), "down"))
+    else
+        hl.bind(CMD .. " + " .. sh .. "up", send("CTRL " .. s, "Home"))
+        hl.bind(CMD .. " + " .. sh .. "down", send("CTRL " .. s, "End"))
+    end
     hl.bind("ALT + " .. sh .. "left", send("CTRL " .. s, "left"))
     hl.bind("ALT + " .. sh .. "right", send("CTRL " .. s, "right"))
 end
 hl.bind(CMD .. " + backspace", function()                 -- delete to line start
+    if foxtail_desktop then hl.exec_cmd("foxtail-ipc desktopKey backspace"); return end
+    if in_files() then shortcut_now("", "Delete"); return end   -- Files: Move to Trash
     hl.dispatch(hl.dsp.send_shortcut({ mods = "SHIFT", key = "Home" }))
     hl.dispatch(hl.dsp.send_shortcut({ mods = "", key = "BackSpace" }))
 end)
@@ -301,15 +392,138 @@ hl.bind("ALT + backspace", send("CTRL", "backspace"))
 hl.bind(CMD .. " + bracketleft", send("ALT", "left"))
 hl.bind(CMD .. " + bracketright", send("ALT", "right"))
 
+---------------------------------------------------------------- hide, minimize, tile
+-- These are globals so the shell's menus can run them (hyprctl eval).
+
+local function move_where(workspace, pred)
+    for _, w in ipairs(hl.get_windows()) do
+        if pred(w) and w.workspace and not w.workspace.special then
+            hl.dispatch(hl.dsp.window.move({ workspace = workspace, follow = false, window = "address:" .. w.address }))
+        end
+    end
+end
+
+-- ⌘H hides the app - every window of it - and ⌥⌘H hides all other apps.
+-- Hidden windows wait on "special:hidden"; the shell brings them back when the
+-- app is clicked in the Dock, picked with ⌘Tab, or via Show All.
+function foxtail_hide(others)
+    local a = hl.get_active_window()
+    if not a or foxtail_desktop then return end
+    move_where("special:hidden", function(w)
+        if others then return w.class ~= a.class end
+        return w.class == a.class
+    end)
+end
+
+-- Hide a given app (the Dock menu's Hide).
+function foxtail_hide_class(cls)
+    move_where("special:hidden", function(w) return w.class == cls end)
+end
+
+-- Show Desktop: move the windows on the current desktop out of the way, or
+-- bring them back. (Clicking an app in the Dock brings its windows back too.)
+function foxtail_show_desktop()
+    local shown = {}
+    for _, w in ipairs(hl.get_windows()) do
+        if w.workspace and w.workspace.name == "special:desktop" then table.insert(shown, w) end
+    end
+    if #shown > 0 then
+        for _, w in ipairs(shown) do
+            hl.dispatch(hl.dsp.window.move({ workspace = "e+0", window = "address:" .. w.address }))
+        end
+        return
+    end
+    local ws = hl.get_active_workspace()
+    move_where("special:desktop", function(w) return ws and w.workspace and w.workspace.id == ws.id end)
+end
+
+-- ⌥⌘M minimizes every window of the app into the Dock.
+function foxtail_minimize_app()
+    local a = hl.get_active_window()
+    if not a then return end
+    move_where("special:minimized", function(w) return w.class == a.class end)
+end
+
+-- macOS Sequoia window tiling (Window ▸ Move & Resize). macOS puts these on
+-- Fn⌃ (Globe); PC keyboards don't pass Fn through, so Foxtail uses ⌃⌥:
+--   ⌃⌥ ←/→/↑/↓  left/right/top/bottom half    ⌃⌥F or ⌃⌥↩  Fill
+--   ⌃⌥C         Center                         ⌃⌥R         Return to Previous Size
+local TILE_GAP = 8          -- "Tiled windows have margins"
+local before_tile = {}      -- window address -> geometry before it was first tiled
+
+
+local function usable_area(w)
+    local m = (w and w.monitor) or hl.get_active_monitor()
+    local r = m.reserved or {}
+    local width, height = m.width / m.scale, m.height / m.scale
+    if (m.transform or 0) % 2 == 1 then width, height = height, width end
+    local left, top, right, bottom = r.left or 0, r.top or 0, r.right or 0, r.bottom or 0
+    return { x = m.x + left + TILE_GAP, y = m.y + top + TILE_GAP,
+             w = width - left - right - 2 * TILE_GAP, h = height - top - bottom - 2 * TILE_GAP }
+end
+
+local TILES = {
+    fill = function(a) return a.x, a.y, a.w, a.h end,
+    left = function(a) return a.x, a.y, (a.w - TILE_GAP) / 2, a.h end,
+    right = function(a) local w = (a.w - TILE_GAP) / 2; return a.x + w + TILE_GAP, a.y, w, a.h end,
+    top = function(a) return a.x, a.y, a.w, (a.h - TILE_GAP) / 2 end,
+    bottom = function(a) local h = (a.h - TILE_GAP) / 2; return a.x, a.y + h + TILE_GAP, a.w, h end,
+    top_left = function(a) return a.x, a.y, (a.w - TILE_GAP) / 2, (a.h - TILE_GAP) / 2 end,
+    top_right = function(a) local w, h = (a.w - TILE_GAP) / 2, (a.h - TILE_GAP) / 2; return a.x + w + TILE_GAP, a.y, w, h end,
+    bottom_left = function(a) local w, h = (a.w - TILE_GAP) / 2, (a.h - TILE_GAP) / 2; return a.x, a.y + h + TILE_GAP, w, h end,
+    bottom_right = function(a) local w, h = (a.w - TILE_GAP) / 2, (a.h - TILE_GAP) / 2; return a.x + w + TILE_GAP, a.y + h + TILE_GAP, w, h end,
+}
+
+local function place(x, y, w, h)
+    -- resize keeps the window's center, so size first, then position.
+    hl.dispatch(hl.dsp.window.resize({ x = math.floor(w), y = math.floor(h) }))
+    hl.dispatch(hl.dsp.window.move({ x = math.floor(x), y = math.floor(y) }))
+end
+
+function foxtail_tile(where)
+    local w = hl.get_active_window()
+    if not w or not w.floating then return end
+    if where == "center" then
+        hl.dispatch(hl.dsp.window.center())
+        return
+    end
+    if where == "restore" then
+        local g = before_tile[w.address]
+        if g then
+            before_tile[w.address] = nil
+            place(g.x, g.y, g.w, g.h)
+        end
+        return
+    end
+    local tile = TILES[where]
+    if not tile then return end
+    if w.fullscreen == 1 then hl.dispatch(hl.dsp.window.fullscreen({ mode = "maximized" })) end
+    if not before_tile[w.address] then
+        local x, y = xy(w.at)
+        local sw, sh = xy(w.size)
+        before_tile[w.address] = { x = x, y = y, w = sw, h = sh }
+    end
+    place(tile(usable_area(w)))
+end
+
 -- Foxtail actions (macOS defaults where macOS has one).
 hl.bind(CMD .. " + Q", quit_app, { desc = "Quit app" })
-hl.bind(CMD .. " + H", hl.dsp.window.move({ workspace = "special:minimized", follow = false }), { desc = "Hide" })
+hl.bind(CMD .. " + H", function() foxtail_hide(false) end, { desc = "Hide" })
+hl.bind(CMD .. " + ALT + H", function() foxtail_hide(true) end, { desc = "Hide Others" })
 hl.bind(CMD .. " + M", hl.dsp.window.move({ workspace = "special:minimized", follow = false }), { desc = "Minimize" })
-hl.bind(CMD .. " + ALT + M", ipc("restoreAll"), { desc = "Restore minimized windows" })
+hl.bind(CMD .. " + ALT + M", foxtail_minimize_app, { desc = "Minimize All" })
+for key, where in pairs({ left = "left", right = "right", up = "top", down = "bottom",
+                          F = "fill", ["return"] = "fill", C = "center", R = "restore" }) do
+    hl.bind("CTRL + ALT + " .. key, function() foxtail_tile(where) end)
+end
 hl.bind(CMD .. " + space", ipc("spotlight"), { desc = "Spotlight" })
 hl.bind(CMD .. " + ALT + space", hl.dsp.exec_cmd("nautilus --new-window"), { desc = "Files" })
 hl.bind("F4", ipc("launchpad"), { desc = "Launchpad" })
-hl.bind(CMD .. " + ALT + L", ipc("launchpad"))
+hl.bind("F11", function() foxtail_show_desktop() end, { desc = "Show Desktop" })
+hl.bind(CMD .. " + F3", function() foxtail_show_desktop() end)
+hl.bind(CMD .. " + ALT + L", function()                    -- Files: Downloads (Finder's ⌥⌘L)
+    if in_files() then go_to("xdg-user-dir DOWNLOAD") else hl.dispatch(ipc("launchpad")) end
+end)
 hl.bind(CMD .. " + ALT + C", ipc("controlCenter"), { desc = "Control Center" })
 hl.bind(CMD .. " + ALT + N", ipc("notificationCenter"), { desc = "Notification Center" })
 hl.bind("CTRL + " .. CMD .. " + Q", ipc("lock"), { desc = "Lock Screen" })
@@ -331,6 +545,7 @@ hl.bind(CMD .. " + grave", hl.dsp.window.cycle_next(), { desc = "Next window of 
 hl.bind("F3", shell("missionControl"), { desc = "Mission Control" })
 hl.bind("CTRL + up", shell("missionControl"))
 hl.bind(CMD .. " + ALT + V", ipc("clipboard"), { desc = "Clipboard history" })
+hl.bind("CTRL + " .. CMD .. " + space", ipc("emoji"), { desc = "Emoji & Symbols" })
 
 -- Input sources: ⌃Space switches keyboard layout when there is more than one.
 if foxtail_layout_shortcut ~= false and (foxtail_layouts or ""):find(",") then
@@ -338,8 +553,11 @@ if foxtail_layout_shortcut ~= false and (foxtail_layouts or ""):find(",") then
 end
 hl.bind(CMD .. " + ALT + return", hl.dsp.exec_cmd("ptyxis --new-window"), { desc = "Terminal" })
 
-hl.bind(CMD .. " + SHIFT + 3", hl.dsp.exec_cmd("foxtail-screenshot screen"), { desc = "Screenshot" })
-hl.bind(CMD .. " + SHIFT + 4", hl.dsp.exec_cmd("foxtail-screenshot area"), { desc = "Screenshot area" })
+-- Screenshots go to the Desktop (Options in ⇧⌘5); add ⌃ to copy to the clipboard instead.
+hl.bind(CMD .. " + SHIFT + 3", ipc("screenshot screen"), { desc = "Screenshot" })
+hl.bind(CMD .. " + SHIFT + 4", ipc("screenshot area"), { desc = "Screenshot area" })
+hl.bind("CTRL + " .. CMD .. " + SHIFT + 3", ipc("screenshotToClipboard screen"))
+hl.bind("CTRL + " .. CMD .. " + SHIFT + 4", ipc("screenshotToClipboard area"))
 hl.bind(CMD .. " + SHIFT + 5", ipc("screenshotToolbar"), { desc = "Screenshot and recording" })
 
 -- Desktops: ⌃1-9 as on macOS, ⌃⌘←/→ for next/previous (plain ⌃←/→ stays

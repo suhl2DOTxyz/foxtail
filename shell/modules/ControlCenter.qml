@@ -74,7 +74,7 @@ Item {
                     icon: "half-circle"
                     tip: Settings.darkMode ? "Dark Mode" : "Light Mode"
                     on: Settings.darkMode
-                    onClicked: Settings.darkMode = !Settings.darkMode
+                    onClicked: { Settings.appearanceAuto = false; Settings.darkMode = !Settings.darkMode; }
                 }
             }
 
@@ -260,15 +260,16 @@ Item {
         id: tile
         property real radius: 22
         property bool active: false
+        property bool pressed: false
         default property alias content: inner.data
         Glass {
             anchors.fill: parent
             radius: tile.radius
             screenSize: root.screenSize
             windowOffset: root.windowOffset
-            rimOpacity: 0.55
-            bezel: Math.min(16, tile.height * 0.3)
-            refraction: 12
+            bezel: Math.min(16, tile.height * 0.32)
+            refraction: 10
+            pressed: tile.pressed
             shadowStrength: 0.6
         }
         Item { id: inner; anchors.fill: parent }
@@ -289,6 +290,7 @@ Item {
             anchors.fill: parent
             radius: width / 2
             visible: !rb.on
+            pressed: tap.pressed
         }
         Rectangle {
             anchors.fill: parent

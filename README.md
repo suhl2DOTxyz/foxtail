@@ -17,7 +17,7 @@ sudo ./scripts/build-iso.sh       # -> out/foxtail-1.0-<date>-x86_64.iso
 
 | Path | What |
 |---|---|
-| `shell/` | The desktop (Quickshell/QML): menu bar, Dock, Control Center, Spotlight, Launchpad, Notification Center, lock screen, System Settings, installer |
+| `shell/` | The desktop (Quickshell/QML): menu bar, Dock, desktop icons, Control Center, Spotlight, Launchpad, Notification Center, lock screen, System Settings, installer |
 | `shell/shaders/liquidglass.frag` | Liquid Glass shader (rebuild `.qsb` with `/usr/lib/qt6/bin/qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o X.qsb X`) |
 | `hypr/` | Hyprland Lua config (floating windows, macOS keybinds, blur rules) |
 | `bin/` | `foxtail-*` helpers (IPC, installer backend, screenshots, appearance sync) |

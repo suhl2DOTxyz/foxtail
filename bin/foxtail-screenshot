@@ -1,21 +1,26 @@
 #!/bin/sh
 # foxtail-screenshot <screen|area|window|pick-window> [--delay N] [--pointer]
+#                    [--dir DIR | --clipboard]
 #   screen       the display the pointer is on
 #   area         drag out a region
 #   window       the focused window
 #   pick-window  click a window
-# Saves to ~/Pictures/Screenshots, copies to the clipboard, posts a notification.
+# Saves "Screenshot <date> at <time>.png" to DIR (default: the Desktop, as on
+# macOS) and prints its path, or with --clipboard copies the picture instead.
+# Exits 3 if the selection was cancelled.
 mode=${1:-screen}; shift
-delay=0; pointer=""
+delay=0; pointer=""; dir=""; clip=""
 while [ $# -gt 0 ]; do
     case "$1" in
         --delay) delay=$2; shift ;;
         --pointer) pointer=-c ;;
+        --dir) dir=$2; shift ;;
+        --clipboard) clip=1 ;;
     esac
     shift
 done
 
-dir="$(xdg-user-dir PICTURES 2>/dev/null || echo "$HOME/Pictures")/Screenshots"
+[ -n "$dir" ] || dir="$(xdg-user-dir DESKTOP 2>/dev/null || echo "$HOME/Desktop")"
 mkdir -p "$dir"
 
 windows() {   # geometry of every visible window on the active desktops, for slurp -r
@@ -26,8 +31,8 @@ windows() {   # geometry of every visible window on the active desktops, for slu
 }
 
 case "$mode" in
-    area)        geom=$(slurp -d -b '#00000040' -c '#FF7A1AFF' -w 2) || exit 0 ;;
-    pick-window) geom=$(windows | slurp -r -b '#00000030' -c '#FF7A1AFF' -B '#FF7A1A30' -w 3) || exit 0 ;;
+    area)        geom=$(slurp -d -b '#00000040' -c '#FF7A1AFF' -w 2) || exit 3 ;;
+    pick-window) geom=$(windows | slurp -r -b '#00000030' -c '#FF7A1AFF' -B '#FF7A1A30' -w 3) || exit 3 ;;
     window)      geom=$(hyprctl -j activewindow | jq -r '"\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"') ;;
     *)           output=$(hyprctl -j monitors | jq -r '.[] | select(.focused) | .name') ;;
 esac
@@ -35,7 +40,11 @@ esac
 [ "$delay" -gt 0 ] 2>/dev/null && sleep "$delay"
 sleep 0.15   # let menus and the toolbar fade out first
 
-file="$dir/Screenshot $(date '+%Y-%m-%d at %H.%M.%S').png"
+if [ -n "$clip" ]; then
+    file=$(mktemp --suffix=.png)
+else
+    file="$dir/Screenshot $(date '+%Y-%m-%d at %H.%M.%S').png"
+fi
 if [ -n "${geom:-}" ]; then
     grim $pointer -g "$geom" "$file"
 elif [ -n "${output:-}" ]; then
@@ -44,5 +53,9 @@ else
     grim $pointer "$file"
 fi || exit 1
 
-wl-copy < "$file"
-notify-send -a "Screenshot" -i "$file" "Screenshot" "Saved to Pictures/Screenshots and copied."
+if [ -n "$clip" ]; then
+    wl-copy --type image/png < "$file"
+    rm -f "$file"
+else
+    echo "$file"
+fi

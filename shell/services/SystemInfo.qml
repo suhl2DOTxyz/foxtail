@@ -18,6 +18,7 @@ Singleton {
     property string fullName: ""
     property string disk: ""
     property string machine: ""
+    property string timezone: ""
 
     function run(cmd, cb) {
         const p = runner.createObject(root, { command: cmd });
@@ -44,5 +45,6 @@ Singleton {
         run(["sh", "-c", "getent passwd \"$USER\" | cut -d: -f5 | cut -d, -f1"], t => fullName = t || user);
         run(["sh", "-c", "df -h / | awk 'NR==2 {print $4 \" available of \" $2}'"], t => disk = t);
         run(["sh", "-c", "cat /sys/class/dmi/id/product_name 2>/dev/null || echo Computer"], t => machine = t);
+        run(["sh", "-c", "readlink /etc/localtime | sed 's|.*/zoneinfo/||'"], t => timezone = t);
     }
 }

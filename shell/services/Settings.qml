@@ -10,9 +10,12 @@ Singleton {
     id: root
 
     property alias liquidGlass: adapter.liquidGlass
+    property alias glassTinted: adapter.glassTinted
     property alias darkMode: adapter.darkMode
+    property alias appearanceAuto: adapter.appearanceAuto
     property alias accent: adapter.accent
     property alias wallpaper: adapter.wallpaper
+    property alias dynamicWallpaper: adapter.dynamicWallpaper
     property alias pinnedApps: adapter.pinnedApps
     property alias dockIconSize: adapter.dockIconSize
     property alias dockMagnification: adapter.dockMagnification
@@ -42,6 +45,27 @@ Singleton {
     property alias clipboardHistory: adapter.clipboardHistory
     property alias screenshotTimer: adapter.screenshotTimer
     property alias screenshotPointer: adapter.screenshotPointer
+    property alias screenshotSaveTo: adapter.screenshotSaveTo
+    property alias showDesktopItems: adapter.showDesktopItems
+    property alias desktopSort: adapter.desktopSort
+    property alias uiSounds: adapter.uiSounds
+    property alias volumeFeedback: adapter.volumeFeedback
+    property alias notificationSounds: adapter.notificationSounds
+    property alias startupSound: adapter.startupSound
+    property alias emojiRecent: adapter.emojiRecent
+    property alias hotCorners: adapter.hotCorners
+    property alias menuBarBackground: adapter.menuBarBackground
+    property alias menuBarAutoHide: adapter.menuBarAutoHide
+    property alias menuBarWifi: adapter.menuBarWifi
+    property alias menuBarSound: adapter.menuBarSound
+    property alias menuBarSpotlight: adapter.menuBarSpotlight
+    property alias pointerSpeed: adapter.pointerSpeed
+    property alias mouseNaturalScroll: adapter.mouseNaturalScroll
+    property alias trackpadNaturalScroll: adapter.trackpadNaturalScroll
+    property alias tapToClick: adapter.tapToClick
+    property alias twoFingerSecondary: adapter.twoFingerSecondary
+    property alias trackpadScrollSpeed: adapter.trackpadScrollSpeed
+    property alias trackpadGestures: adapter.trackpadGestures
 
     readonly property string dir: Quickshell.env("HOME") + "/.config/foxtail"
     readonly property string wallpaperDir: "/usr/share/backgrounds/foxtail"
@@ -61,9 +85,12 @@ Singleton {
         JsonAdapter {
             id: adapter
             property bool liquidGlass: true
+            property bool glassTinted: false   // Liquid Glass "Tinted": more opaque, more contrast (macOS 26.1)
             property bool darkMode: false
+            property bool appearanceAuto: false   // Light by day, Dark from 7 PM to 7 AM
             property string accent: "#FF7A1A"
             property string wallpaper: "/usr/share/backgrounds/foxtail/foxtail-dawn.jpg"
+            property bool dynamicWallpaper: true   // Dawn in Light mode, Dusk in Dark mode
             property list<string> pinnedApps: [
                 "org.gnome.Nautilus",
                 "firefox",
@@ -102,6 +129,28 @@ Singleton {
             property bool clipboardHistory: true
             property int screenshotTimer: 0    // seconds
             property bool screenshotPointer: false
+            property string screenshotSaveTo: "desktop"   // desktop | documents | pictures | clipboard
+            property bool showDesktopItems: true
+            property string desktopSort: "none"     // none | name | kind | date
+            property bool uiSounds: true             // screenshot shutter, emptying the Trash, ...
+            property bool volumeFeedback: true       // a click when the volume keys change the volume
+            property bool notificationSounds: true
+            property bool startupSound: true
+            property list<string> emojiRecent: []
+            // tl/tr/bl/br -> "" | mission | desktop | notifications | launchpad | lock | sleep
+            property var hotCorners: ({ tl: "", tr: "", bl: "", br: "" })
+            property bool menuBarBackground: false   // Tahoe's menu bar is clear unless this is on
+            property bool menuBarAutoHide: false
+            property bool menuBarWifi: true
+            property bool menuBarSound: false
+            property bool menuBarSpotlight: true
+            property real pointerSpeed: 0            // -1..1, mouse and trackpad
+            property bool mouseNaturalScroll: true   // macOS default
+            property bool trackpadNaturalScroll: true
+            property bool tapToClick: true
+            property bool twoFingerSecondary: true   // click with two fingers = secondary click
+            property real trackpadScrollSpeed: 0.6
+            property bool trackpadGestures: true     // three-finger swipes
         }
     }
 }

@@ -15,7 +15,7 @@ PanelWindow {
     screen: modelData
 
     readonly property bool mine: Panels.screen === null || Panels.screen === modelData
-    readonly property bool modal: Panels.spotlight || Panels.confirm !== "" || Panels.popover === "clipboard"
+    readonly property bool modal: Panels.spotlight || Panels.confirm !== "" || Panels.popover === "clipboard" || Panels.popover === "emoji"
     visible: mine && (Panels.popover !== "" || modal)
 
     WlrLayershell.layer: WlrLayer.Overlay
@@ -86,6 +86,20 @@ PanelWindow {
         }
     }
 
+    // ---------- right-click menus (desktop) ----------
+    Loader {
+        active: Panels.popover === "context"
+        x: Math.max(6, Math.min(Panels.contextPos.x, root.width - (item?.width ?? 0) - 6))
+        y: Math.max(Theme.menuBarHeight + 3, Math.min(Panels.contextPos.y, root.height - (item?.height ?? 0) - 6))
+        sourceComponent: MenuPanel {
+            minWidth: 200
+            model: Panels.contextModel
+            windowOffset: root.origin
+            screenSize: root.screenSize
+            onDone: Panels.closeAll()
+        }
+    }
+
     // ---------- Dock icon context menu ----------
     Loader {
         active: Panels.popover === "dockmenu" && Panels.dockMenuApp !== null
@@ -106,13 +120,34 @@ PanelWindow {
                 if (items.length) items.push({ separator: true });
                 items.push({ text: "New Window", action: () => Apps.launch(id) });
                 items.push({ separator: true });
-                items.push({ text: pinned ? "Remove from Dock" : "Keep in Dock", action: () => pinned ? Apps.unpin(id) : Apps.pin(id) });
+                items.push({ text: "Options", submenu: [
+                    { text: pinned ? "Remove from Dock" : "Keep in Dock", enabled: id !== "org.gnome.Nautilus",
+                      action: () => pinned ? Apps.unpin(id) : Apps.pin(id) },
+                    { text: "Open at Login", checkable: true, checked: LoginItems.has(id), action: () => LoginItems.toggle(id) }
+                ] });
                 if (running) {
+                    const wins = Apps.windowsFor(id);
+                    const hidden = wins.length > 0 && wins.every(w => Hypr.isHidden(w));
                     items.push({ separator: true });
+                    items.push({ text: hidden ? "Show" : "Hide", action: () => {
+                        if (hidden) Apps.focus(id);
+                        else Hypr.hideApp(wins[0].appId);
+                    } });
                     items.push({ text: "Quit", action: () => Apps.quit(id) });
                 }
                 return items;
             }
+        }
+    }
+
+    // ---------- Dock ▸ Downloads ----------
+    Loader {
+        active: Panels.popover === "downloads"
+        x: Math.max(6, Math.min(Panels.downloadsX - (item?.width ?? 0) / 2, root.width - (item?.width ?? 0) - 6))
+        y: root.height - (item?.height ?? 0) - Settings.dockIconSize - 34
+        sourceComponent: DownloadsStack {
+            screenSize: root.screenSize
+            windowOffset: root.origin
         }
     }
 
@@ -161,6 +196,17 @@ PanelWindow {
         }
     }
 
+    // ---------- Sound ----------
+    Loader {
+        active: Panels.popover === "sound"
+        x: Math.min(Panels.anchorX, root.width - (item?.width ?? 0) - 8)
+        y: Theme.menuBarHeight + 3
+        sourceComponent: SoundMenu {
+            screenSize: root.screenSize
+            windowOffset: root.origin
+        }
+    }
+
     // ---------- Wi-Fi ----------
     Loader {
         active: Panels.popover === "wifi"
@@ -189,6 +235,17 @@ PanelWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         y: Math.round(root.height * 0.22)
         sourceComponent: ClipboardMenu {
+            screenSize: root.screenSize
+            windowOffset: root.origin
+        }
+    }
+
+    // ---------- Emoji & Symbols ----------
+    Loader {
+        active: Panels.popover === "emoji"
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: Math.round(root.height * 0.2)
+        sourceComponent: EmojiPicker {
             screenSize: root.screenSize
             windowOffset: root.origin
         }
