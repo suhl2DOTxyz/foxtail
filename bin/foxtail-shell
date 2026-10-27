@@ -5,6 +5,9 @@
 # FOXTAIL_SHELL_DIR lets you point at a working copy while developing.
 SHELL_DIR="${FOXTAIL_SHELL_DIR:-/usr/share/foxtail/shell}"
 [ -d "$HOME/.config/foxtail/shell" ] && SHELL_DIR="$HOME/.config/foxtail/shell"
+# The shell styles itself; keep it on the GTK platform theme it was built with.
+export QT_QPA_PLATFORMTHEME=gtk3
+unset QT_STYLE_OVERRIDE
 PIDFILE="${XDG_RUNTIME_DIR:-/tmp}/foxtail-shell.pid"
 
 # Replace a running supervisor (and its shell) instead of adding a second one.
@@ -19,11 +22,15 @@ trap 'pkill -P $$ -x qs; rm -f "$PIDFILE"; exit 0' TERM INT
 
 crashes=""
 while :; do
-    qs -p "$SHELL_DIR" "$@" &
+    # The log is kept for "Report a problem" (foxtail-report).
+    qs -p "$SHELL_DIR" "$@" > "${XDG_RUNTIME_DIR:-/tmp}/foxtail-shell.log" 2>&1 &
     wait $!
     code=$?
     # 0 = quit on purpose; 143 = killed by a restart (TERM)
     [ "$code" = 0 ] || [ "$code" = 143 ] && break
+    # Keep the crashed shell's log before the restart overwrites it.
+    cp "${XDG_RUNTIME_DIR:-/tmp}/foxtail-shell.log" "${XDG_RUNTIME_DIR:-/tmp}/foxtail-shell.crashed.log" 2>/dev/null
+    foxtail-report --crash &
     now=$(date +%s)
     crashes="$(for t in $crashes; do [ $((now - t)) -lt 60 ] && echo "$t"; done) $now"
     [ "$(echo $crashes | wc -w)" -gt 5 ] && { notify-send -u critical "Foxtail" "The desktop shell keeps crashing. Log out and back in to restart it."; break; }

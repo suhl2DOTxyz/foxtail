@@ -255,36 +255,36 @@ PanelWindow {
         if (!selected[name]) selected = { [name]: true };
         const one = paths.length === 1;
         return [
-            { text: "Open", action: () => root.open(paths) },
+            { text: I18n.tr("Open"), action: () => root.open(paths) },
             { separator: true },
-            { text: "Move to Trash", shortcut: "⌘⌫", action: () => root.trash(paths) },
+            { text: I18n.tr("Move to Trash"), shortcut: "⌘⌫", action: () => root.trash(paths) },
             { separator: true },
-            { text: "Get Info", shortcut: "⌘I", action: () => root.fileManager("ShowItemProperties", paths) },
-            { text: "Rename", enabled: one, action: () => root.renaming = name },
-            { text: "Show in Files", action: () => root.fileManager("ShowItems", paths) },
+            { text: I18n.tr("Get Info"), shortcut: "⌘I", action: () => root.fileManager("ShowItemProperties", paths) },
+            { text: I18n.tr("Rename"), enabled: one, action: () => root.renaming = name },
+            { text: I18n.tr("Show in Files"), action: () => root.fileManager("ShowItems", paths) },
             { separator: true },
-            { text: "Copy", shortcut: "⌘C", action: () => Quickshell.execDetached(["wl-copy", "-t", "text/uri-list", fileUris(paths).join("\r\n")]) }
+            { text: I18n.tr("Copy"), shortcut: "⌘C", action: () => Quickshell.execDetached(["wl-copy", "-t", "text/uri-list", fileUris(paths).join("\r\n")]) }
         ];
     }
     function desktopMenu() {
         const sort = v => () => { Settings.desktopSort = v; };
         return [
-            { text: "New Folder", shortcut: "⇧⌘N", action: () => root.newFolder() },
+            { text: I18n.tr("New Folder"), shortcut: "⇧⌘N", action: () => root.newFolder() },
             { separator: true },
-            { text: "Get Info", action: () => root.fileManager("ShowItemProperties", [root.dir]) },
+            { text: I18n.tr("Get Info"), action: () => root.fileManager("ShowItemProperties", [root.dir]) },
             { separator: true },
-            { text: "Change Wallpaper…", action: () => Panels.openSettings("wallpaper") },
+            { text: I18n.tr("Change Wallpaper…"), action: () => Panels.openSettings("wallpaper") },
             { separator: true },
-            { text: "Clean Up", enabled: Settings.desktopSort === "none", action: () => root.cleanUp() },
-            { text: "Sort By", submenu: [
-                { text: "None", checkable: true, checked: Settings.desktopSort === "none", action: sort("none") },
+            { text: I18n.tr("Clean Up"), enabled: Settings.desktopSort === "none", action: () => root.cleanUp() },
+            { text: I18n.tr("Sort By"), submenu: [
+                { text: I18n.tr("None"), checkable: true, checked: Settings.desktopSort === "none", action: sort("none") },
                 { separator: true },
-                { text: "Name", checkable: true, checked: Settings.desktopSort === "name", action: sort("name") },
-                { text: "Kind", checkable: true, checked: Settings.desktopSort === "kind", action: sort("kind") },
-                { text: "Date Modified", checkable: true, checked: Settings.desktopSort === "date", action: sort("date") }
+                { text: I18n.tr("Name"), checkable: true, checked: Settings.desktopSort === "name", action: sort("name") },
+                { text: I18n.tr("Kind"), checkable: true, checked: Settings.desktopSort === "kind", action: sort("kind") },
+                { text: I18n.tr("Date Modified"), checkable: true, checked: Settings.desktopSort === "date", action: sort("date") }
             ] },
             { separator: true },
-            { text: "Show Desktop in Files", action: () => Quickshell.execDetached(["xdg-open", root.dir]) }
+            { text: I18n.tr("Show Desktop in Files"), action: () => Quickshell.execDetached(["xdg-open", root.dir]) }
         ];
     }
     function contextAt(model, x, y) {
@@ -632,7 +632,7 @@ PanelWindow {
                 elide: Text.ElideRight
                 text: cell.name
                 font.family: Theme.font
-                font.pixelSize: 12
+                font.pixelSize: Theme.px(12)
                 font.weight: Font.Medium
                 color: cell.isSelected || Theme.wallpaperDark ? "white" : "#1D1D1F"
                 style: cell.isSelected ? Text.Normal : Text.Outline
@@ -657,7 +657,7 @@ PanelWindow {
                     horizontalAlignment: TextInput.AlignHCenter
                     wrapMode: TextInput.WrapAnywhere
                     font.family: Theme.font
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.px(12)
                     color: Theme.text
                     selectionColor: Theme.accent
                     selectByMouse: true

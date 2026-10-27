@@ -76,9 +76,9 @@ Scope {
                 spacing: 0
                 Label {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: Qt.formatDate(clock.date, "dddd, MMMM d")
+                    text: I18n.date(clock.date, I18n.english ? "dddd, MMMM d" : "dddd, d. MMMM")
                     color: Qt.rgba(1, 1, 1, 0.9)
-                    font.pixelSize: 24
+                    font.pixelSize: Theme.px(24)
                     font.weight: Font.DemiBold
                 }
                 Label {
@@ -86,7 +86,7 @@ Scope {
                     text: Qt.formatTime(clock.date, Settings.clock24h ? "HH:mm" : "h:mm")
                     color: Qt.rgba(1, 1, 1, 0.92)
                     font.family: Theme.fontDisplay
-                    font.pixelSize: 112
+                    font.pixelSize: Theme.px(112)
                     font.weight: Font.Bold
                 }
             }
@@ -122,7 +122,7 @@ Scope {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: SystemInfo.fullName || SystemInfo.user
                     color: "white"
-                    font.pixelSize: 15
+                    font.pixelSize: Theme.px(15)
                     font.weight: Font.DemiBold
                 }
 
@@ -138,9 +138,9 @@ Scope {
                     SequentialAnimation {
                         id: shakeAnim
                         loops: 2
-                        NumberAnimation { target: field; property: "anchors.horizontalCenterOffset"; to: -10; duration: 50 }
-                        NumberAnimation { target: field; property: "anchors.horizontalCenterOffset"; to: 10; duration: 100 }
-                        NumberAnimation { target: field; property: "anchors.horizontalCenterOffset"; to: 0; duration: 50 }
+                        NumberAnimation { target: field; property: "anchors.horizontalCenterOffset"; to: -10; duration: Theme.ms(50) }
+                        NumberAnimation { target: field; property: "anchors.horizontalCenterOffset"; to: 10; duration: Theme.ms(100) }
+                        NumberAnimation { target: field; property: "anchors.horizontalCenterOffset"; to: 0; duration: Theme.ms(50) }
                     }
                     Connections { target: lock; function onShake() { shakeAnim.restart(); pw.text = ""; } }
 
@@ -154,13 +154,13 @@ Scope {
                         passwordCharacter: "●"
                         color: "white"
                         font.family: Theme.font
-                        font.pixelSize: 13
+                        font.pixelSize: Theme.px(13)
                         focus: true
                         enabled: !lock.busy
                         onAccepted: lock.submit(text)
                         Label {
                             visible: !pw.text
-                            text: "Enter Password"
+                            text: I18n.tr("Enter Password")
                             color: Qt.rgba(1, 1, 1, 0.6)
                             anchors.verticalCenter: parent.verticalCenter
                         }
@@ -182,7 +182,7 @@ Scope {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: lock.status || "Enter your password to unlock"
                     color: lock.status ? "#FFB4A8" : Qt.rgba(1, 1, 1, 0.55)
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.px(11)
                 }
             }
         }

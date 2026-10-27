@@ -1,6 +1,6 @@
 #!/bin/sh
 # foxtail-sync-appearance <light|dark> <#accent>
-# Pushes Foxtail's appearance to GTK 3/4 + libadwaita apps.
+# Pushes Foxtail's appearance to GTK 3/4 + libadwaita, Qt and KDE apps.
 mode="${1:-light}"
 accent="${2:-#FF7A1A}"
 
@@ -39,3 +39,41 @@ for v in gtk-3.0 gtk-4.0; do
     printf '@define-color accent_color %s;\n@define-color accent_bg_color %s;\n' "$accent" "$accent" \
         > "$HOME/.config/$v/foxtail-accent.css"
 done
+
+# ---- Qt and KDE apps: same palette, accent, fonts and icons ----
+# qt5ct/qt6ct paint Qt apps with the Fusion style and Foxtail's palette;
+# KDE apps also read their colors from kdeglobals.
+pal="/usr/share/foxtail/qt/foxtail-$mode.conf"
+if [ -f "$pal" ]; then
+    hex=$(echo "$accent" | tr -d '#' | tr A-F a-f)
+    for v in qt5ct qt6ct; do
+        mkdir -p "$HOME/.config/$v/colors"
+        sed "s/@ACCENT@/#ff$hex/g" "$pal" > "$HOME/.config/$v/colors/foxtail.conf"
+        conf="$HOME/.config/$v/$v.conf"
+        # Leave a configuration the user wrote by hand alone.
+        if [ ! -f "$conf" ] || grep -q '^# Foxtail' "$conf"; then
+            printf '%s\n' "# Foxtail (managed: delete this line to keep your own settings)" \
+                '[Appearance]' "color_scheme_path=$HOME/.config/$v/colors/foxtail.conf" \
+                'custom_palette=true' 'icon_theme=WhiteSur' 'standard_dialogs=xdgdesktopportal' 'style=Fusion' \
+                '[Fonts]' 'fixed="JetBrains Mono,11,-1,5,50,0,0,0,0,0"' 'general="Inter,11,-1,5,50,0,0,0,0,0"' > "$conf"
+        fi
+    done
+    # KDE apps (KColorScheme): window, view, button and selection colors.
+    if [ "$mode" = dark ]; then win=37,37,39; view=30,30,32; btn=58,58,60; fg=245,245,247; fg2=142,142,147
+    else win=245,245,247; view=255,255,255; btn=255,255,255; fg=29,29,31; fg2=110,110,115; fi
+    acc=$(printf '%d,%d,%d' 0x$(echo "$hex" | cut -c1-2) 0x$(echo "$hex" | cut -c3-4) 0x$(echo "$hex" | cut -c5-6))
+    kg="$HOME/.config/kdeglobals"
+    if [ ! -f "$kg" ] || grep -q '^# Foxtail' "$kg"; then
+        {
+            echo "# Foxtail (managed: delete this line to keep your own settings)"
+            echo "[General]"; echo "ColorScheme=Foxtail"; echo "font=Inter,11,-1,5,50,0,0,0,0,0"; echo "fixed=JetBrains Mono,11,-1,5,50,0,0,0,0,0"
+            echo "[Icons]"; echo "Theme=WhiteSur"
+            for s in Window View Button Tooltip Header Complementary; do
+                bg=$win; [ $s = View ] && bg=$view; [ $s = Button ] && bg=$btn
+                printf '[Colors:%s]\nBackgroundNormal=%s\nBackgroundAlternate=%s\nForegroundNormal=%s\nForegroundInactive=%s\nDecorationFocus=%s\nDecorationHover=%s\n' \
+                    "$s" "$bg" "$win" "$fg" "$fg2" "$acc" "$acc"
+            done
+            printf '[Colors:Selection]\nBackgroundNormal=%s\nBackgroundAlternate=%s\nForegroundNormal=255,255,255\nDecorationFocus=%s\nDecorationHover=%s\n' "$acc" "$acc" "$acc" "$acc"
+        } > "$kg"
+    fi
+fi

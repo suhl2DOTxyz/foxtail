@@ -7,6 +7,6 @@ Label {
     width: parent?.width ?? 0
     wrapMode: Text.Wrap
     elide: Text.ElideNone
-    font.pixelSize: 12
+    font.pixelSize: Theme.px(12)
     color: Theme.textSecondary
 }

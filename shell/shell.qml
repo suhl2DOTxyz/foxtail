@@ -107,8 +107,23 @@ ShellRoot {
         }
         function onAccentChanged() { root.syncGtk(); }
     }
+    // Accessibility settings reach GTK apps (and Orca) too.
+    Connections {
+        target: Settings
+        function onTextScaleChanged() { root.syncA11y(); }
+        function onIncreaseContrastChanged() { root.syncA11y(); }
+        function onReduceMotionChanged() { root.syncA11y(); }
+        function onScreenReaderChanged() { root.syncA11y(); }
+    }
+    function syncA11y() {
+        Quickshell.execDetached(["foxtail-sync-a11y", Settings.textScale.toFixed(2),
+                                 Settings.increaseContrast ? "1" : "0", Settings.reduceMotion ? "1" : "0",
+                                 Settings.screenReader ? "1" : "0"]);
+    }
+
     Component.onCompleted: {
         syncGtk();
+        syncA11y();
         Sounds.startup();
         // Dynamic wallpaper: on for the Foxtail pictures that have a light and
         // a dark version; a wallpaper picked before it existed stays put.

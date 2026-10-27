@@ -24,7 +24,7 @@ Rectangle {
         width: parent.width - 34
         anchors.verticalCenter: parent.verticalCenter
         text: ch.idx >= 0 ? ch.options[ch.idx][1] : "—"
-        font.pixelSize: 12
+        font.pixelSize: Theme.px(12)
     }
     Icon { anchors.right: parent.right; anchors.rightMargin: 8; anchors.verticalCenter: parent.verticalCenter; size: 10; name: "chevron-down"; color: Theme.textSecondary }
     MouseArea { anchors.fill: parent; enabled: ch.enabled; onClicked: menu.visible = !menu.visible }
@@ -73,7 +73,7 @@ Rectangle {
                         x: 24
                         anchors.verticalCenter: parent.verticalCenter
                         text: opt.modelData[1]
-                        font.pixelSize: 12
+                        font.pixelSize: Theme.px(12)
                         color: om.containsMouse ? "white" : Theme.text
                         Component.onCompleted: list.longest = Math.max(list.longest, implicitWidth)
                     }

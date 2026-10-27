@@ -51,11 +51,11 @@ Column {
     Group {
         visible: !pane.cupsUp
         SettingRow {
-            label: "The printing service is off"
-            sub: "Turn it on to use printers. It starts only when something is printed."
+            label: I18n.tr("The printing service is off")
+            sub: I18n.tr("Turn it on to use printers. It starts only when something is printed.")
             last: true
             PushButton {
-                text: "Turn On"
+                text: I18n.tr("Turn On")
                 onClicked: Quickshell.execDetached(["systemctl", "enable", "--now", "cups.socket", "avahi-daemon.service"])
             }
         }
@@ -78,11 +78,11 @@ Column {
                     spacing: 6
                     PushButton {
                         visible: prow.modelData.name !== pane.defaultPrinter
-                        text: "Make Default"
+                        text: I18n.tr("Make Default")
                         onClicked: { Quickshell.execDetached(["lpoptions", "-d", prow.modelData.name]); refreshSoon.restart(); }
                     }
                     PushButton {
-                        text: "Options…"
+                        text: I18n.tr("Options…")
                         onClicked: Quickshell.execDetached(["system-config-printer"])
                     }
                 }
@@ -93,10 +93,10 @@ Column {
 
     Note {
         visible: pane.printers.length === 0 && pane.cupsUp
-        text: "No printers yet. Most network printers are found automatically when you print; to set one up permanently, or to add a USB printer, click Add Printer."
+        text: I18n.tr("No printers yet. Most network printers are found automatically when you print; to set one up permanently, or to add a USB printer, click Add Printer.")
     }
     Row {
         spacing: 8
-        PushButton { text: "Add Printer…"; onClicked: Quickshell.execDetached(["system-config-printer"]) }
+        PushButton { text: I18n.tr("Add Printer…"); onClicked: Quickshell.execDetached(["system-config-printer"]) }
     }
 }

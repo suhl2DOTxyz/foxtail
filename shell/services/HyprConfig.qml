@@ -25,6 +25,9 @@ Singleton {
                    + `touchpad = { natural_scroll = ${Settings.trackpadNaturalScroll}, tap_to_click = ${Settings.tapToClick}, `
                    + `clickfinger_behavior = ${Settings.twoFingerSecondary}, scroll_factor = ${Settings.trackpadScrollSpeed.toFixed(2)} } } })`);
         lines.push(`foxtail_gestures = ${Settings.trackpadGestures}`);
+        // Accessibility
+        lines.push(`foxtail_reduce_motion = ${Settings.reduceMotion}`);
+        lines.push(`foxtail_zoom_keys = ${Settings.zoomKeys}`);
         const d = Settings.displays;
         for (const name of Object.keys(d).sort()) {
             const c = d[name];

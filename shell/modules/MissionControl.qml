@@ -66,7 +66,7 @@ PanelWindow {
         anchors.fill: parent
         color: "black"
         opacity: root.open ? 0.38 : 0
-        Behavior on opacity { NumberAnimation { duration: 240 } }
+        Behavior on opacity { NumberAnimation { duration: Theme.ms(240) } }
     }
     MouseArea { anchors.fill: parent; onClicked: root.close() }
 
@@ -81,7 +81,7 @@ PanelWindow {
         id: spaces
         anchors.horizontalCenter: parent.horizontalCenter
         y: root.open ? 18 : -height - 10
-        Behavior on y { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+        Behavior on y { NumberAnimation { duration: Theme.ms(260); easing.type: Easing.OutCubic } }
         spacing: 16
         readonly property real tileW: Math.min(180, root.width / 9)
         readonly property real tileH: tileW * root.height / root.width
@@ -129,9 +129,9 @@ PanelWindow {
                 Label {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
-                    text: "Desktop " + desk.modelData
+                    text: I18n.tr("Desktop ") + desk.modelData
                     color: "white"
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.px(11)
                     font.weight: desk.current ? Font.DemiBold : Font.Normal
                 }
                 MouseArea {
@@ -186,9 +186,9 @@ PanelWindow {
         Label {
             anchors.centerIn: parent
             visible: area.n === 0 && root.open
-            text: "No windows on this desktop"
+            text: I18n.tr("No windows on this desktop")
             color: Qt.rgba(1, 1, 1, 0.7)
-            font.pixelSize: 15
+            font.pixelSize: Theme.px(15)
         }
 
         Repeater {
@@ -221,10 +221,10 @@ PanelWindow {
                 width: dragging ? gridW * 0.5 : (root.open ? gridW : realW)
                 height: dragging ? gridH * 0.5 : (root.open ? gridH : realH)
                 z: dragging ? 10 : 0
-                Behavior on x { enabled: !win.dragging; NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
-                Behavior on y { enabled: !win.dragging; NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
-                Behavior on width { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
-                Behavior on height { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+                Behavior on x { enabled: !win.dragging; NumberAnimation { duration: Theme.ms(260); easing.type: Easing.OutCubic } }
+                Behavior on y { enabled: !win.dragging; NumberAnimation { duration: Theme.ms(260); easing.type: Easing.OutCubic } }
+                Behavior on width { NumberAnimation { duration: Theme.ms(220); easing.type: Easing.OutCubic } }
+                Behavior on height { NumberAnimation { duration: Theme.ms(220); easing.type: Easing.OutCubic } }
 
                 Rectangle {
                     anchors.fill: parent
@@ -249,7 +249,7 @@ PanelWindow {
                     sourceSize: Qt.size(88, 88)
                     source: Apps.iconFor(Apps.idForToplevel(win.modelData.wayland))
                     opacity: root.open ? 1 : 0
-                    Behavior on opacity { NumberAnimation { duration: 200 } }
+                    Behavior on opacity { NumberAnimation { duration: Theme.ms(200) } }
                 }
                 Rectangle {
                     visible: hover.containsMouse && !win.dragging
@@ -266,7 +266,7 @@ PanelWindow {
                         width: Math.min(implicitWidth, 300)
                         text: win.modelData.title
                         color: "white"
-                        font.pixelSize: 12
+                        font.pixelSize: Theme.px(12)
                     }
                 }
                 MouseArea {

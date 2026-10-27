@@ -1,0 +1,57 @@
+#!/bin/sh
+# foxtail-report [--crash]
+# "Report a problem": collects what's useful for a bug report into a zip on the
+# Desktop (system info, Foxtail's logs, recent errors) and opens a new GitHub
+# issue with the details filled in. Nothing is uploaded automatically: you
+# see the report and attach it yourself.
+# --crash: called by foxtail-shell after the desktop crashed; only notifies.
+set -u
+REPO=https://github.com/suhl2DOTxyz/foxtail
+state="${XDG_STATE_HOME:-$HOME/.local/state}/foxtail"
+mkdir -p "$state/crashes"
+
+if [ "${1:-}" = --crash ]; then
+    # Keep the log of the shell that crashed, then offer to report it.
+    t=$(date +%Y-%m-%d_%H.%M.%S)
+    cp "${XDG_RUNTIME_DIR:-/tmp}/foxtail-shell.crashed.log" "$state/crashes/shell-$t.log" 2>/dev/null
+    ls -t "$state/crashes"/shell-*.log 2>/dev/null | tail -n +11 | xargs -r rm -f   # keep 10
+    action=$(notify-send -a "Foxtail" -i dialog-warning -A report="Report…" \
+        "The desktop restarted" "Foxtail's menu bar and Dock stopped working and were restarted.")
+    [ "$action" = report ] && exec "$0"
+    exit 0
+fi
+
+ver=$(. /etc/os-release; echo "${VERSION_ID:-?}")
+tmp=$(mktemp -d)
+d="$tmp/foxtail-report"
+mkdir -p "$d"
+{
+    echo "Foxtail $ver"
+    echo "Kernel: $(uname -r)"
+    echo "Machine: $(cat /sys/class/dmi/id/sys_vendor 2>/dev/null) $(cat /sys/class/dmi/id/product_name 2>/dev/null)"
+    echo "CPU: $(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2- | sed 's/^ //')"
+    echo "Memory: $(awk '/MemTotal/ {printf "%.1f GB", $2/1024/1024}' /proc/meminfo)"
+    echo "Graphics:"; lspci 2>/dev/null | grep -iE 'vga|3d|display' | sed 's/^/  /'
+    echo "Displays:"; hyprctl -j monitors 2>/dev/null | jq -r '.[] | "  \(.name) \(.width)x\(.height)@\(.refreshRate) scale \(.scale)"'
+    echo "Hyprland: $(hyprctl version -j 2>/dev/null | jq -r .tag)"
+    echo "Quickshell: $(qs --version 2>/dev/null | head -1)"
+    echo "Software rendering: ${FOXTAIL_SOFTWARE_RENDERING:-0}"
+} > "$d/system.txt" 2>&1
+cp "${XDG_RUNTIME_DIR:-/tmp}/foxtail-shell.log" "$d/shell.log" 2>/dev/null
+cp "$state/crashes"/shell-*.log "$d/" 2>/dev/null
+hyprctl configerrors > "$d/hyprland-config-errors.txt" 2>&1
+log=$(ls -t "${XDG_RUNTIME_DIR:-/tmp}"/hypr/*/hyprland.log 2>/dev/null | head -1)
+[ -n "$log" ] && tail -n 400 "$log" > "$d/hyprland.log"
+journalctl -b -p err --no-pager -n 300 > "$d/errors-this-boot.txt" 2>&1
+pacman -Q > "$d/packages.txt" 2>&1
+# Settings without anything personal (no wallpaper paths or app lists).
+jq 'del(.wallpaper, .pinnedApps, .emojiRecent)' "$HOME/.config/foxtail/settings.json" > "$d/settings.json" 2>/dev/null
+
+desk=$(xdg-user-dir DESKTOP 2>/dev/null || echo "$HOME")
+out="$desk/Foxtail Report $(date '+%Y-%m-%d at %H.%M.%S').zip"
+(cd "$tmp" && bsdtar -a -cf "$out" foxtail-report)
+rm -rf "$tmp"
+
+url="$REPO/issues/new?template=bug_report.yml&title=$(printf '%s' "[Bug] " | jq -sRr @uri)&version=$(printf '%s' "$ver" | jq -sRr @uri)"
+xdg-open "$url" >/dev/null 2>&1 &
+notify-send -a "Foxtail" -i foxtail "Report ready" "Saved to your Desktop. A new issue opened in your browser: describe the problem and attach the report."

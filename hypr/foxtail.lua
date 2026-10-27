@@ -43,7 +43,8 @@ hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_THEME", "macOS")
 hl.env("HYPRCURSOR_SIZE", "24")
 hl.env("QT_QPA_PLATFORM", "wayland;xcb")
-hl.env("QT_QPA_PLATFORMTHEME", "gtk3")
+hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")   -- Qt apps: Foxtail palette (foxtail-sync-appearance)
+hl.env("QT_STYLE_OVERRIDE", "Fusion")
 hl.env("QT_WAYLAND_DISABLE_WINDOWDECORATION", "1")
 hl.env("GDK_BACKEND", "wayland,x11")
 hl.env("MOZ_ENABLE_WAYLAND", "1")
@@ -158,6 +159,11 @@ hl.animation({ leaf = "layersOut", enabled = true, speed = 2, bezier = "macOut",
 hl.animation({ leaf = "workspaces", enabled = true, speed = 5, bezier = "macEase", style = "slide" })
 hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 4, bezier = "macEase", style = "slidevert" })
 hl.animation({ leaf = "border", enabled = false })
+
+-- Accessibility ▸ Reduce motion: windows and desktops change without animating.
+if foxtail_reduce_motion then
+    hl.config({ animations = { enabled = false } })
+end
 
 ---------------------------------------------------------------- gestures
 -- Off in System Settings ▸ Trackpad sets foxtail_gestures = false (generated.lua).
@@ -572,6 +578,21 @@ hl.bind(CMD .. " + SHIFT + tab", shell("switcherPrev"))
 hl.bind(CMD .. " + Super_L", shell("switcherCommit"), { release = true, non_consuming = true })
 hl.bind(CMD .. " + Super_R", shell("switcherCommit"), { release = true, non_consuming = true })
 hl.bind(CMD .. " + grave", hl.dsp.window.cycle_next(), { desc = "Next window of app" })
+
+-- Accessibility ▸ Zoom, macOS keys: ⌥⌘8 toggles, ⌥⌘= / ⌥⌘- zoom in and out.
+-- The zoomed view follows the pointer.
+local zoom_level = 2
+local function set_zoom(f)
+    hl.config({ cursor = { zoom_factor = math.max(1, math.min(10, f)) } })
+end
+local function current_zoom() return hl.get_config("cursor.zoom_factor") or 1 end
+if foxtail_zoom_keys ~= false then
+    hl.bind(CMD .. " + ALT + 8", function()
+        if current_zoom() > 1 then set_zoom(1) else set_zoom(zoom_level) end
+    end, { desc = "Toggle zoom" })
+    hl.bind(CMD .. " + ALT + equal", function() zoom_level = current_zoom() + 0.5; set_zoom(zoom_level) end, { repeating = true })
+    hl.bind(CMD .. " + ALT + minus", function() zoom_level = math.max(1.5, current_zoom() - 0.5); set_zoom(current_zoom() - 0.5) end, { repeating = true })
+end
 
 -- Mission Control: F3, ⌃↑ or a three-finger swipe up.
 hl.bind("F3", shell("missionControl"), { desc = "Mission Control" })

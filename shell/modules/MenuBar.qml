@@ -138,7 +138,7 @@ PanelWindow {
                     Label {
                         text: Capture.clock(Capture.elapsed)
                         color: bar.fg
-                        font.pixelSize: 12
+                        font.pixelSize: Theme.px(12)
                         font.features: { "tnum": 1 }
                         anchors.verticalCenter: parent.verticalCenter
                     }
@@ -165,7 +165,7 @@ PanelWindow {
                         id: inputLabel
                         anchors.centerIn: parent
                         text: Keyboard.shortName(Keyboard.active)
-                        font.pixelSize: 9
+                        font.pixelSize: Theme.px(9)
                         font.weight: Font.Bold
                         color: bar.fg
                     }
@@ -186,7 +186,7 @@ PanelWindow {
                         visible: Settings.showBatteryPercent
                         text: Power.percent + "%"
                         color: bar.fg
-                        font.pixelSize: 12
+                        font.pixelSize: Theme.px(12)
                         anchors.verticalCenter: parent.verticalCenter
                     }
                     Item {
@@ -276,7 +276,7 @@ PanelWindow {
                         const d = time.date;
                         const fmt = Settings.clock24h ? (Settings.clockSeconds ? "HH:mm:ss" : "HH:mm")
                                                       : (Settings.clockSeconds ? "h:mm:ss AP" : "h:mm AP");
-                        return Qt.formatDateTime(d, "ddd MMM d") + "   " + Qt.formatDateTime(d, fmt);
+                        return (I18n.english ? I18n.date(d, "ddd MMM d") : I18n.date(d, "ddd d. MMM")) + "   " + Qt.formatDateTime(d, fmt);
                     }
                 }
             }
@@ -317,7 +317,7 @@ PanelWindow {
             color: btn.active ? (Theme.liquid ? Qt.rgba(1, 1, 1, Theme.wallpaperDark ? 0.22 : 0.45)
                                               : Theme.hover)
                               : "transparent"
-            Behavior on color { ColorAnimation { duration: 80 } }
+            Behavior on color { ColorAnimation { duration: Theme.ms(80) } }
         }
         MouseArea {
             anchors.fill: parent

@@ -15,11 +15,11 @@ Item {
     height: col.implicitHeight + 40
 
     readonly property var kinds: ({
-        restart: { title: "Are you sure you want to restart your computer now?", button: "Restart", cmd: ["systemctl", "reboot"] },
-        shutdown: { title: "Are you sure you want to shut down your computer now?", button: "Shut Down", cmd: ["systemctl", "poweroff"] },
-        logout: { title: "Are you sure you want to quit all applications and log out now?", button: "Log Out", cmd: ["hyprctl", "dispatch", "hl.dsp.exit()"] },
-        emptyTrash: { title: "Are you sure you want to permanently erase the items in the Trash?", button: "Empty Trash",
-                      note: "You can't undo this action.", noTimer: true, icon: "user-trash-full", cmd: ["gio", "trash", "--empty"] }
+        restart: { title: I18n.tr("Are you sure you want to restart your computer now?"), button: I18n.tr("Restart"), countdown: "If you do nothing, the computer will restart automatically in %1 seconds.", cmd: ["systemctl", "reboot"] },
+        shutdown: { title: I18n.tr("Are you sure you want to shut down your computer now?"), button: I18n.tr("Shut Down"), countdown: "If you do nothing, the computer will shut down automatically in %1 seconds.", cmd: ["systemctl", "poweroff"] },
+        logout: { title: I18n.tr("Are you sure you want to quit all applications and log out now?"), button: I18n.tr("Log Out"), countdown: "If you do nothing, you will be logged out automatically in %1 seconds.", cmd: ["hyprctl", "dispatch", "hl.dsp.exit()"] },
+        emptyTrash: { title: I18n.tr("Are you sure you want to permanently erase the items in the Trash?"), button: I18n.tr("Empty Trash"),
+                      note: I18n.tr("You can't undo this action."), noTimer: true, icon: "user-trash-full", cmd: ["gio", "trash", "--empty"] }
     })
     readonly property var kind: kinds[Panels.confirm] ?? kinds.shutdown
     property int seconds: 60
@@ -75,7 +75,7 @@ Item {
             wrapMode: Text.Wrap
             text: root.kind.title
             font.family: Theme.font
-            font.pixelSize: 13
+            font.pixelSize: Theme.px(13)
             font.weight: Font.Bold
             color: Theme.text
         }
@@ -85,9 +85,9 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
-            text: root.kind.note ?? `If you do nothing, the computer will ${root.kind.button.toLowerCase()} automatically in ${root.seconds} seconds.`
+            text: root.kind.note ?? I18n.tr(root.kind.countdown).arg(root.seconds)
             font.family: Theme.font
-            font.pixelSize: 11
+            font.pixelSize: Theme.px(11)
             color: Theme.textSecondary
         }
 
@@ -96,7 +96,7 @@ Item {
         Row {
             anchors.horizontalCenter: parent.horizontalCenter
             spacing: 8
-            DialogButton { text: "Cancel"; onClicked: Panels.confirm = "" }
+            DialogButton { text: I18n.tr("Cancel"); onClicked: Panels.confirm = "" }
             DialogButton { text: root.kind.button; primary: true; onClicked: root.go() }
         }
     }

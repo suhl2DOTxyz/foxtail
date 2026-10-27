@@ -29,7 +29,7 @@ Item {
     // Opening animation: a quick fade+drop like macOS menus.
     opacity: 0
     Component.onCompleted: opacity = 1
-    Behavior on opacity { NumberAnimation { duration: 90 } }
+    Behavior on opacity { NumberAnimation { duration: Theme.ms(90) } }
 
     Glass {
         anchors.fill: parent

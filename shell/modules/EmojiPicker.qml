@@ -81,11 +81,11 @@ Item {
             anchors.rightMargin: 10
             anchors.verticalCenter: parent.verticalCenter
             font.family: Theme.font
-            font.pixelSize: 13
+            font.pixelSize: Theme.px(13)
             color: Theme.text
             selectionColor: Theme.accent
             clip: true
-            Label { visible: !search.text; text: "Search"; color: Theme.textTertiary; anchors.verticalCenter: parent.verticalCenter }
+            Label { visible: !search.text; text: I18n.tr("Search"); color: Theme.textTertiary; anchors.verticalCenter: parent.verticalCenter }
             Keys.onEscapePressed: Panels.closeAll()
             Keys.onReturnPressed: if (root.shown.length) root.pick(root.shown[0][0])
         }
@@ -95,7 +95,7 @@ Item {
         x: 16
         y: searchBox.y + searchBox.height + 10
         text: root.title
-        font.pixelSize: 11
+        font.pixelSize: Theme.px(11)
         font.weight: Font.DemiBold
         color: Theme.textSecondary
     }
@@ -125,7 +125,7 @@ Item {
                 anchors.centerIn: parent
                 text: cell.modelData[0]
                 font.family: "Noto Color Emoji"
-                font.pixelSize: 26
+                font.pixelSize: Theme.px(26)
             }
             MouseArea {
                 id: cellMouse
@@ -157,7 +157,7 @@ Item {
                     anchors.centerIn: parent
                     text: root.icons[tab.modelData] ?? ""
                     font.family: "Noto Color Emoji"
-                    font.pixelSize: 16
+                    font.pixelSize: Theme.px(16)
                     opacity: tab.on ? 1 : 0.6
                 }
                 MouseArea {

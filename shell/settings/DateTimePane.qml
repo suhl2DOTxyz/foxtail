@@ -61,22 +61,22 @@ Column {
                 anchors.verticalCenter: parent.verticalCenter
                 Label {
                     text: Qt.formatTime(clock.date, Settings.clock24h ? (Settings.clockSeconds ? "HH:mm:ss" : "HH:mm") : (Settings.clockSeconds ? "h:mm:ss AP" : "h:mm AP"))
-                    font.pixelSize: 26
+                    font.pixelSize: Theme.px(26)
                     font.weight: Font.DemiBold
                 }
-                Label { text: Qt.formatDate(clock.date, "dddd, MMMM d, yyyy"); color: Theme.textSecondary; font.pixelSize: 12 }
+                Label { text: I18n.date(clock.date, I18n.english ? "dddd, MMMM d, yyyy" : "dddd, d. MMMM yyyy"); color: Theme.textSecondary; font.pixelSize: Theme.px(12) }
             }
         }
     }
 
     Group {
         SettingRow {
-            label: "Set time and date automatically"
-            sub: "Uses internet time servers."
+            label: I18n.tr("Set time and date automatically")
+            sub: I18n.tr("Uses internet time servers.")
             Switch { checked: pane.ntp; onToggled: c => pane.run(["set-ntp", c ? "true" : "false"]) }
         }
         SettingRow {
-            label: "Time zone"
+            label: I18n.tr("Time zone")
             sub: pane.zone.replace(/_/g, " ")
             last: true
             PushButton { text: pane.picking ? "Cancel" : "Change…"; onClicked: { pane.picking = !pane.picking; if (pane.picking && !pane.zones.length) zoneList.running = true; } }
@@ -99,7 +99,7 @@ Column {
         }
         PushButton {
             anchors.right: parent.right
-            text: "Set Time Zone"
+            text: I18n.tr("Set Time Zone")
             primary: true
             enabled: pane.pick !== "" && pane.pick !== pane.zone
             onClicked: { pane.run(["set-timezone", pane.pick]); pane.picking = false; }
@@ -111,17 +111,17 @@ Column {
         wrapMode: Text.Wrap
         text: pane.error
         color: "#FF453A"
-        font.pixelSize: 12
+        font.pixelSize: Theme.px(12)
     }
 
-    SectionTitle { text: "Clock" }
+    SectionTitle { text: I18n.tr("Clock") }
     Group {
         SettingRow {
-            label: "Use 24-hour time"
+            label: I18n.tr("Use 24-hour time")
             Switch { checked: Settings.clock24h; onToggled: c => Settings.clock24h = c }
         }
         SettingRow {
-            label: "Show seconds in menu bar"
+            label: I18n.tr("Show seconds in menu bar")
             last: true
             Switch { checked: Settings.clockSeconds; onToggled: c => Settings.clockSeconds = c }
         }

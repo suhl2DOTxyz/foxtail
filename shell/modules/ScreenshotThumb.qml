@@ -50,7 +50,7 @@ PanelWindow {
     }
     SequentialAnimation {
         id: slideOut
-        NumberAnimation { target: card; property: "x"; to: root.width + 20; duration: 260; easing.type: Easing.InCubic }
+        NumberAnimation { target: card; property: "x"; to: root.width + 20; duration: Theme.ms(260); easing.type: Easing.InCubic }
         ScriptAction { script: { root.file = ""; Capture.lastShot = ""; } }
     }
 

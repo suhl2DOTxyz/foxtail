@@ -34,7 +34,7 @@ Item {
         Item {
             width: parent.width
             height: 30
-            Label { x: 14; anchors.verticalCenter: parent.verticalCenter; text: "Sound"; font.weight: Font.Bold }
+            Label { x: 14; anchors.verticalCenter: parent.verticalCenter; text: I18n.tr("Sound"); font.weight: Font.Bold }
         }
         Item {
             width: parent.width
@@ -51,7 +51,7 @@ Item {
         }
 
         MenuItem { width: parent.width; separator: true }
-        MenuItem { width: parent.width; header: true; text: "Output" }
+        MenuItem { width: parent.width; header: true; text: I18n.tr("Output") }
         Repeater {
             model: Audio.sinks
             MenuItem {
@@ -66,7 +66,7 @@ Item {
         MenuItem { width: parent.width; separator: true }
         MenuItem {
             width: parent.width
-            text: "Sound Settings…"
+            text: I18n.tr("Sound Settings…")
             onTriggered: { Panels.closeAll(); Panels.openSettings("sound"); }
         }
     }

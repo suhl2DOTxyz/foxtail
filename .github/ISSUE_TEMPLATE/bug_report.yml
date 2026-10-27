@@ -1,0 +1,51 @@
+name: Bug report
+description: Something in Foxtail doesn't work as it should.
+title: "[Bug] "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for testing Foxtail! The quickest way to file a good report is
+        **fox menu ▸ Help ▸ Report a Problem…**, which saves a report to your
+        Desktop (system info and logs, nothing personal) to attach below.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: And what did you expect to happen instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open …
+        2. Click …
+  - type: input
+    id: version
+    attributes:
+      label: Foxtail version
+      description: fox menu ▸ About This Foxtail
+      placeholder: "1.6"
+    validations:
+      required: true
+  - type: dropdown
+    id: hardware
+    attributes:
+      label: Where are you running Foxtail?
+      options:
+        - Real hardware (laptop)
+        - Real hardware (desktop)
+        - Virtual machine
+  - type: input
+    id: gpu
+    attributes:
+      label: Graphics card
+      placeholder: "e.g. Intel Iris Xe, AMD Radeon 780M, NVIDIA RTX 3060"
+  - type: textarea
+    id: report
+    attributes:
+      label: Report and screenshots
+      description: Drag the "Foxtail Report … .zip" from your Desktop here, and screenshots if they help.

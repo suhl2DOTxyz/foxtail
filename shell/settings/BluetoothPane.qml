@@ -59,12 +59,12 @@ Column {
                 anchors.right: btSwitch.left
                 anchors.rightMargin: 12
                 anchors.verticalCenter: parent.verticalCenter
-                Label { text: "Bluetooth"; font.weight: Font.DemiBold }
+                Label { text: I18n.tr("Bluetooth"); font.weight: Font.DemiBold }
                 Label {
                     width: parent.width
                     text: !pane.adapter ? "No Bluetooth adapter found."
                         : pane.on ? `This computer is discoverable as “${pane.adapter.name}” while this pane is open.` : "Off"
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.px(11)
                     color: Theme.textSecondary
                 }
             }
@@ -80,8 +80,8 @@ Column {
         }
     }
 
-    SectionTitle { visible: pane.on; text: "My Devices" }
-    Note { visible: pane.on && pane.mine.length === 0; text: "No devices yet. Put a device in pairing mode and it will show up under Nearby Devices." }
+    SectionTitle { visible: pane.on; text: I18n.tr("My Devices") }
+    Note { visible: pane.on && pane.mine.length === 0; text: I18n.tr("No devices yet. Put a device in pairing mode and it will show up under Nearby Devices.") }
     Group {
         visible: pane.on && pane.mine.length > 0
         Repeater {
@@ -101,21 +101,21 @@ Column {
                         text: devRow.modelData.connected ? "Disconnect" : "Connect"
                         onClicked: devRow.modelData.connected ? devRow.modelData.disconnect() : devRow.modelData.connect()
                     }
-                    PushButton { text: "Forget"; destructive: true; onClicked: devRow.modelData.forget() }
+                    PushButton { text: I18n.tr("Forget"); destructive: true; onClicked: devRow.modelData.forget() }
                 }
             }
         }
     }
 
-    SectionTitle { visible: pane.on; text: "Nearby Devices" }
+    SectionTitle { visible: pane.on; text: I18n.tr("Nearby Devices") }
     Row {
         visible: pane.on && pane.nearby.length === 0
         spacing: 8
         Icon {
             size: 14; name: "restart"; color: Theme.textSecondary
-            RotationAnimation on rotation { running: pane.adapter?.discovering ?? false; from: 0; to: 360; duration: 1600; loops: Animation.Infinite }
+            RotationAnimation on rotation { running: pane.adapter?.discovering ?? false; from: 0; to: 360; duration: Theme.ms(1600); loops: Animation.Infinite }
         }
-        Label { text: "Looking for devices…"; font.pixelSize: 12; color: Theme.textSecondary }
+        Label { text: I18n.tr("Looking for devices…"); font.pixelSize: Theme.px(12); color: Theme.textSecondary }
     }
     Group {
         visible: pane.on && pane.nearby.length > 0

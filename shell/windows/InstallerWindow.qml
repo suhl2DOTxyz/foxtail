@@ -11,7 +11,7 @@ import qs.settings
 FloatingWindow {
     id: win
 
-    title: "Install Foxtail"
+    title: I18n.tr("Install Foxtail")
     visible: Panels.installer
     onVisibleChanged: if (!visible) Panels.installer = false
     implicitWidth: 720
@@ -270,7 +270,7 @@ FloatingWindow {
         spacing: 10
 
         Btn {
-            text: "Go Back"
+            text: I18n.tr("Go Back")
             visible: win.step > 0 && win.step < 5
             onClicked: win.step--
         }
@@ -293,15 +293,15 @@ FloatingWindow {
         id: intro
         Column {
             spacing: 14
-            Label { text: "Welcome to Foxtail"; font.pixelSize: 26; font.weight: Font.Bold }
+            Label { text: I18n.tr("Welcome to Foxtail"); font.pixelSize: Theme.px(26); font.weight: Font.Bold }
             Text {
                 width: parent.width
                 wrapMode: Text.Wrap
                 color: Theme.text
                 font.family: Theme.font
-                font.pixelSize: 13
+                font.pixelSize: Theme.px(13)
                 lineHeight: 1.25
-                text: "This assistant will install Foxtail on this computer.\n\n" +
+                text: I18n.tr("This assistant will install Foxtail on this computer.\n\n") +
                       "You'll choose a disk, create your account, and pick your time zone. " +
                       "Installing takes a few minutes and works without an internet connection.\n\n" +
                       "You can erase a disk, or install alongside another system (such as Windows) if there's free space on it."
@@ -313,12 +313,12 @@ FloatingWindow {
         id: destination
         Column {
             spacing: 14
-            Label { text: "Select a Destination"; font.pixelSize: 22; font.weight: Font.Bold }
+            Label { text: I18n.tr("Select a Destination"); font.pixelSize: Theme.px(22); font.weight: Font.Bold }
             Label {
                 width: parent.width
                 wrapMode: Text.Wrap
                 elide: Text.ElideNone
-                text: "Choose the disk where you want to install Foxtail."
+                text: I18n.tr("Choose the disk where you want to install Foxtail.")
                 color: Theme.textSecondary
             }
             Flow {
@@ -346,7 +346,7 @@ FloatingWindow {
                                 Rectangle { anchors.bottom: parent.bottom; anchors.bottomMargin: 8; x: 8; width: 6; height: 6; radius: 3; color: "#4CD964" }
                             }
                             Label { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.model || modelData.name; font.weight: Font.DemiBold; width: 130; horizontalAlignment: Text.AlignHCenter }
-                            Label { anchors.horizontalCenter: parent.horizontalCenter; text: win.human(modelData.size) + " · /dev/" + modelData.name; font.pixelSize: 11; color: Theme.textSecondary }
+                            Label { anchors.horizontalCenter: parent.horizontalCenter; text: win.human(modelData.size) + " · /dev/" + modelData.name; font.pixelSize: Theme.px(11); color: Theme.textSecondary }
                         }
                         MouseArea { anchors.fill: parent; onClicked: win.disk = parent.modelData.name }
                     }
@@ -354,7 +354,7 @@ FloatingWindow {
             }
             Label {
                 visible: win.disks.length === 0
-                text: "No suitable disks found (at least 16 GB is required)."
+                text: I18n.tr("No suitable disks found (at least 16 GB is required).")
                 color: "#FF453A"
             }
 
@@ -368,14 +368,14 @@ FloatingWindow {
 
                 Choice {
                     selected: win.mode === "erase"
-                    title: "Erase disk and install Foxtail"
-                    sub: "Everything on /dev/" + win.disk + " will be deleted."
+                    title: I18n.tr("Erase disk and install Foxtail")
+                    sub: I18n.tr("Everything on /dev/") + win.disk + " will be deleted."
                     onPicked: win.mode = "erase"
                 }
                 Choice {
                     enabled: parent.canAlongside
                     selected: win.mode === "alongside"
-                    title: "Install alongside the existing system"
+                    title: I18n.tr("Install alongside the existing system")
                     sub: parent.canAlongside
                         ? `Uses ${win.human(parent.free)} of free space. Your other system and files stay untouched, and you choose which one to start when the computer turns on.`
                         : "Needs at least 20 GB of unpartitioned space and an existing EFI system. Shrink a partition first (for example with Windows Disk Management) to make room."
@@ -388,11 +388,11 @@ FloatingWindow {
                     Switch { checked: win.encrypt; onToggled: c => win.encrypt = c; anchors.verticalCenter: parent.verticalCenter }
                     Column {
                         anchors.verticalCenter: parent.verticalCenter
-                        Label { text: "Encrypt Foxtail (FileVault-style)" }
+                        Label { text: I18n.tr("Encrypt Foxtail (FileVault-style)") }
                         Label {
-                            text: "Your password will be needed each time the computer starts."
+                            text: I18n.tr("Your password will be needed each time the computer starts.")
                             color: Theme.textSecondary
-                            font.pixelSize: 11
+                            font.pixelSize: Theme.px(11)
                         }
                     }
                 }
@@ -404,14 +404,14 @@ FloatingWindow {
         id: language
         Column {
             spacing: 12
-            Label { text: "Language & Keyboard"; font.pixelSize: 22; font.weight: Font.Bold }
+            Label { text: I18n.tr("Language & Keyboard"); font.pixelSize: Theme.px(22); font.weight: Font.Bold }
             Row {
                 width: parent.width
                 spacing: 14
                 Column {
                     width: (parent.width - 14) / 2
                     spacing: 6
-                    Label { text: "Language"; font.weight: Font.DemiBold }
+                    Label { text: I18n.tr("Language"); font.weight: Font.DemiBold }
                     ListBox {
                         width: parent.width
                         height: 290
@@ -426,7 +426,7 @@ FloatingWindow {
                 Column {
                     width: (parent.width - 14) / 2
                     spacing: 6
-                    Label { text: "Keyboard"; font.weight: Font.DemiBold }
+                    Label { text: I18n.tr("Keyboard"); font.weight: Font.DemiBold }
                     Rectangle {
                         width: parent.width; height: 26; radius: 7
                         color: Theme.control
@@ -437,9 +437,9 @@ FloatingWindow {
                             verticalAlignment: TextInput.AlignVCenter
                             color: Theme.text
                             font.family: Theme.font
-                            font.pixelSize: 12
+                            font.pixelSize: Theme.px(12)
                             onTextChanged: win.layoutFilter = text.toLowerCase()
-                            Label { visible: !kbSearch.text; text: "Search layouts"; color: Theme.textTertiary; font.pixelSize: 12 }
+                            Label { visible: !kbSearch.text; text: I18n.tr("Search layouts"); color: Theme.textTertiary; font.pixelSize: Theme.px(12) }
                         }
                     }
                     ListBox {
@@ -452,9 +452,9 @@ FloatingWindow {
                 }
             }
             Label {
-                text: "Try typing here to check your keyboard:"
+                text: I18n.tr("Try typing here to check your keyboard:")
                 color: Theme.textSecondary
-                font.pixelSize: 12
+                font.pixelSize: Theme.px(12)
             }
             Rectangle {
                 width: parent.width; height: 28; radius: 7
@@ -466,7 +466,7 @@ FloatingWindow {
                     verticalAlignment: TextInput.AlignVCenter
                     color: Theme.text
                     font.family: Theme.font
-                    font.pixelSize: 13
+                    font.pixelSize: Theme.px(13)
                 }
             }
         }
@@ -476,17 +476,17 @@ FloatingWindow {
         id: account
         Column {
             spacing: 12
-            Label { text: "Create Your Account"; font.pixelSize: 22; font.weight: Font.Bold }
-            Field { label: "Full name"; text: win.fullName; onEdited: t => win.fullName = t }
-            Field { label: "Account name"; text: win.userName; onEdited: t => { win.userEdited = true; win.userName = t; } }
-            Field { label: "Password"; secret: true; text: win.password; onEdited: t => win.password = t }
-            Field { label: "Verify"; secret: true; text: win.password2; onEdited: t => win.password2 = t }
-            Field { label: "Computer name"; text: win.hostName; onEdited: t => win.hostName = t }
+            Label { text: I18n.tr("Create Your Account"); font.pixelSize: Theme.px(22); font.weight: Font.Bold }
+            Field { label: I18n.tr("Full name"); text: win.fullName; onEdited: t => win.fullName = t }
+            Field { label: I18n.tr("Account name"); text: win.userName; onEdited: t => { win.userEdited = true; win.userName = t; } }
+            Field { label: I18n.tr("Password"); secret: true; text: win.password; onEdited: t => win.password = t }
+            Field { label: I18n.tr("Verify"); secret: true; text: win.password2; onEdited: t => win.password2 = t }
+            Field { label: I18n.tr("Computer name"); text: win.hostName; onEdited: t => win.hostName = t }
             Label {
                 visible: win.password2 !== "" && win.password !== win.password2
-                text: "Passwords don't match."
+                text: I18n.tr("Passwords don't match.")
                 color: "#FF453A"
-                font.pixelSize: 12
+                font.pixelSize: Theme.px(12)
             }
         }
     }
@@ -495,8 +495,8 @@ FloatingWindow {
         id: tz
         Column {
             spacing: 12
-            Label { text: "Select Your Time Zone"; font.pixelSize: 22; font.weight: Font.Bold }
-            Field { label: "Search"; text: win.tzFilter; onEdited: t => win.tzFilter = t }
+            Label { text: I18n.tr("Select Your Time Zone"); font.pixelSize: Theme.px(22); font.weight: Font.Bold }
+            Field { label: I18n.tr("Search"); text: win.tzFilter; onEdited: t => win.tzFilter = t }
             Rectangle {
                 width: parent.width
                 height: 250
@@ -531,7 +531,7 @@ FloatingWindow {
         id: install
         Column {
             spacing: 18
-            Label { text: win.error ? "Installation Failed" : "Installing Foxtail…"; font.pixelSize: 22; font.weight: Font.Bold }
+            Label { text: win.error ? "Installation Failed" : "Installing Foxtail…"; font.pixelSize: Theme.px(22); font.weight: Font.Bold }
             Item { width: 1; height: 40 }
             Image {
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -541,7 +541,7 @@ FloatingWindow {
                 RotationAnimation on rotation {
                     running: win.installing
                     from: 0; to: 360
-                    duration: 2400
+                    duration: Theme.ms(2400)
                     loops: Animation.Infinite
                 }
             }
@@ -554,7 +554,7 @@ FloatingWindow {
                     height: parent.height
                     radius: 3
                     color: Theme.accent
-                    Behavior on width { NumberAnimation { duration: 300 } }
+                    Behavior on width { NumberAnimation { duration: Theme.ms(300) } }
                 }
             }
             Label {
@@ -573,14 +573,14 @@ FloatingWindow {
         id: summary
         Column {
             spacing: 14
-            Label { text: "Foxtail is installed 🎉"; font.pixelSize: 26; font.weight: Font.Bold }
+            Label { text: I18n.tr("Foxtail is installed 🎉"); font.pixelSize: Theme.px(26); font.weight: Font.Bold }
             Text {
                 width: parent.width
                 wrapMode: Text.Wrap
                 color: Theme.text
                 font.family: Theme.font
-                font.pixelSize: 13
-                text: "Remove the installation media, then restart. You'll log in as “" + win.userName + "”."
+                font.pixelSize: Theme.px(13)
+                text: I18n.tr("Remove the installation media, then restart. You'll log in as “") + win.userName + "”."
             }
         }
     }
@@ -617,7 +617,7 @@ FloatingWindow {
             y: 10
             spacing: 2
             Label { width: parent.width; text: ch.title; font.weight: Font.DemiBold }
-            Label { width: parent.width; text: ch.sub; color: Theme.textSecondary; font.pixelSize: 11; wrapMode: Text.Wrap; elide: Text.ElideNone }
+            Label { width: parent.width; text: ch.sub; color: Theme.textSecondary; font.pixelSize: Theme.px(11); wrapMode: Text.Wrap; elide: Text.ElideNone }
         }
         MouseArea { anchors.fill: parent; enabled: ch.enabled; onClicked: ch.picked() }
     }
@@ -658,7 +658,7 @@ FloatingWindow {
                 verticalAlignment: TextInput.AlignVCenter
                 color: Theme.text
                 font.family: Theme.font
-                font.pixelSize: 13
+                font.pixelSize: Theme.px(13)
                 echoMode: f.secret ? TextInput.Password : TextInput.Normal
                 text: f.text
                 clip: true

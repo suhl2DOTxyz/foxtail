@@ -11,14 +11,14 @@ Column {
     spacing: 14
 
     readonly property var categories: [
-        { id: "web", name: "Web browser", icon: "globe", mimes: ["x-scheme-handler/http", "x-scheme-handler/https", "text/html"] },
-        { id: "mail", name: "Mail", icon: "bell", mimes: ["x-scheme-handler/mailto"] },
-        { id: "files", name: "Files", icon: "folder", mimes: ["inode/directory"] },
-        { id: "text", name: "Text editor", icon: "keyboard", mimes: ["text/plain"] },
-        { id: "pdf", name: "PDF documents", icon: "info", mimes: ["application/pdf"] },
-        { id: "image", name: "Images", icon: "photo", mimes: ["image/png", "image/jpeg", "image/webp", "image/gif"] },
-        { id: "video", name: "Videos", icon: "play", mimes: ["video/mp4", "video/x-matroska", "video/webm"] },
-        { id: "music", name: "Music", icon: "music", mimes: ["audio/mpeg", "audio/flac", "audio/ogg", "audio/x-wav"] }
+        { id: "web", name: I18n.tr("Web browser"), icon: "globe", mimes: ["x-scheme-handler/http", "x-scheme-handler/https", "text/html"] },
+        { id: "mail", name: I18n.tr("Mail"), icon: "bell", mimes: ["x-scheme-handler/mailto"] },
+        { id: "files", name: I18n.tr("Files"), icon: "folder", mimes: ["inode/directory"] },
+        { id: "text", name: I18n.tr("Text editor"), icon: "keyboard", mimes: ["text/plain"] },
+        { id: "pdf", name: I18n.tr("PDF documents"), icon: "info", mimes: ["application/pdf"] },
+        { id: "image", name: I18n.tr("Images"), icon: "photo", mimes: ["image/png", "image/jpeg", "image/webp", "image/gif"] },
+        { id: "video", name: I18n.tr("Videos"), icon: "play", mimes: ["video/mp4", "video/x-matroska", "video/webm"] },
+        { id: "music", name: I18n.tr("Music"), icon: "music", mimes: ["audio/mpeg", "audio/flac", "audio/ogg", "audio/x-wav"] }
     ]
 
     // { id: { current: "x.desktop", apps: ["a.desktop", ...] } }
@@ -91,5 +91,5 @@ Column {
             }
         }
     }
-    Note { text: "Apps you install from the App Store appear here once they can open these kinds of files." }
+    Note { text: I18n.tr("Apps you install from the App Store appear here once they can open these kinds of files.") }
 }

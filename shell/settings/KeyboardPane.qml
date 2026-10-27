@@ -12,7 +12,7 @@ Column {
     property bool adding: false
     property string pick: ""
 
-    SectionTitle { text: "Input Sources" }
+    SectionTitle { text: I18n.tr("Input Sources") }
     Group {
         Repeater {
             model: Keyboard.layouts
@@ -32,16 +32,16 @@ Column {
                         radius: 4
                         color: "transparent"
                         border.color: Theme.textSecondary
-                        Label { id: codeLabel; anchors.centerIn: parent; text: Keyboard.shortName(srcRow.modelData); font.pixelSize: 10; font.weight: Font.Bold; color: Theme.textSecondary }
+                        Label { id: codeLabel; anchors.centerIn: parent; text: Keyboard.shortName(srcRow.modelData); font.pixelSize: Theme.px(10); font.weight: Font.Bold; color: Theme.textSecondary }
                     }
                     PushButton {
                         visible: srcRow.index !== Keyboard.activeIndex
-                        text: "Use"
+                        text: I18n.tr("Use")
                         onClicked: Keyboard.select(srcRow.index)
                     }
                     PushButton {
                         visible: Keyboard.layouts.length > 1
-                        text: "Remove"
+                        text: I18n.tr("Remove")
                         onClicked: Keyboard.remove(srcRow.modelData)
                     }
                 }
@@ -50,7 +50,7 @@ Column {
     }
     Row {
         spacing: 8
-        PushButton { visible: !pane.adding; text: "Add Input Source…"; onClicked: { pane.adding = true; filter.text = ""; filter.focusInput(); } }
+        PushButton { visible: !pane.adding; text: I18n.tr("Add Input Source…"); onClicked: { pane.adding = true; filter.text = ""; filter.focusInput(); } }
     }
     Column {
         visible: pane.adding
@@ -71,9 +71,9 @@ Column {
         Row {
             anchors.right: parent.right
             spacing: 8
-            PushButton { text: "Cancel"; onClicked: pane.adding = false }
+            PushButton { text: I18n.tr("Cancel"); onClicked: pane.adding = false }
             PushButton {
-                text: "Add"
+                text: I18n.tr("Add")
                 primary: true
                 enabled: pane.pick !== ""
                 onClicked: { Keyboard.add(pane.pick); pane.pick = ""; pane.adding = false; }
@@ -82,20 +82,20 @@ Column {
     }
     Group {
         SettingRow {
-            label: "Switch input sources with ⌃Space"
-            sub: "You can also pick one from the menu bar."
+            label: I18n.tr("Switch input sources with ⌃Space")
+            sub: I18n.tr("You can also pick one from the menu bar.")
             last: true
             Switch { checked: Settings.layoutSwitchShortcut; onToggled: c => Settings.layoutSwitchShortcut = c }
         }
     }
 
-    SectionTitle { text: "Typing" }
+    SectionTitle { text: I18n.tr("Typing") }
     Group {
         SettingRow {
-            label: "Key repeat rate"
+            label: I18n.tr("Key repeat rate")
             Row {
                 spacing: 10
-                Label { text: "Slow"; font.pixelSize: 11; color: Theme.textSecondary; anchors.verticalCenter: parent.verticalCenter }
+                Label { text: I18n.tr("Slow"); font.pixelSize: Theme.px(11); color: Theme.textSecondary; anchors.verticalCenter: parent.verticalCenter }
                 PlainSlider {
                     width: 150
                     anchors.verticalCenter: parent.verticalCenter
@@ -103,15 +103,15 @@ Column {
                     value: Settings.keyRepeatRate
                     onReleased: Settings.keyRepeatRate = Math.round(value)
                 }
-                Label { text: "Fast"; font.pixelSize: 11; color: Theme.textSecondary; anchors.verticalCenter: parent.verticalCenter }
+                Label { text: I18n.tr("Fast"); font.pixelSize: Theme.px(11); color: Theme.textSecondary; anchors.verticalCenter: parent.verticalCenter }
             }
         }
         SettingRow {
-            label: "Delay until repeat"
+            label: I18n.tr("Delay until repeat")
             last: true
             Row {
                 spacing: 10
-                Label { text: "Long"; font.pixelSize: 11; color: Theme.textSecondary; anchors.verticalCenter: parent.verticalCenter }
+                Label { text: I18n.tr("Long"); font.pixelSize: Theme.px(11); color: Theme.textSecondary; anchors.verticalCenter: parent.verticalCenter }
                 PlainSlider {
                     width: 150
                     anchors.verticalCenter: parent.verticalCenter
@@ -119,25 +119,25 @@ Column {
                     value: Settings.keyRepeatDelay
                     onReleased: Settings.keyRepeatDelay = Math.round(value / 50) * 50
                 }
-                Label { text: "Short"; font.pixelSize: 11; color: Theme.textSecondary; anchors.verticalCenter: parent.verticalCenter }
+                Label { text: I18n.tr("Short"); font.pixelSize: Theme.px(11); color: Theme.textSecondary; anchors.verticalCenter: parent.verticalCenter }
             }
         }
     }
     Group {
         SettingRow {
-            label: "Clipboard history"
-            sub: "Remember what you copy. Open the history with ⌥⌘V."
+            label: I18n.tr("Clipboard history")
+            sub: I18n.tr("Remember what you copy. Open the history with ⌥⌘V.")
             last: true
             Row {
                 spacing: 8
-                PushButton { text: "Clear"; anchors.verticalCenter: parent.verticalCenter; onClicked: Clipboard.clear() }
+                PushButton { text: I18n.tr("Clear"); anchors.verticalCenter: parent.verticalCenter; onClicked: Clipboard.clear() }
                 Switch { anchors.verticalCenter: parent.verticalCenter; checked: Settings.clipboardHistory; onToggled: c => Settings.clipboardHistory = c }
             }
         }
     }
 
-    SectionTitle { text: "Keyboard Shortcuts" }
-    Note { text: "The Super (⊞) key is ⌘ Command, Ctrl is ⌃ Control, Alt is ⌥ Option. ⌘ shortcuts work in every app, and in terminals ⌘C copies instead of interrupting." }
+    SectionTitle { text: I18n.tr("Keyboard Shortcuts") }
+    Note { text: I18n.tr("The Super (⊞) key is ⌘ Command, Ctrl is ⌃ Control, Alt is ⌥ Option. ⌘ shortcuts work in every app, and in terminals ⌘C copies instead of interrupting.") }
     Group {
         Repeater {
             id: shortcuts

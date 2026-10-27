@@ -40,12 +40,12 @@ PanelWindow {
     }
 
     readonly property var tools: [
-        { id: "screen", icon: "screen-capture", tip: "Capture Entire Screen" },
-        { id: "pick-window", icon: "window-capture", tip: "Capture Selected Window" },
-        { id: "area", icon: "selection-capture", tip: "Capture Selected Portion" },
+        { id: "screen", icon: "screen-capture", tip: I18n.tr("Capture Entire Screen") },
+        { id: "pick-window", icon: "window-capture", tip: I18n.tr("Capture Selected Window") },
+        { id: "area", icon: "selection-capture", tip: I18n.tr("Capture Selected Portion") },
         { sep: true },
-        { id: "record-screen", icon: "screen-record", tip: "Record Entire Screen" },
-        { id: "record-area", icon: "selection-record", tip: "Record Selected Portion" },
+        { id: "record-screen", icon: "screen-record", tip: I18n.tr("Record Entire Screen") },
+        { id: "record-area", icon: "selection-record", tip: I18n.tr("Record Selected Portion") },
         { sep: true }
     ]
 
@@ -77,7 +77,7 @@ PanelWindow {
             // Close
             ToolButton {
                 icon: "xmark"
-                tip: "Close"
+                tip: I18n.tr("Close")
                 small: true
                 onClicked: Panels.screenshotBar = false
             }
@@ -114,7 +114,7 @@ PanelWindow {
                 Row {
                     anchors.centerIn: parent
                     spacing: 4
-                    Label { id: optLabel; text: "Options"; font.pixelSize: 13; anchors.verticalCenter: parent.verticalCenter }
+                    Label { id: optLabel; text: I18n.tr("Options"); font.pixelSize: Theme.px(13); anchors.verticalCenter: parent.verticalCenter }
                     Icon { size: 10; name: "chevron-down"; color: Theme.textSecondary; anchors.verticalCenter: parent.verticalCenter }
                 }
                 MouseArea { id: optMouse; anchors.fill: parent; hoverEnabled: true; onClicked: root.optionsOpen = !root.optionsOpen }
@@ -151,7 +151,7 @@ PanelWindow {
                 id: optCol
                 x: 6; y: 6
                 width: parent.width - 12
-                OptHeader { text: "Save to" }
+                OptHeader { text: I18n.tr("Save to") }
                 Repeater {
                     model: [["desktop", "Desktop"], ["documents", "Documents"], ["pictures", "Pictures"], ["clipboard", "Clipboard"]]
                     OptItem {
@@ -161,7 +161,7 @@ PanelWindow {
                         onClicked: Settings.screenshotSaveTo = modelData[0]
                     }
                 }
-                OptHeader { text: "Timer" }
+                OptHeader { text: I18n.tr("Timer") }
                 Repeater {
                     model: [[0, "None"], [5, "5 Seconds"], [10, "10 Seconds"]]
                     OptItem {
@@ -171,9 +171,9 @@ PanelWindow {
                         onClicked: Settings.screenshotTimer = modelData[0]
                     }
                 }
-                OptHeader { text: "Options" }
+                OptHeader { text: I18n.tr("Options") }
                 OptItem {
-                    text: "Show Mouse Pointer"
+                    text: I18n.tr("Show Mouse Pointer")
                     checked: Settings.screenshotPointer
                     onClicked: Settings.screenshotPointer = !Settings.screenshotPointer
                 }
@@ -190,7 +190,7 @@ PanelWindow {
         color: "white"
         style: Text.Outline
         styleColor: Qt.rgba(0, 0, 0, 0.35)
-        font.pixelSize: 12
+        font.pixelSize: Theme.px(12)
     }
 
     component Sep: Rectangle {
@@ -220,7 +220,7 @@ PanelWindow {
         leftPadding: 10
         topPadding: 6
         bottomPadding: 2
-        font.pixelSize: 11
+        font.pixelSize: Theme.px(11)
         font.weight: Font.DemiBold
         color: Theme.textSecondary
     }
@@ -235,7 +235,7 @@ PanelWindow {
         radius: Theme.liquid ? 8 : 5
         color: oim.containsMouse ? Theme.accent : "transparent"
         Icon { x: 8; anchors.verticalCenter: parent.verticalCenter; visible: oi.checked; size: 11; name: "check"; color: oim.containsMouse ? "white" : Theme.text }
-        Label { x: 26; anchors.verticalCenter: parent.verticalCenter; text: oi.text; font.pixelSize: 13; color: oim.containsMouse ? "white" : Theme.text }
+        Label { x: 26; anchors.verticalCenter: parent.verticalCenter; text: oi.text; font.pixelSize: Theme.px(13); color: oim.containsMouse ? "white" : Theme.text }
         MouseArea { id: oim; anchors.fill: parent; hoverEnabled: true; onClicked: oi.clicked() }
     }
 }

@@ -118,22 +118,22 @@ PanelWindow {
                 for (const w of Apps.windowsFor(id))
                     items.push({ text: w.title || Apps.nameFor(id), checkable: true, checked: w.activated, action: () => w.activate() });
                 if (items.length) items.push({ separator: true });
-                items.push({ text: "New Window", action: () => Apps.launch(id) });
+                items.push({ text: I18n.tr("New Window"), action: () => Apps.launch(id) });
                 items.push({ separator: true });
-                items.push({ text: "Options", submenu: [
-                    { text: pinned ? "Remove from Dock" : "Keep in Dock", enabled: id !== "org.gnome.Nautilus",
+                items.push({ text: I18n.tr("Options"), submenu: [
+                    { text: pinned ? I18n.tr("Remove from Dock") : I18n.tr("Keep in Dock"), enabled: id !== "org.gnome.Nautilus",
                       action: () => pinned ? Apps.unpin(id) : Apps.pin(id) },
-                    { text: "Open at Login", checkable: true, checked: LoginItems.has(id), action: () => LoginItems.toggle(id) }
+                    { text: I18n.tr("Open at Login"), checkable: true, checked: LoginItems.has(id), action: () => LoginItems.toggle(id) }
                 ] });
                 if (running) {
                     const wins = Apps.windowsFor(id);
                     const hidden = wins.length > 0 && wins.every(w => Hypr.isHidden(w));
                     items.push({ separator: true });
-                    items.push({ text: hidden ? "Show" : "Hide", action: () => {
+                    items.push({ text: hidden ? I18n.tr("Show") : I18n.tr("Hide"), action: () => {
                         if (hidden) Apps.focus(id);
                         else Hypr.hideApp(wins[0].appId);
                     } });
-                    items.push({ text: "Quit", action: () => Apps.quit(id) });
+                    items.push({ text: I18n.tr("Quit"), action: () => Apps.quit(id) });
                 }
                 return items;
             }
@@ -179,7 +179,7 @@ PanelWindow {
                     action: () => Keyboard.select(i)
                 }));
                 items.push({ separator: true });
-                items.push({ text: "Open Keyboard Settings…", action: () => Panels.openSettings("keyboard") });
+                items.push({ text: I18n.tr("Open Keyboard Settings…"), action: () => Panels.openSettings("keyboard") });
                 return items;
             }
         }

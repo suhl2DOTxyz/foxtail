@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Foxtail Guide
+    url: https://github.com/suhl2DOTxyz/foxtail/tree/main/docs
+    about: Installing, troubleshooting and frequently asked questions.

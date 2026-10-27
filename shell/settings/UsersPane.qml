@@ -76,7 +76,7 @@ Column {
                 Row {
                     spacing: 6
                     PushButton {
-                        text: "Password…"
+                        text: I18n.tr("Password…")
                         onClicked: { pane.mode = "password:" + urow.modelData.name; pw1.text = ""; pw2.text = ""; pw1.focusInput(); }
                     }
                     PushButton {
@@ -99,7 +99,7 @@ Column {
     }
     PushButton {
         visible: pane.mode === ""
-        text: "Add User…"
+        text: I18n.tr("Add User…")
         onClicked: { pane.mode = "add"; nfull.text = ""; nuser.text = ""; pw1.text = ""; pw2.text = ""; nfull.focusInput(); }
     }
 
@@ -118,7 +118,7 @@ Column {
         }
         SettingRow {
             visible: pane.mode === "add"
-            label: "Full name"
+            label: I18n.tr("Full name")
             TextField {
                 id: nfull
                 width: 240
@@ -127,8 +127,8 @@ Column {
         }
         SettingRow {
             visible: pane.mode === "add"
-            label: "Account name"
-            sub: "Used for the home folder. It can't be changed later."
+            label: I18n.tr("Account name")
+            sub: I18n.tr("Used for the home folder. It can't be changed later.")
             TextField {
                 id: nuser
                 property bool edited: false
@@ -137,16 +137,16 @@ Column {
             }
         }
         SettingRow {
-            label: "Password"
+            label: I18n.tr("Password")
             TextField { id: pw1; width: 240; secret: true }
         }
         SettingRow {
-            label: "Verify"
+            label: I18n.tr("Verify")
             TextField { id: pw2; width: 240; secret: true }
         }
         SettingRow {
             visible: pane.mode === "add"
-            label: "Allow this user to administer this computer"
+            label: I18n.tr("Allow this user to administer this computer")
             Switch { id: nadmin; checked: false }
         }
         Item {
@@ -156,16 +156,16 @@ Column {
                 x: 14
                 anchors.verticalCenter: parent.verticalCenter
                 visible: pw2.text !== "" && pw1.text !== pw2.text
-                text: "Passwords don't match"
+                text: I18n.tr("Passwords don't match")
                 color: "#FF453A"
-                font.pixelSize: 12
+                font.pixelSize: Theme.px(12)
             }
             Row {
                 anchors.right: parent.right
                 anchors.rightMargin: 14
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 8
-                PushButton { text: "Cancel"; onClicked: { pane.mode = ""; pane.error = ""; } }
+                PushButton { text: I18n.tr("Cancel"); onClicked: { pane.mode = ""; pane.error = ""; } }
                 PushButton {
                     text: pane.mode === "add" ? "Create User" : "Change Password"
                     primary: true
@@ -185,6 +185,6 @@ Column {
         wrapMode: Text.Wrap
         text: pane.error
         color: "#FF453A"
-        font.pixelSize: 12
+        font.pixelSize: Theme.px(12)
     }
 }

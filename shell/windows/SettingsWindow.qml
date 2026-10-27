@@ -13,7 +13,7 @@ import qs.settings
 FloatingWindow {
     id: win
 
-    title: "System Settings"
+    title: I18n.tr("System Settings")
     visible: Panels.settings
     onVisibleChanged: if (!visible) Panels.settings = false
     implicitWidth: 760
@@ -84,10 +84,10 @@ FloatingWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 color: Theme.text
                 font.family: Theme.font
-                font.pixelSize: 13
+                font.pixelSize: Theme.px(13)
                 clip: true
                 onTextChanged: win.filter = text.toLowerCase()
-                Label { visible: !searchInput.text; text: "Search"; color: Theme.textTertiary }
+                Label { visible: !searchInput.text; text: I18n.tr("Search"); color: Theme.textTertiary }
             }
         }
 
@@ -121,7 +121,7 @@ FloatingWindow {
                             anchors.centerIn: parent
                             text: (SystemInfo.fullName || SystemInfo.user || "?").charAt(0).toUpperCase()
                             color: "white"
-                            font.pixelSize: 17
+                            font.pixelSize: Theme.px(17)
                             font.weight: Font.DemiBold
                         }
                     }
@@ -130,7 +130,7 @@ FloatingWindow {
                         anchors.leftMargin: 10
                         anchors.verticalCenter: parent.verticalCenter
                         Label { text: SystemInfo.fullName || SystemInfo.user; font.weight: Font.DemiBold }
-                        Label { text: "Foxtail Account"; font.pixelSize: 11; color: Theme.textSecondary }
+                        Label { text: I18n.tr("Foxtail Account"); font.pixelSize: Theme.px(11); color: Theme.textSecondary }
                     }
                 }
 
@@ -217,7 +217,7 @@ FloatingWindow {
                 }
                 Label {
                     text: (win.panes.find(p => p.id === Panels.settingsPane) ?? {}).name ?? ""
-                    font.pixelSize: 15
+                    font.pixelSize: Theme.px(15)
                     font.weight: Font.Bold
                     anchors.verticalCenter: parent.verticalCenter
                 }
@@ -257,6 +257,7 @@ FloatingWindow {
                     case "lock": return lockPane;
                     case "keyboard": return keyboardPane;
                     case "menubar": return menuBarPane;
+                    case "accessibility": return accessibilityPane;
                     case "trackpad": return trackpadPane;
                     case "mouse": return mousePane;
                     }
@@ -285,8 +286,8 @@ FloatingWindow {
                     }
                     Label {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: "Foxtail"
-                        font.pixelSize: 30
+                        text: I18n.tr("Foxtail")
+                        font.pixelSize: Theme.px(30)
                         font.weight: Font.Bold
                     }
                     Label {
@@ -297,15 +298,15 @@ FloatingWindow {
                 }
             }
             Group {
-                SettingRow { label: "Name"; Label { text: SystemInfo.hostname; color: Theme.textSecondary } }
-                SettingRow { label: "Chip"; Label { text: SystemInfo.cpu; color: Theme.textSecondary; width: 300; horizontalAlignment: Text.AlignRight } }
-                SettingRow { label: "Graphics"; Label { text: SystemInfo.gpu; color: Theme.textSecondary; width: 300; horizontalAlignment: Text.AlignRight } }
-                SettingRow { label: "Memory"; Label { text: SystemInfo.memory; color: Theme.textSecondary } }
-                SettingRow { label: "Storage"; Label { text: SystemInfo.disk; color: Theme.textSecondary } }
-                SettingRow { label: "Kernel"; last: true; Label { text: "Linux " + SystemInfo.kernel; color: Theme.textSecondary } }
+                SettingRow { label: I18n.tr("Name"); Label { text: SystemInfo.hostname; color: Theme.textSecondary } }
+                SettingRow { label: I18n.tr("Chip"); Label { text: SystemInfo.cpu; color: Theme.textSecondary; width: 300; horizontalAlignment: Text.AlignRight } }
+                SettingRow { label: I18n.tr("Graphics"); Label { text: SystemInfo.gpu; color: Theme.textSecondary; width: 300; horizontalAlignment: Text.AlignRight } }
+                SettingRow { label: I18n.tr("Memory"); Label { text: SystemInfo.memory; color: Theme.textSecondary } }
+                SettingRow { label: I18n.tr("Storage"); Label { text: SystemInfo.disk; color: Theme.textSecondary } }
+                SettingRow { label: I18n.tr("Kernel"); last: true; Label { text: I18n.tr("Linux ") + SystemInfo.kernel; color: Theme.textSecondary } }
             }
 
-            SectionTitle { text: "Open at Login" }
+            SectionTitle { text: I18n.tr("Open at Login") }
             Group {
                 Repeater {
                     model: LoginItems.items
@@ -313,12 +314,12 @@ FloatingWindow {
                         required property string modelData
                         required property int index
                         label: Apps.nameFor(modelData)
-                        PushButton { text: "Remove"; onClicked: LoginItems.remove(modelData) }
+                        PushButton { text: I18n.tr("Remove"); onClicked: LoginItems.remove(modelData) }
                     }
                 }
                 SettingRow {
                     label: LoginItems.items.length ? "Add an app" : "No apps open when you log in"
-                    sub: "Apps here open automatically when you log in."
+                    sub: I18n.tr("Apps here open automatically when you log in.")
                     last: true
                     Choice {
                         menuWidth: 240
@@ -344,11 +345,11 @@ FloatingWindow {
                         x: 18
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 4
-                        Label { text: Power.percent + "%"; font.pixelSize: 26; font.weight: Font.DemiBold }
+                        Label { text: Power.percent + "%"; font.pixelSize: Theme.px(26); font.weight: Font.DemiBold }
                         Label {
                             text: Power.source + (Power.timeLeft ? " · " + Power.timeLeft : "")
                             color: Theme.textSecondary
-                            font.pixelSize: 12
+                            font.pixelSize: Theme.px(12)
                         }
                     }
                     Rectangle {   // big battery gauge
@@ -371,17 +372,17 @@ FloatingWindow {
             }
             Label {
                 visible: !Power.hasBattery
-                text: "This computer doesn't have a battery."
+                text: I18n.tr("This computer doesn't have a battery.")
                 color: Theme.textSecondary
             }
 
-            SectionTitle { text: "Power Mode" }
+            SectionTitle { text: I18n.tr("Power Mode") }
             Group {
                 Repeater {
                     model: [
-                        { id: "power-saver", name: "Low Power", sub: "Reduces energy use for longer battery life. The display and apps may be a little slower." },
-                        { id: "balanced", name: "Balanced", sub: "Good performance with sensible energy use." },
-                        { id: "performance", name: "High Performance", sub: "Maximum speed. Uses more energy and may make fans louder." }
+                        { id: "power-saver", name: I18n.tr("Low Power"), sub: I18n.tr("Reduces energy use for longer battery life. The display and apps may be a little slower.") },
+                        { id: "balanced", name: I18n.tr("Balanced"), sub: I18n.tr("Good performance with sensible energy use.") },
+                        { id: "performance", name: I18n.tr("High Performance"), sub: I18n.tr("Maximum speed. Uses more energy and may make fans louder.") }
                     ]
                     SettingRow {
                         required property var modelData
@@ -405,12 +406,12 @@ FloatingWindow {
             Group {
                 visible: Power.hasBattery
                 SettingRow {
-                    label: "Show battery percentage in menu bar"
+                    label: I18n.tr("Show battery percentage in menu bar")
                     Switch { checked: Settings.showBatteryPercent; onToggled: c => Settings.showBatteryPercent = c }
                 }
                 SettingRow {
-                    label: "Switch to Low Power at 10%"
-                    sub: "You'll also get a warning at 20%, 10% and 5%."
+                    label: I18n.tr("Switch to Low Power at 10%")
+                    sub: I18n.tr("You'll also get a warning at 20%, 10% and 5%.")
                     last: true
                     Switch { checked: Settings.autoLowPower; onToggled: c => Settings.autoLowPower = c }
                 }
@@ -439,7 +440,7 @@ FloatingWindow {
                         source: Qt.resolvedUrl("../icons/foxtail-logo.png")
                         RotationAnimation on rotation {
                             running: Updates.installing || Updates.checking
-                            from: 0; to: 360; duration: 2400; loops: Animation.Infinite
+                            from: 0; to: 360; duration: Theme.ms(2400); loops: Animation.Infinite
                             onStopped: updLogo.rotation = 0
                         }
                     }
@@ -452,7 +453,7 @@ FloatingWindow {
                         spacing: 3
                         Label {
                             width: parent.width
-                            font.pixelSize: 15
+                            font.pixelSize: Theme.px(15)
                             font.weight: Font.DemiBold
                             text: Updates.installing ? "Installing updates…"
                                 : Updates.checking ? "Checking for updates…"
@@ -462,7 +463,7 @@ FloatingWindow {
                         }
                         Label {
                             width: parent.width
-                            font.pixelSize: 12
+                            font.pixelSize: Theme.px(12)
                             color: Theme.textSecondary
                             text: Updates.installing
                                 ? (Updates.stage === "apps" ? "Updating apps…" : "Updating Foxtail and system software. A snapshot is taken first.")
@@ -489,7 +490,7 @@ FloatingWindow {
                 elide: Text.ElideNone
                 text: Updates.error
                 color: "#FF453A"
-                font.pixelSize: 12
+                font.pixelSize: Theme.px(12)
             }
 
             Group {
@@ -522,26 +523,26 @@ FloatingWindow {
                 visible: Updates.count > 12 && !Updates.installing
                 text: `and ${Updates.count - 12} more`
                 color: Theme.textSecondary
-                font.pixelSize: 12
+                font.pixelSize: Theme.px(12)
             }
 
             Group {
                 SettingRow {
-                    label: "Check for updates automatically"
-                    sub: "You'll get a notification when updates are ready. Nothing installs without you."
+                    label: I18n.tr("Check for updates automatically")
+                    sub: I18n.tr("You'll get a notification when updates are ready. Nothing installs without you.")
                     last: true
                     Switch { checked: Settings.autoCheckUpdates; onToggled: c => Settings.autoCheckUpdates = c }
                 }
             }
 
-            SectionTitle { text: "Restore an earlier version" }
+            SectionTitle { text: I18n.tr("Restore an earlier version") }
             Label {
                 width: parent.width
                 wrapMode: Text.Wrap
                 elide: Text.ElideNone
-                font.pixelSize: 12
+                font.pixelSize: Theme.px(12)
                 color: Theme.textSecondary
-                text: "Foxtail saves a snapshot of the system before and after every update. Restoring one rolls back apps and system settings; your files and personal settings stay as they are. You can also pick a snapshot by holding Esc while your computer starts."
+                text: I18n.tr("Foxtail saves a snapshot of the system before and after every update. Restoring one rolls back apps and system settings; your files and personal settings stay as they are. You can also pick a snapshot by holding Esc while your computer starts.")
             }
             Group {
                 visible: Updates.snapshots.length > 0
@@ -569,9 +570,9 @@ FloatingWindow {
             }
             Label {
                 visible: Updates.snapshots.length === 0
-                text: "No snapshots yet."
+                text: I18n.tr("No snapshots yet.")
                 color: Theme.textSecondary
-                font.pixelSize: 12
+                font.pixelSize: Theme.px(12)
             }
             Connections {
                 target: Updates
@@ -588,7 +589,7 @@ FloatingWindow {
                 Item {
                     width: parent.width
                     height: 112
-                    Label { x: 14; y: 14; text: "Appearance" }
+                    Label { x: 14; y: 14; text: I18n.tr("Appearance") }
                     Row {
                         anchors.right: parent.right
                         anchors.rightMargin: 14
@@ -641,7 +642,7 @@ FloatingWindow {
                                         }
                                     }
                                 }
-                                Label { anchors.horizontalCenter: parent.horizontalCenter; text: modeChoice.modelData.n; font.pixelSize: 11 }
+                                Label { anchors.horizontalCenter: parent.horizontalCenter; text: modeChoice.modelData.n; font.pixelSize: Theme.px(11) }
                             }
                         }
                     }
@@ -650,24 +651,24 @@ FloatingWindow {
 
             Group {
                 SettingRow {
-                    label: "Liquid Glass"
-                    sub: "Clear, refractive glass for the Dock, menus, Spotlight and Control Center. Turn off for classic frosted translucency."
+                    label: I18n.tr("Liquid Glass")
+                    sub: I18n.tr("Clear, refractive glass for the Dock, menus, Spotlight and Control Center. Turn off for classic frosted translucency.")
                     Switch { checked: Settings.liquidGlass; onToggled: c => Settings.liquidGlass = c }
                 }
                 SettingRow {
-                    label: "Glass style"
-                    sub: "Clear shows more of what's behind the glass. Tinted is more opaque, with more contrast."
+                    label: I18n.tr("Glass style")
+                    sub: I18n.tr("Clear shows more of what's behind the glass. Tinted is more opaque, with more contrast.")
                     opacity: Settings.liquidGlass ? 1 : 0.4
                     Segmented {
                         enabled: Settings.liquidGlass
-                        options: [{ text: "Clear", value: false }, { text: "Tinted", value: true }]
+                        options: [{ text: I18n.tr("Clear"), value: false }, { text: I18n.tr("Tinted"), value: true }]
                         value: Settings.glassTinted
                         onPicked: v => Settings.glassTinted = v
                     }
                 }
                 SettingRow {
-                    label: "Refract windows behind glass"
-                    sub: "Menus and Control Center bend what's actually behind them, not just the wallpaper."
+                    label: I18n.tr("Refract windows behind glass")
+                    sub: I18n.tr("Menus and Control Center bend what's actually behind them, not just the wallpaper.")
                     Switch {
                         checked: Settings.refractWindows
                         opacity: Settings.liquidGlass ? 1 : 0.4
@@ -675,11 +676,11 @@ FloatingWindow {
                     }
                 }
                 SettingRow {
-                    label: "Reduce transparency"
+                    label: I18n.tr("Reduce transparency")
                     Switch { checked: Settings.reduceTransparency; onToggled: c => Settings.reduceTransparency = c }
                 }
                 SettingRow {
-                    label: "Accent color"
+                    label: I18n.tr("Accent color")
                     last: true
                     Row {
                         spacing: 8
@@ -705,14 +706,14 @@ FloatingWindow {
         id: dockPane
         Column {
             spacing: 14
-            SectionTitle { text: "Dock" }
+            SectionTitle { text: I18n.tr("Dock") }
             Group {
                 SettingRow {
-                    label: "Size"
+                    label: I18n.tr("Size")
                     PlainSlider { from: 36; to: 80; value: Settings.dockIconSize; onMoved: v => Settings.dockIconSize = Math.round(v) }
                 }
                 SettingRow {
-                    label: "Magnification"
+                    label: I18n.tr("Magnification")
                     Row {
                         spacing: 12
                         PlainSlider {
@@ -727,21 +728,21 @@ FloatingWindow {
                     }
                 }
                 SettingRow {
-                    label: "Automatically hide and show the Dock"
+                    label: I18n.tr("Automatically hide and show the Dock")
                     last: true
                     Switch { checked: Settings.dockAutoHide; onToggled: c => Settings.dockAutoHide = c }
                 }
             }
-            SectionTitle { text: "Desktop" }
+            SectionTitle { text: I18n.tr("Desktop") }
             Group {
                 SettingRow {
-                    label: "Show items on the desktop"
-                    sub: "Files in your Desktop folder appear on the wallpaper. Screenshots are saved there."
+                    label: I18n.tr("Show items on the desktop")
+                    sub: I18n.tr("Files in your Desktop folder appear on the wallpaper. Screenshots are saved there.")
                     last: true
                     Switch { checked: Settings.showDesktopItems; onToggled: c => Settings.showDesktopItems = c }
                 }
             }
-            SectionTitle { text: "Hot Corners" }
+            SectionTitle { text: I18n.tr("Hot Corners") }
             Group {
                 Repeater {
                     model: [["tl", "Top left"], ["tr", "Top right"], ["bl", "Bottom left"], ["br", "Bottom right"]]
@@ -765,11 +766,11 @@ FloatingWindow {
                     }
                 }
             }
-            SectionTitle { text: "Windows" }
+            SectionTitle { text: I18n.tr("Windows") }
             Group {
                 SettingRow {
-                    label: "New windows float, like macOS"
-                    sub: "Turn off for tiling: windows arrange themselves side by side."
+                    label: I18n.tr("New windows float, like macOS")
+                    sub: I18n.tr("Turn off for tiling: windows arrange themselves side by side.")
                     last: true
                     Switch {
                         checked: true
@@ -803,7 +804,7 @@ FloatingWindow {
                     fillMode: Image.PreserveAspectCrop
                 }
             }
-            SectionTitle { text: "Foxtail Wallpapers" }
+            SectionTitle { text: I18n.tr("Foxtail Wallpapers") }
             Flow {
                 id: grid
                 property var files: []
@@ -842,11 +843,11 @@ FloatingWindow {
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.bottom: parent.bottom
                         anchors.bottomMargin: 6
-                        text: "Dynamic"
+                        text: I18n.tr("Dynamic")
                         color: "white"
                         style: Text.Outline
                         styleColor: Qt.rgba(0, 0, 0, 0.3)
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.px(11)
                         font.weight: Font.DemiBold
                     }
                     MouseArea {
@@ -891,7 +892,7 @@ FloatingWindow {
             Component.onCompleted: if (dev) dev.scannerEnabled = true
             Group {
                 SettingRow {
-                    label: "Wi-Fi"
+                    label: I18n.tr("Wi-Fi")
                     last: true
                     Switch { checked: Networking.wifiEnabled; onToggled: c => Networking.wifiEnabled = c }
                 }
@@ -912,7 +913,7 @@ FloatingWindow {
                     }
                 }
             }
-            SectionTitle { text: "Wired" }
+            SectionTitle { text: I18n.tr("Wired") }
             Group {
                 Repeater {
                     model: Networking.devices.values.filter(d => d.type === DeviceType.Wired)
@@ -940,13 +941,13 @@ FloatingWindow {
             spacing: 14
             Group {
                 SettingRow {
-                    label: "Show notification banners"
-                    sub: "Banners appear in the top-right corner and go away automatically."
+                    label: I18n.tr("Show notification banners")
+                    sub: I18n.tr("Banners appear in the top-right corner and go away automatically.")
                     last: true
                     Switch { checked: !Settings.doNotDisturb; onToggled: c => Settings.doNotDisturb = !c }
                 }
             }
-            PushButton { text: "Clear Notification History"; onClicked: Notifs.clearAll() }
+            PushButton { text: I18n.tr("Clear Notification History"); onClicked: Notifs.clearAll() }
         }
     }
 
@@ -956,8 +957,8 @@ FloatingWindow {
             spacing: 14
             Group {
                 SettingRow {
-                    label: "Do Not Disturb"
-                    sub: "Silences notification banners. Critical alerts still come through."
+                    label: I18n.tr("Do Not Disturb")
+                    sub: I18n.tr("Silences notification banners. Critical alerts still come through.")
                     last: true
                     Switch { checked: Settings.doNotDisturb; onToggled: c => Settings.doNotDisturb = c }
                 }
@@ -971,7 +972,7 @@ FloatingWindow {
             spacing: 14
             Group {
                 SettingRow {
-                    label: "Require password after the screen is idle for"
+                    label: I18n.tr("Require password after the screen is idle for")
                     Choice {
                         options: [[1, "1 minute"], [5, "5 minutes"], [15, "15 minutes"], [60, "1 hour"], [0, "Never"]]
                         value: Settings.lockAfter
@@ -979,7 +980,7 @@ FloatingWindow {
                     }
                 }
                 SettingRow {
-                    label: "Turn display off when inactive for"
+                    label: I18n.tr("Turn display off when inactive for")
                     Choice {
                         options: [[2, "2 minutes"], [10, "10 minutes"], [30, "30 minutes"], [0, "Never"]]
                         value: Settings.displayOffAfter
@@ -987,9 +988,9 @@ FloatingWindow {
                     }
                 }
                 SettingRow {
-                    label: "Lock Screen now"
+                    label: I18n.tr("Lock Screen now")
                     last: true
-                    PushButton { text: "Lock"; onClicked: { Panels.settings = false; Lock.lock(); } }
+                    PushButton { text: I18n.tr("Lock"); onClicked: { Panels.settings = false; Lock.lock(); } }
                 }
             }
         }
@@ -997,6 +998,7 @@ FloatingWindow {
 
     Component { id: keyboardPane; KeyboardPane {} }
     Component { id: menuBarPane; MenuBarPane {} }
+    Component { id: accessibilityPane; AccessibilityPane {} }
     Component { id: trackpadPane; TrackpadPane {} }
     Component { id: mousePane; MousePane {} }
     Component { id: usersPane; UsersPane {} }

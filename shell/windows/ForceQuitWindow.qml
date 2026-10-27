@@ -7,7 +7,7 @@ import qs.components
 FloatingWindow {
     id: win
 
-    title: "Force Quit Applications"
+    title: I18n.tr("Force Quit Applications")
     visible: Panels.forceQuit
     onVisibleChanged: if (!visible) Panels.forceQuit = false
     implicitWidth: 380
@@ -42,8 +42,8 @@ FloatingWindow {
         width: parent.width - 40
         wrapMode: Text.Wrap
         elide: Text.ElideNone
-        text: "If an app doesn't respond for a while, select its name and click Force Quit."
-        font.pixelSize: 12
+        text: I18n.tr("If an app doesn't respond for a while, select its name and click Force Quit.")
+        font.pixelSize: Theme.px(12)
     }
 
     Rectangle {
@@ -85,7 +85,7 @@ FloatingWindow {
         width: 100; height: 26
         radius: Theme.liquid ? 13 : 6
         color: win.selected ? Theme.accent : Theme.control
-        Label { anchors.centerIn: parent; text: "Force Quit"; color: win.selected ? "white" : Theme.textTertiary }
+        Label { anchors.centerIn: parent; text: I18n.tr("Force Quit"); color: win.selected ? "white" : Theme.textTertiary }
         MouseArea {
             anchors.fill: parent
             onClicked: if (win.selected) {

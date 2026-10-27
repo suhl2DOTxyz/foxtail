@@ -7,10 +7,10 @@ import qs.components
 Column {
     spacing: 14
 
-    SectionTitle { text: "Output" }
+    SectionTitle { text: I18n.tr("Output") }
     Group {
         SettingRow {
-            label: "Output volume"
+            label: I18n.tr("Output volume")
             Row {
                 spacing: 10
                 Icon { size: 14; name: "speaker-low"; color: Theme.textSecondary; anchors.verticalCenter: parent.verticalCenter }
@@ -19,12 +19,12 @@ Column {
             }
         }
         SettingRow {
-            label: "Mute"
+            label: I18n.tr("Mute")
             last: true
             Switch { checked: Audio.muted; onToggled: Audio.toggleMute() }
         }
     }
-    Note { visible: Audio.sinks.length > 0; text: "Play sound through" }
+    Note { visible: Audio.sinks.length > 0; text: I18n.tr("Play sound through") }
     Group {
         visible: Audio.sinks.length > 0
         Repeater {
@@ -39,12 +39,12 @@ Column {
             }
         }
     }
-    Note { visible: Audio.sinks.length === 0; text: "No output devices found." }
+    Note { visible: Audio.sinks.length === 0; text: I18n.tr("No output devices found.") }
 
-    SectionTitle { text: "Input" }
+    SectionTitle { text: I18n.tr("Input") }
     Group {
         SettingRow {
-            label: "Input volume"
+            label: I18n.tr("Input volume")
             last: true
             Row {
                 spacing: 10
@@ -59,7 +59,7 @@ Column {
             }
         }
     }
-    Note { visible: Audio.sources.length > 0; text: "Use this microphone" }
+    Note { visible: Audio.sources.length > 0; text: I18n.tr("Use this microphone") }
     Group {
         visible: Audio.sources.length > 0
         Repeater {
@@ -74,25 +74,25 @@ Column {
             }
         }
     }
-    Note { visible: Audio.sources.length === 0; text: "No microphones found." }
+    Note { visible: Audio.sources.length === 0; text: I18n.tr("No microphones found.") }
 
-    SectionTitle { text: "Sound Effects" }
+    SectionTitle { text: I18n.tr("Sound Effects") }
     Group {
         SettingRow {
-            label: "Play sound on startup"
+            label: I18n.tr("Play sound on startup")
             Switch { checked: Settings.startupSound; onToggled: c => Settings.startupSound = c }
         }
         SettingRow {
-            label: "Play user interface sound effects"
-            sub: "Screenshots, emptying the Trash and other actions."
+            label: I18n.tr("Play user interface sound effects")
+            sub: I18n.tr("Screenshots, emptying the Trash and other actions.")
             Switch { checked: Settings.uiSounds; onToggled: c => Settings.uiSounds = c }
         }
         SettingRow {
-            label: "Play feedback when volume is changed"
+            label: I18n.tr("Play feedback when volume is changed")
             Switch { checked: Settings.volumeFeedback; onToggled: c => Settings.volumeFeedback = c }
         }
         SettingRow {
-            label: "Play sound for notifications"
+            label: I18n.tr("Play sound for notifications")
             last: true
             Switch { checked: Settings.notificationSounds; onToggled: c => Settings.notificationSounds = c }
         }

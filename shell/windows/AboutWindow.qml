@@ -7,7 +7,7 @@ import qs.components
 FloatingWindow {
     id: win
 
-    title: "About This Foxtail"
+    title: I18n.tr("About This Foxtail")
     visible: Panels.about
     onVisibleChanged: if (!visible) Panels.about = false
     implicitWidth: 280
@@ -49,14 +49,14 @@ FloatingWindow {
         Item { width: 1; height: 8 }
         Label {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: "Foxtail"
-            font.pixelSize: 26
+            text: I18n.tr("Foxtail")
+            font.pixelSize: Theme.px(26)
             font.weight: Font.Bold
         }
         Label {
             anchors.horizontalCenter: parent.horizontalCenter
             text: `Version ${SystemInfo.version} “${SystemInfo.codename}”`
-            font.pixelSize: 11
+            font.pixelSize: Theme.px(11)
             color: Theme.textSecondary
         }
         Item { width: 1; height: 16 }
@@ -73,8 +73,8 @@ FloatingWindow {
                 required property var modelData
                 anchors.horizontalCenter: parent.horizontalCenter
                 spacing: 8
-                Label { width: 70; horizontalAlignment: Text.AlignRight; text: modelData[0]; font.pixelSize: 11; font.weight: Font.DemiBold }
-                Label { width: 150; text: modelData[1]; font.pixelSize: 11; color: Theme.textSecondary }
+                Label { width: 70; horizontalAlignment: Text.AlignRight; text: modelData[0]; font.pixelSize: Theme.px(11); font.weight: Font.DemiBold }
+                Label { width: 150; text: modelData[1]; font.pixelSize: Theme.px(11); color: Theme.textSecondary }
             }
         }
 
@@ -87,15 +87,15 @@ FloatingWindow {
             radius: 12
             color: Theme.control
             border.color: Theme.separator
-            Label { id: moreLabel; anchors.centerIn: parent; text: "More Info…"; font.pixelSize: 12 }
+            Label { id: moreLabel; anchors.centerIn: parent; text: I18n.tr("More Info…"); font.pixelSize: Theme.px(12) }
             MouseArea { anchors.fill: parent; onClicked: { Panels.about = false; Panels.openSettings("general"); } }
         }
 
         Item { width: 1; height: 14 }
         Label {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: "Made with 🧡 and a lot of tail-chasing."
-            font.pixelSize: 10
+            text: I18n.tr("Made with 🧡 and a lot of tail-chasing.")
+            font.pixelSize: Theme.px(10)
             color: Theme.textTertiary
         }
     }

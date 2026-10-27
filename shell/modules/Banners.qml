@@ -14,6 +14,8 @@ PanelWindow {
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "foxtail-banner"
+    // Keyboard only while a reply is being typed.
+    WlrLayershell.keyboardFocus: Notifs.replying ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true; right: true }
     margins { top: Theme.menuBarHeight + 6; right: 10 }
@@ -44,8 +46,9 @@ PanelWindow {
                 Component.onCompleted: x = 0
                 Behavior on x { NumberAnimation { duration: Theme.animSlow; easing.type: Easing.OutCubic } }
 
+                // Stays while hovered or while a reply is being typed.
                 Timer {
-                    running: true
+                    running: !card.busy
                     interval: card.modelData.urgency === 2 ? 15000 : 5500
                     onTriggered: Notifs.dismissBanner(card.modelData)
                 }

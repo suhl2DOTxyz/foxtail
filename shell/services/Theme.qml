@@ -8,27 +8,31 @@ Singleton {
     id: root
 
     readonly property bool dark: Settings.darkMode
-    readonly property bool liquid: Settings.liquidGlass && !Settings.reduceTransparency
+    // Accessibility: Increase contrast implies solid (non-translucent) surfaces
+    // with stronger outlines and text, like macOS.
+    readonly property bool contrast: Settings.increaseContrast
+    readonly property bool solid: Settings.reduceTransparency || contrast
+    readonly property bool liquid: Settings.liquidGlass && !solid
 
     readonly property color accent: Settings.accent
     readonly property color accentText: "#FFFFFF"
 
     readonly property color text: dark ? "#F5F5F7" : "#1D1D1F"
-    readonly property color textSecondary: dark ? Qt.rgba(1, 1, 1, 0.62) : Qt.rgba(0, 0, 0, 0.55)
-    readonly property color textTertiary: dark ? Qt.rgba(1, 1, 1, 0.38) : Qt.rgba(0, 0, 0, 0.32)
-    readonly property color separator: dark ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(0, 0, 0, 0.10)
+    readonly property color textSecondary: dark ? Qt.rgba(1, 1, 1, contrast ? 0.85 : 0.62) : Qt.rgba(0, 0, 0, contrast ? 0.8 : 0.55)
+    readonly property color textTertiary: dark ? Qt.rgba(1, 1, 1, contrast ? 0.65 : 0.38) : Qt.rgba(0, 0, 0, contrast ? 0.6 : 0.32)
+    readonly property color separator: dark ? Qt.rgba(1, 1, 1, contrast ? 0.45 : 0.12) : Qt.rgba(0, 0, 0, contrast ? 0.45 : 0.10)
     readonly property color hover: dark ? Qt.rgba(1, 1, 1, 0.10) : Qt.rgba(0, 0, 0, 0.06)
     readonly property color pressed: dark ? Qt.rgba(1, 1, 1, 0.18) : Qt.rgba(0, 0, 0, 0.12)
     readonly property color control: dark ? Qt.rgba(1, 1, 1, 0.14) : Qt.rgba(0, 0, 0, 0.07)
     readonly property color controlOff: dark ? Qt.rgba(1, 1, 1, 0.22) : Qt.rgba(0, 0, 0, 0.14)
 
     // Glass base tint. Liquid glass is clearer; classic vibrancy is milkier.
-    readonly property color glass: Settings.reduceTransparency
+    readonly property color glass: solid
         ? (dark ? "#2A2A2C" : "#ECECEE")
         : liquid
             ? (dark ? Qt.rgba(0.10, 0.10, 0.11, 0.34) : Qt.rgba(1, 1, 1, 0.20))
             : (dark ? Qt.rgba(0.14, 0.14, 0.15, 0.72) : Qt.rgba(0.96, 0.96, 0.97, 0.74))
-    readonly property color glassStrong: Settings.reduceTransparency
+    readonly property color glassStrong: solid
         ? (dark ? "#323234" : "#F4F4F6")
         : liquid
             ? (dark ? Qt.rgba(0.12, 0.12, 0.13, 0.55) : Qt.rgba(1, 1, 1, 0.52))
@@ -36,9 +40,10 @@ Singleton {
     // Tiles inside Control Center etc.
     readonly property color tile: dark ? Qt.rgba(1, 1, 1, liquid ? 0.10 : 0.08) : Qt.rgba(1, 1, 1, liquid ? 0.38 : 0.55)
     readonly property color glassBorder: dark ? Qt.rgba(1, 1, 1, 0.16) : Qt.rgba(1, 1, 1, 0.55)
-    readonly property color glassOutline: dark ? Qt.rgba(0, 0, 0, 0.55) : Qt.rgba(0, 0, 0, 0.12)
+    readonly property color glassOutline: contrast ? (dark ? "#FFFFFF" : "#000000")
+                                        : dark ? Qt.rgba(0, 0, 0, 0.55) : Qt.rgba(0, 0, 0, 0.12)
 
-    readonly property color menuBar: Settings.reduceTransparency
+    readonly property color menuBar: solid
         ? (dark ? "#1E1E1E" : "#EDEDED")
         : liquid && !Settings.menuBarBackground ? Qt.rgba(0, 0, 0, 0.0)  // Tahoe: the bar itself is fully clear
                  : (dark ? Qt.rgba(0.12, 0.12, 0.12, 0.45) : Qt.rgba(1, 1, 1, 0.45))
@@ -49,8 +54,15 @@ Singleton {
     readonly property string font: "Inter"
     readonly property string fontDisplay: "Inter Display"
     readonly property string fontMono: "JetBrains Mono"
-    readonly property int fontSize: 13
-    readonly property int fontSizeSmall: 11
+    // Accessibility ▸ Text size scales all shell text; Reduce motion turns
+    // animations into instant changes.
+    readonly property real textScale: Math.max(0.9, Math.min(1.35, Settings.textScale))
+    readonly property bool reduceMotion: Settings.reduceMotion
+    function px(n) { return Math.round(n * textScale); }
+    function ms(n) { return reduceMotion ? 0 : n; }
+
+    readonly property int fontSize: px(13)
+    readonly property int fontSizeSmall: px(11)
 
     readonly property int menuBarHeight: 28
     readonly property int radiusSmall: 6
@@ -61,7 +73,7 @@ Singleton {
     // rule "foxtail-shell-windows" rounding, which clips them to this radius.
     readonly property int windowRadius: 20
 
-    readonly property int animFast: 120
-    readonly property int anim: 220
-    readonly property int animSlow: 380
+    readonly property int animFast: ms(120)
+    readonly property int anim: ms(220)
+    readonly property int animSlow: ms(380)
 }

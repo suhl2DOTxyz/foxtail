@@ -51,7 +51,7 @@ Item {
     NumberAnimation on materialize {
         running: root.animateIn
         from: 0; to: 1
-        duration: 420
+        duration: Theme.ms(420)
         easing.type: Easing.OutCubic
     }
 
@@ -70,8 +70,8 @@ Item {
     readonly property bool tracking: pointer.x >= 0
     property real lightX: tracking ? pointer.x : keyLight.x
     property real lightY: tracking ? Math.min(pointer.y, -0.4) : keyLight.y
-    Behavior on lightX { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
-    Behavior on lightY { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+    Behavior on lightX { NumberAnimation { duration: Theme.ms(260); easing.type: Easing.OutCubic } }
+    Behavior on lightY { NumberAnimation { duration: Theme.ms(260); easing.type: Easing.OutCubic } }
 
     // Where this item sits on screen, so the shader can sample the matching
     // part of the backdrop. Owners pass the window's offset on screen.

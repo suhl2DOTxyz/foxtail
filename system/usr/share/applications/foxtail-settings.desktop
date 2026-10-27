@@ -1,5 +1,8 @@
 [Desktop Entry]
 Name=System Settings
+Name[de]=Systemeinstellungen
+Name[fr]=Réglages Système
+Name[es]=Ajustes del Sistema
 Comment=Change Foxtail's appearance, Dock, Wi-Fi, sound and more
 Exec=foxtail-ipc settings general
 Icon=preferences-system

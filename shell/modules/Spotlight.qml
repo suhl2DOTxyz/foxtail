@@ -22,10 +22,10 @@ Item {
     // "" = search everything; "apps" | "files" | "actions" | "clipboard" = browse
     property string mode: ""
     readonly property var modes: [
-        { id: "apps", name: "Applications", icon: "grid" },
-        { id: "files", name: "Files", icon: "doc" },
-        { id: "actions", name: "Actions", icon: "bolt-circle" },
-        { id: "clipboard", name: "Clipboard", icon: "clipboard" }
+        { id: "apps", name: I18n.tr("Applications"), icon: "grid" },
+        { id: "files", name: I18n.tr("Files"), icon: "doc" },
+        { id: "actions", name: I18n.tr("Actions"), icon: "bolt-circle" },
+        { id: "clipboard", name: I18n.tr("Clipboard"), icon: "clipboard" }
     ]
     readonly property var modeInfo: modes.find(m => m.id === mode) ?? null
     function setMode(m) {
@@ -50,23 +50,23 @@ Item {
 
     // ---------------- sources ----------------
     readonly property var actions: [
-        { name: "System Settings", keys: "preferences", icon: "gear", run: () => Panels.openSettings() },
-        { name: "Lock Screen", keys: "lock", icon: "lock", run: () => Lock.lock() },
-        { name: "Take Screenshot", keys: "capture screen", icon: "screen-capture", run: () => Capture.shoot("screen", 0, false, false) },
-        { name: "Screenshot and Recording Options", keys: "capture record video", icon: "screen-record", run: () => { Panels.screenshotBar = true; } },
-        { name: "New Folder on Desktop", keys: "create directory", icon: "folder-plus", run: () => Panels.desktopNewFolder() },
-        { name: "Show Clipboard History", keys: "paste copied", icon: "clipboard", run: () => Panels.toggle("clipboard", Panels.screen) },
-        { name: "Emoji & Symbols", keys: "emoji characters", icon: "smiley", run: () => Panels.toggle("emoji", Panels.screen) },
-        { name: "Mission Control", keys: "windows overview spaces", icon: "mission", run: () => { Panels.missionControl = true; } },
+        { name: I18n.tr("System Settings"), keys: "preferences", icon: "gear", run: () => Panels.openSettings() },
+        { name: I18n.tr("Lock Screen"), keys: "lock", icon: "lock", run: () => Lock.lock() },
+        { name: I18n.tr("Take Screenshot"), keys: "capture screen", icon: "screen-capture", run: () => Capture.shoot("screen", 0, false, false) },
+        { name: I18n.tr("Screenshot and Recording Options"), keys: "capture record video", icon: "screen-record", run: () => { Panels.screenshotBar = true; } },
+        { name: I18n.tr("New Folder on Desktop"), keys: "create directory", icon: "folder-plus", run: () => Panels.desktopNewFolder() },
+        { name: I18n.tr("Show Clipboard History"), keys: "paste copied", icon: "clipboard", run: () => Panels.toggle("clipboard", Panels.screen) },
+        { name: I18n.tr("Emoji & Symbols"), keys: "emoji characters", icon: "smiley", run: () => Panels.toggle("emoji", Panels.screen) },
+        { name: I18n.tr("Mission Control"), keys: "windows overview spaces", icon: "mission", run: () => { Panels.missionControl = true; } },
         { name: Settings.doNotDisturb ? "Turn Off Do Not Disturb" : "Turn On Do Not Disturb", keys: "focus notifications", icon: "moon", run: () => Settings.doNotDisturb = !Settings.doNotDisturb },
         { name: Settings.darkMode ? "Turn Off Dark Mode" : "Turn On Dark Mode", keys: "appearance light", icon: "half-circle", run: () => { Settings.appearanceAuto = false; Settings.darkMode = !Settings.darkMode; } },
         { name: Settings.liquidGlass ? "Turn Off Liquid Glass" : "Turn On Liquid Glass", keys: "transparency glass", icon: "drop", run: () => Settings.liquidGlass = !Settings.liquidGlass },
         { name: Settings.nightShiftNow ? "Turn Off Night Shift" : "Turn On Night Shift", keys: "warm display", icon: "nightshift", run: () => Settings.nightShiftNow = !Settings.nightShiftNow },
-        { name: "Empty Trash", keys: "delete", icon: "trash", run: () => Panels.confirm = "emptyTrash" },
-        { name: "Sleep", keys: "suspend", icon: "moon", run: () => Quickshell.execDetached(["systemctl", "suspend"]) },
-        { name: "Restart…", keys: "reboot", icon: "restart", run: () => Panels.confirm = "restart" },
-        { name: "Shut Down…", keys: "power off", icon: "power", run: () => Panels.confirm = "shutdown" },
-        { name: "Log Out…", keys: "sign out", icon: "logout", run: () => Panels.confirm = "logout" }
+        { name: I18n.tr("Empty Trash"), keys: "delete", icon: "trash", run: () => Panels.confirm = "emptyTrash" },
+        { name: I18n.tr("Sleep"), keys: "suspend", icon: "moon", run: () => Quickshell.execDetached(["systemctl", "suspend"]) },
+        { name: I18n.tr("Restart…"), keys: "reboot", icon: "restart", run: () => Panels.confirm = "restart" },
+        { name: I18n.tr("Shut Down…"), keys: "power off", icon: "power", run: () => Panels.confirm = "shutdown" },
+        { name: I18n.tr("Log Out…"), keys: "sign out", icon: "logout", run: () => Panels.confirm = "logout" }
     ]
 
     function calc(q) {
@@ -92,8 +92,8 @@ Item {
                  run: () => Quickshell.execDetached(["xdg-open", f]) };
     }
     function appRow(e) { return { kind: "app", name: Apps.title(e), sub: e.genericName || e.comment || "Application", entry: e, run: () => e.execute() }; }
-    function actionRow(a) { return { kind: "action", name: a.name, sub: "Action", glyph: a.icon, run: a.run }; }
-    function paneRow(p) { return { kind: "pane", name: p.name, sub: "System Settings", glyph: p.icon, color: p.color, run: () => Panels.openSettings(p.id) }; }
+    function actionRow(a) { return { kind: "action", name: a.name, sub: I18n.tr("Action"), glyph: a.icon, run: a.run }; }
+    function paneRow(p) { return { kind: "pane", name: p.name, sub: I18n.tr("System Settings"), glyph: p.icon, color: p.color, run: () => Panels.openSettings(p.id) }; }
     function clipRow(c) { return { kind: "clip", name: c.text.split("\n")[0].slice(0, 120), sub: c.image ? "Image" : "Text", clip: c, glyph: "clipboard", run: () => Clipboard.paste(c) }; }
 
     // Sections: [{ title, rows: [...] }]
@@ -103,15 +103,15 @@ Item {
         const add = (title, rows) => { if (rows.length) out.push({ title, rows }); };
 
         if (mode === "apps")
-            return [{ title: "Applications", rows: (q ? Apps.search(q) : Apps.all).slice(0, 60).map(appRow) }];
+            return [{ title: I18n.tr("Applications"), rows: (q ? Apps.search(q) : Apps.all).slice(0, 60).map(appRow) }];
         if (mode === "files") {
             const list = q ? files : recentFiles;
-            return list.length ? [{ title: q ? "Files" : "Recent Files", rows: list.slice(0, 40).map(fileRow) }] : [];
+            return list.length ? [{ title: q ? I18n.tr("Files") : I18n.tr("Recent Files"), rows: list.slice(0, 40).map(fileRow) }] : [];
         }
         if (mode === "actions")
-            return [{ title: "Actions", rows: actions.filter(a => !q || matches(a.name + " " + a.keys, q)).map(actionRow) }];
+            return [{ title: I18n.tr("Actions"), rows: actions.filter(a => !q || matches(a.name + " " + a.keys, q)).map(actionRow) }];
         if (mode === "clipboard")
-            return [{ title: "Clipboard", rows: Clipboard.items.filter(c => !q || matches(c.text, q)).slice(0, 50).map(clipRow) }];
+            return [{ title: I18n.tr("Clipboard"), rows: Clipboard.items.filter(c => !q || matches(c.text, q)).slice(0, 50).map(clipRow) }];
 
         if (!q) return [];
         const c = calc(q);
@@ -120,7 +120,7 @@ Item {
         const acts = actions.filter(a => matches(a.name + " " + a.keys, q)).slice(0, 4).map(actionRow);
         const found = files.map(fileRow);
 
-        if (c !== null) add("Calculator", [{ kind: "calc", name: String(c), sub: q + " =", glyph: "calculator",
+        if (c !== null) add(I18n.tr("Calculator"), [{ kind: "calc", name: String(c), sub: q + " =", glyph: "calculator",
                                              run: () => Quickshell.clipboardText = String(c) }]);
         // Top Hit: an app whose name starts with what you typed, else the best match.
         let top = null;
@@ -129,14 +129,14 @@ Item {
             else if (panes.length && panes[0].name.toLowerCase().startsWith(q)) top = panes.shift();
             else if (apps.length) top = apps.shift();
         }
-        if (top) add("Top Hit", [top]);
-        add("Applications", apps);
-        add("System Settings", panes);
-        add("Folders", found.filter(f => f.isDir).slice(0, 4));
-        add("Documents", found.filter(f => !f.isDir).slice(0, 6));
-        add("Actions", acts);
-        add("Clipboard", Clipboard.items.filter(i => !i.image && matches(i.text, q)).slice(0, 3).map(clipRow));
-        add("Web", [{ kind: "web", name: `Search the web for “${input.text.trim()}”`, sub: "Firefox", glyph: "globe",
+        if (top) add(I18n.tr("Top Hit"), [top]);
+        add(I18n.tr("Applications"), apps);
+        add(I18n.tr("System Settings"), panes);
+        add(I18n.tr("Folders"), found.filter(f => f.isDir).slice(0, 4));
+        add(I18n.tr("Documents"), found.filter(f => !f.isDir).slice(0, 6));
+        add(I18n.tr("Actions"), acts);
+        add(I18n.tr("Clipboard"), Clipboard.items.filter(i => !i.image && matches(i.text, q)).slice(0, 3).map(clipRow));
+        add(I18n.tr("Web"), [{ kind: "web", name: I18n.tr("Search the web for “%1”").arg(input.text.trim()), sub: I18n.tr("Firefox"), glyph: "globe",
                       run: () => Quickshell.execDetached(["xdg-open", "https://duckduckgo.com/?q=" + encodeURIComponent(input.text.trim())]) }]);
         return out;
     }
@@ -253,7 +253,7 @@ Item {
             height: 26
             radius: 13
             color: Theme.accent
-            Label { id: tokenLabel; anchors.centerIn: parent; text: root.modeInfo?.name ?? ""; color: "white"; font.pixelSize: 13; font.weight: Font.Medium }
+            Label { id: tokenLabel; anchors.centerIn: parent; text: root.modeInfo?.name ?? ""; color: "white"; font.pixelSize: Theme.px(13); font.weight: Font.Medium }
         }
 
         TextInput {
@@ -264,7 +264,7 @@ Item {
             anchors.rightMargin: 10
             anchors.verticalCenter: parent.verticalCenter
             font.family: Theme.font
-            font.pixelSize: 22
+            font.pixelSize: Theme.px(22)
             font.weight: Font.Light
             color: Theme.text
             selectionColor: Theme.accent
@@ -273,8 +273,8 @@ Item {
 
             Label {
                 visible: !input.text
-                text: root.modeInfo ? `Search ${root.modeInfo.name}` : "Spotlight Search"
-                font.pixelSize: 22
+                text: root.modeInfo ? I18n.tr("Search %1").arg(root.modeInfo.name) : I18n.tr("Spotlight Search")
+                font.pixelSize: Theme.px(22)
                 font.weight: Font.Light
                 color: Theme.textTertiary
                 anchors.verticalCenter: parent.verticalCenter
@@ -325,7 +325,7 @@ Item {
                         radius: 11
                         color: Theme.glassStrong
                         border.color: Theme.glassOutline
-                        Label { id: tipText; anchors.centerIn: parent; text: `${modeButton.modelData.name}  ⌘${modeButton.index + 1}`; font.pixelSize: 11 }
+                        Label { id: tipText; anchors.centerIn: parent; text: `${modeButton.modelData.name}  ⌘${modeButton.index + 1}`; font.pixelSize: Theme.px(11) }
                     }
                 }
             }
@@ -378,7 +378,7 @@ Item {
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: 4
                     text: row.modelData.name
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.px(11)
                     font.weight: Font.DemiBold
                     color: Theme.textSecondary
                 }
@@ -513,7 +513,7 @@ Item {
                         anchors.centerIn: parent
                         visible: preview.it.kind === "calc"
                         text: preview.it.name ?? ""
-                        font.pixelSize: 40
+                        font.pixelSize: Theme.px(40)
                         font.weight: Font.Light
                     }
                 }
@@ -524,7 +524,7 @@ Item {
                     maximumLineCount: 3
                     elide: Text.ElideRight
                     text: preview.it.kind === "calc" ? preview.it.sub : (preview.it.name ?? "")
-                    font.pixelSize: 15
+                    font.pixelSize: Theme.px(15)
                     font.weight: Font.DemiBold
                 }
                 Label {
@@ -533,12 +533,12 @@ Item {
                     wrapMode: Text.Wrap
                     maximumLineCount: 4
                     elide: Text.ElideRight
-                    text: preview.it.kind === "file" ? (preview.it.isDir ? "Folder" : (preview.it.suffix ? preview.it.suffix.toUpperCase() + " document" : "Document")) + "\n" + preview.it.sub
-                        : preview.it.kind === "calc" ? "Press Return to copy the result"
-                        : preview.it.kind === "clip" ? "Press Return to paste"
+                    text: preview.it.kind === "file" ? (preview.it.isDir ? I18n.tr("Folder") : (preview.it.suffix ? preview.it.suffix.toUpperCase() + " document" : "Document")) + "\n" + preview.it.sub
+                        : preview.it.kind === "calc" ? I18n.tr("Press Return to copy the result")
+                        : preview.it.kind === "clip" ? I18n.tr("Press Return to paste")
                         : (preview.it.sub ?? "")
                     color: Theme.textSecondary
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.px(12)
                 }
             }
         }

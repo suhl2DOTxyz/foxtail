@@ -42,7 +42,7 @@ PanelWindow {
         property: "opacity"
         from: 0
         to: 1
-        duration: 600
+        duration: Theme.ms(600)
         easing.type: Easing.InOutQuad
         onFinished: back.source = front.source
     }

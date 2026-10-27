@@ -1,0 +1,42 @@
+name: Hardware report
+description: Tell us how Foxtail runs on your computer (works great or not at all; both help).
+title: "[Hardware] "
+labels: ["hardware-report"]
+body:
+  - type: input
+    id: machine
+    attributes:
+      label: Computer
+      placeholder: "e.g. ThinkPad T14 Gen 3 (AMD), custom desktop"
+    validations:
+      required: true
+  - type: input
+    id: gpu
+    attributes:
+      label: Graphics card
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Foxtail version
+    validations:
+      required: true
+  - type: checkboxes
+    id: works
+    attributes:
+      label: What works?
+      options:
+        - label: Installs and boots
+        - label: Wi-Fi
+        - label: Bluetooth
+        - label: Sound (speakers, headphones, microphone)
+        - label: Display brightness and external displays
+        - label: Sleep and wake
+        - label: Battery status and power modes
+        - label: Trackpad gestures
+        - label: Animations are smooth
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything that didn't work?

@@ -34,7 +34,7 @@ Item {
         Item {
             width: parent.width
             height: 34
-            Label { x: 14; anchors.verticalCenter: parent.verticalCenter; text: "Battery"; font.weight: Font.Bold }
+            Label { x: 14; anchors.verticalCenter: parent.verticalCenter; text: I18n.tr("Battery"); font.weight: Font.Bold }
             Label {
                 anchors.right: parent.right
                 anchors.rightMargin: 14
@@ -44,7 +44,7 @@ Item {
             }
         }
 
-        MenuItem { width: parent.width; header: true; text: "Power Source: " + Power.source }
+        MenuItem { width: parent.width; header: true; text: I18n.tr("Power Source: ") + Power.source }
         MenuItem {
             width: parent.width
             header: true
@@ -53,13 +53,13 @@ Item {
         }
 
         MenuItem { width: parent.width; separator: true }
-        MenuItem { width: parent.width; header: true; text: "Power Mode" }
+        MenuItem { width: parent.width; header: true; text: I18n.tr("Power Mode") }
 
         Repeater {
             model: [
-                { id: "power-saver", name: "Low Power", icon: "drop" },
-                { id: "balanced", name: "Balanced", icon: "half-circle" },
-                { id: "performance", name: "High Performance", icon: "bolt" }
+                { id: "power-saver", name: I18n.tr("Low Power"), icon: "drop" },
+                { id: "balanced", name: I18n.tr("Balanced"), icon: "half-circle" },
+                { id: "performance", name: I18n.tr("High Performance"), icon: "bolt" }
             ]
             MenuItem {
                 required property var modelData
@@ -75,7 +75,7 @@ Item {
         MenuItem { width: parent.width; separator: true }
         MenuItem {
             width: parent.width
-            text: "Battery Settings…"
+            text: I18n.tr("Battery Settings…")
             onTriggered: { Panels.closeAll(); Panels.openSettings("battery"); }
         }
     }

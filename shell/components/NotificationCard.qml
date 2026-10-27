@@ -2,18 +2,30 @@ import QtQuick
 import Quickshell
 import qs.services
 
-// A single notification, as shown in banners and Notification Center.
+// A single notification, as shown in banners and Notification Center: app
+// icon, title, time and body; the app's action buttons on hover; and a Reply
+// field for apps that support inline replies (messaging apps), as on macOS.
 Item {
     id: root
 
     property var notification
     property point windowOffset
     property size screenSize
+    // In a collapsed Notification Center stack, only the top card is live.
+    property bool interactive: true
     signal closed()
 
-    implicitHeight: Math.max(64, body.y + body.implicitHeight + 12)
+    readonly property var buttons: (notification?.actions ?? []).filter(a => a.identifier !== "default" && a.text)
+    readonly property bool canReply: notification?.hasInlineReply ?? false
+    property bool replying: false
+    onReplyingChanged: Notifs.replying = replying
+    readonly property bool busy: hover.hovered || replying
+    readonly property bool showActions: interactive && (hover.hovered || replying) && (buttons.length > 0 || canReply)
 
-    HoverHandler { id: hover }
+    implicitHeight: Math.max(64, body.y + body.implicitHeight + 12) + (showActions ? actionRow.height + 10 : 0)
+    Behavior on implicitHeight { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
+
+    HoverHandler { id: hover; enabled: root.interactive }
 
     Glass {
         anchors.fill: parent
@@ -49,6 +61,7 @@ Item {
         y: 12
         text: root.notification?.summary ?? ""
         font.weight: Font.DemiBold
+        elide: Text.ElideRight
     }
 
     Label {
@@ -56,8 +69,8 @@ Item {
         anchors.right: parent.right
         anchors.rightMargin: 14
         y: 13
-        text: "now"
-        font.pixelSize: 11
+        text: Notifs.ago(root.notification)
+        font.pixelSize: Theme.px(11)
         color: Theme.textSecondary
     }
 
@@ -74,7 +87,94 @@ Item {
         elide: Text.ElideRight
         color: Theme.text
         font.family: Theme.font
-        font.pixelSize: 12
+        font.pixelSize: Theme.px(12)
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        z: -1
+        enabled: root.interactive
+        onClicked: {
+            const a = root.notification?.actions?.find(a => a.identifier === "default");
+            if (a) a.invoke();
+            root.closed();
+        }
+    }
+
+    // ---- actions and reply ----
+    Item {
+        id: actionRow
+        visible: root.showActions
+        anchors.left: title.left
+        anchors.right: parent.right
+        anchors.rightMargin: 12
+        y: body.y + body.implicitHeight + 10
+        height: 28
+
+        Row {
+            visible: !root.replying
+            spacing: 6
+            Repeater {
+                model: root.buttons.slice(0, 3)
+                Pill {
+                    required property var modelData
+                    text: modelData.text
+                    onClicked: { modelData.invoke(); root.closed(); }
+                }
+            }
+            Pill {
+                visible: root.canReply
+                text: I18n.tr("Reply")
+                onClicked: { root.replying = true; reply.forceActiveFocus(); }
+            }
+        }
+
+        Rectangle {
+            visible: root.replying
+            anchors.fill: parent
+            radius: height / 2
+            color: Theme.control
+            border.color: reply.activeFocus ? Theme.accent : Theme.separator
+            TextInput {
+                id: reply
+                anchors.left: parent.left
+                anchors.leftMargin: 12
+                anchors.right: send.left
+                anchors.rightMargin: 8
+                anchors.verticalCenter: parent.verticalCenter
+                font.family: Theme.font
+                font.pixelSize: Theme.px(12)
+                color: Theme.text
+                clip: true
+                Label {
+                    visible: !reply.text
+                    text: root.notification?.inlineReplyPlaceholder || "Reply"
+                    font.pixelSize: Theme.px(12)
+                    color: Theme.textTertiary
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                Keys.onReturnPressed: root.sendReply()
+                Keys.onEnterPressed: root.sendReply()
+                Keys.onEscapePressed: root.replying = false
+            }
+            Rectangle {
+                id: send
+                anchors.right: parent.right
+                anchors.rightMargin: 3
+                anchors.verticalCenter: parent.verticalCenter
+                width: 22; height: 22; radius: 11
+                color: reply.text ? Theme.accent : Theme.controlOff
+                Icon { anchors.centerIn: parent; size: 11; name: "arrow-right-circle"; color: "white" }
+                MouseArea { anchors.fill: parent; onClicked: root.sendReply() }
+            }
+        }
+    }
+
+    function sendReply() {
+        if (!reply.text.trim()) return;
+        notification?.sendInlineReply(reply.text);
+        replying = false;
+        closed();
     }
 
     // Close button (top-left, on hover), like macOS.
@@ -91,13 +191,15 @@ Item {
         }
     }
 
-    MouseArea {
-        anchors.fill: parent
-        z: -1
-        onClicked: {
-            const a = root.notification?.actions?.find(a => a.identifier === "default");
-            if (a) a.invoke();
-            root.closed();
-        }
+    component Pill: Rectangle {
+        id: pill
+        property string text
+        signal clicked()
+        width: pillLabel.implicitWidth + 22
+        height: 26
+        radius: 13
+        color: pillMouse.pressed ? Theme.pressed : Theme.control
+        Label { id: pillLabel; anchors.centerIn: parent; text: pill.text; font.pixelSize: Theme.px(12); font.weight: Font.Medium }
+        MouseArea { id: pillMouse; anchors.fill: parent; onClicked: pill.clicked() }
     }
 }

@@ -29,16 +29,16 @@ Column {
         Column {
             x: 16
             anchors.verticalCenter: parent.verticalCenter
-            Label { text: "Keep these display settings?"; font.weight: Font.DemiBold }
-            Label { text: `Reverting in ${Displays.countdown} seconds`; font.pixelSize: 12; color: Theme.textSecondary }
+            Label { text: I18n.tr("Keep these display settings?"); font.weight: Font.DemiBold }
+            Label { text: `Reverting in ${Displays.countdown} seconds`; font.pixelSize: Theme.px(12); color: Theme.textSecondary }
         }
         Row {
             anchors.right: parent.right
             anchors.rightMargin: 14
             anchors.verticalCenter: parent.verticalCenter
             spacing: 8
-            PushButton { text: "Revert"; onClicked: Displays.revert() }
-            PushButton { text: "Keep Changes"; primary: true; onClicked: Displays.keep() }
+            PushButton { text: I18n.tr("Revert"); onClicked: Displays.revert() }
+            PushButton { text: I18n.tr("Keep Changes"); primary: true; onClicked: Displays.keep() }
         }
     }
 
@@ -100,8 +100,8 @@ Column {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 8
-            text: "Connect another display to arrange it here."
-            font.pixelSize: 11
+            text: I18n.tr("Connect another display to arrange it here.")
+            font.pixelSize: Theme.px(11)
             color: Theme.textTertiary
         }
 
@@ -142,7 +142,7 @@ Column {
                     text: box.modelData.name
                     color: "white"
                     font.weight: Font.DemiBold
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.px(11)
                     style: Text.Outline
                     styleColor: Qt.rgba(0, 0, 0, 0.4)
                 }
@@ -195,14 +195,14 @@ Column {
                 Label { text: pane.mon ? (pane.mon.model || pane.mon.description || pane.mon.name) : ""; font.weight: Font.DemiBold }
                 Label {
                     text: pane.mon ? `${pane.mon.name} · ${pane.res} · ${Math.round(pane.hz)} Hz` : ""
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.px(11)
                     color: Theme.textSecondary
                 }
             }
             Rectangle { anchors.bottom: parent.bottom; x: 14; width: parent.width - 28; height: 1; color: Theme.separator }
         }
         SettingRow {
-            label: "Use as"
+            label: I18n.tr("Use as")
             visible: pane.usable.length > 1
             Choice {
                 options: [["extend", "Extended display"]].concat(
@@ -216,7 +216,7 @@ Column {
             }
         }
         SettingRow {
-            label: "Resolution"
+            label: I18n.tr("Resolution")
             Choice {
                 options: Displays.resolutions(pane.mon).map(r => [r.key, `${r.w} × ${r.h}`])
                 value: pane.res
@@ -228,7 +228,7 @@ Column {
             }
         }
         SettingRow {
-            label: "Refresh rate"
+            label: I18n.tr("Refresh rate")
             Choice {
                 options: Displays.rates(pane.mon, pane.res).map(r => [r.toFixed(2), `${r.toFixed(r % 1 ? 2 : 0)} Hz`])
                 value: pane.hz.toFixed(2)
@@ -236,8 +236,8 @@ Column {
             }
         }
         SettingRow {
-            label: "Scale"
-            sub: "Larger makes text and controls bigger; smaller fits more on screen."
+            label: I18n.tr("Scale")
+            sub: I18n.tr("Larger makes text and controls bigger; smaller fits more on screen.")
             Choice {
                 options: [[1, "100%"], [1.25, "125%"], [1.5, "150%"], [1.666667, "167%"], [2, "200%"], [3, "300%"]]
                 value: pane.cfg ? ([1, 1.25, 1.5, 1.666667, 2, 3].find(s => Math.abs(s - pane.cfg.scale) < 0.02) ?? 1) : 1
@@ -245,7 +245,7 @@ Column {
             }
         }
         SettingRow {
-            label: "Rotation"
+            label: I18n.tr("Rotation")
             last: true
             Choice {
                 options: [[0, "Standard"], [1, "90°"], [2, "180°"], [3, "270°"]]
@@ -258,18 +258,18 @@ Column {
     Group {
         visible: Brightness.available
         SettingRow {
-            label: "Brightness"
+            label: I18n.tr("Brightness")
             last: true
             PlainSlider { value: Brightness.value; onMoved: v => Brightness.set(v) }
         }
     }
 
     // ---------- Night Shift ----------
-    SectionTitle { text: "Night Shift" }
-    Note { text: "Night Shift shifts the colors of your display to the warmer end of the spectrum after dark. This may help you get a better night's sleep." }
+    SectionTitle { text: I18n.tr("Night Shift") }
+    Note { text: I18n.tr("Night Shift shifts the colors of your display to the warmer end of the spectrum after dark. This may help you get a better night's sleep.") }
     Group {
         SettingRow {
-            label: "Turn on now"
+            label: I18n.tr("Turn on now")
             sub: Settings.nightShiftSchedule && Displays.scheduledNow ? "On because of the schedule" : ""
             Switch {
                 checked: Displays.nightShiftActive
@@ -277,7 +277,7 @@ Column {
             }
         }
         SettingRow {
-            label: "Schedule"
+            label: I18n.tr("Schedule")
             Choice {
                 options: [[false, "Off"], [true, "Custom"]]
                 value: Settings.nightShiftSchedule
@@ -286,35 +286,35 @@ Column {
         }
         SettingRow {
             visible: Settings.nightShiftSchedule
-            label: "From"
+            label: I18n.tr("From")
             Row {
                 spacing: 8
                 readonly property var times: Array.from({ length: 48 }, (_, i) => [i * 30, Displays.formatMinutes(i * 30)])
                 Choice { options: parent.times; value: Settings.nightShiftFrom; onPicked: v => Settings.nightShiftFrom = v }
-                Label { text: "to"; anchors.verticalCenter: parent.verticalCenter; color: Theme.textSecondary }
+                Label { text: I18n.tr("to"); anchors.verticalCenter: parent.verticalCenter; color: Theme.textSecondary }
                 Choice { options: parent.times; value: Settings.nightShiftTo; onPicked: v => Settings.nightShiftTo = v }
             }
         }
         SettingRow {
-            label: "Color temperature"
+            label: I18n.tr("Color temperature")
             last: true
             Row {
                 spacing: 10
-                Label { text: "Less Warm"; font.pixelSize: 11; color: Theme.textSecondary; anchors.verticalCenter: parent.verticalCenter }
+                Label { text: I18n.tr("Less Warm"); font.pixelSize: Theme.px(11); color: Theme.textSecondary; anchors.verticalCenter: parent.verticalCenter }
                 PlainSlider {
                     width: 150
                     anchors.verticalCenter: parent.verticalCenter
                     value: Settings.nightShiftWarmth
                     onMoved: v => Settings.nightShiftWarmth = Math.round(v * 20) / 20
                 }
-                Label { text: "More Warm"; font.pixelSize: 11; color: Theme.textSecondary; anchors.verticalCenter: parent.verticalCenter }
+                Label { text: I18n.tr("More Warm"); font.pixelSize: Theme.px(11); color: Theme.textSecondary; anchors.verticalCenter: parent.verticalCenter }
             }
         }
     }
 
     PushButton {
         anchors.right: parent.right
-        text: "Reset Display Settings"
+        text: I18n.tr("Reset Display Settings")
         enabled: Object.keys(Settings.displays).length > 0
         onClicked: Displays.reset()
     }

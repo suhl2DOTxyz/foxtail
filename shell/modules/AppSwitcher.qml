@@ -102,7 +102,7 @@ PanelWindow {
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 10
             text: Apps.nameFor(Switcher.apps[Switcher.index] ?? "")
-            font.pixelSize: 13
+            font.pixelSize: Theme.px(13)
             font.weight: Font.Medium
         }
     }

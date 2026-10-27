@@ -334,8 +334,8 @@ PanelWindow {
                     SequentialAnimation {
                         id: bounceAnim
                         loops: 3
-                        NumberAnimation { target: iconBox; property: "bounce"; to: dock.iconSize * 0.45; duration: 260; easing.type: Easing.OutQuad }
-                        NumberAnimation { target: iconBox; property: "bounce"; to: 0; duration: 260; easing.type: Easing.InQuad }
+                        NumberAnimation { target: iconBox; property: "bounce"; to: dock.iconSize * 0.45; duration: Theme.ms(260); easing.type: Easing.OutQuad }
+                        NumberAnimation { target: iconBox; property: "bounce"; to: 0; duration: Theme.ms(260); easing.type: Easing.InQuad }
                     }
                 }
 
@@ -364,9 +364,9 @@ PanelWindow {
                     Label {
                         id: tipLabel
                         anchors.centerIn: parent
-                        text: cell.modelData.kind === "trash" ? "Trash"
-                            : cell.modelData.kind === "downloads" ? "Downloads"
-                            : cell.modelData.kind === "launchpad" ? "Launchpad"
+                        text: cell.modelData.kind === "trash" ? I18n.tr("Trash")
+                            : cell.modelData.kind === "downloads" ? I18n.tr("Downloads")
+                            : cell.modelData.kind === "launchpad" ? I18n.tr("Launchpad")
                             : cell.modelData.kind === "min" ? (cell.modelData.toplevel.title || "Window")
                             : Apps.nameFor(cell.modelData.id)
                     }
@@ -394,9 +394,9 @@ PanelWindow {
                         if (m.button === Qt.RightButton && it.kind === "trash") {
                             const p = cell.mapToItem(null, cell.width / 2, 0);
                             Panels.showContext([
-                                { text: "Open", action: () => Quickshell.execDetached(["nautilus", "trash:///"]) },
+                                { text: I18n.tr("Open"), action: () => Quickshell.execDetached(["nautilus", "trash:///"]) },
                                 { separator: true },
-                                { text: "Empty Trash", enabled: dock.trashFull, action: () => Panels.confirm = "emptyTrash" }
+                                { text: I18n.tr("Empty Trash"), enabled: dock.trashFull, action: () => Panels.confirm = "emptyTrash" }
                             ], p.x - 90, dock.screen.height - Settings.dockIconSize - 110, dock.modelData);
                             return;
                         }
@@ -495,7 +495,7 @@ PanelWindow {
             radius: 11
             color: Theme.glassStrong
             border.color: Theme.glassOutline
-            Label { id: removeLabel; anchors.centerIn: parent; text: "Remove"; font.pixelSize: 12 }
+            Label { id: removeLabel; anchors.centerIn: parent; text: I18n.tr("Remove"); font.pixelSize: Theme.px(12) }
         }
     }
 }

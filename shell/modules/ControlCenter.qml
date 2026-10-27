@@ -53,26 +53,26 @@ Item {
                 spacing: root.gap
                 Round {
                     icon: Networking.wifiEnabled ? "wifi" : "wifi-off"
-                    tip: Networking.wifiEnabled ? (root.wifiNet?.name ?? "Wi-Fi: Not Connected") : "Wi-Fi: Off"
+                    tip: Networking.wifiEnabled ? (root.wifiNet?.name ?? I18n.tr("Wi-Fi: Not Connected")) : I18n.tr("Wi-Fi: Off")
                     on: Networking.wifiEnabled
                     onClicked: Networking.wifiEnabled = !Networking.wifiEnabled
                 }
                 Round {
                     icon: "bluetooth"
-                    tip: Bluetooth.defaultAdapter ? "Bluetooth" : "Bluetooth: Unavailable"
+                    tip: Bluetooth.defaultAdapter ? I18n.tr("Bluetooth") : I18n.tr("Bluetooth: Unavailable")
                     on: Bluetooth.defaultAdapter?.enabled ?? false
                     enabled: Bluetooth.defaultAdapter !== null
                     onClicked: Bluetooth.defaultAdapter.enabled = !Bluetooth.defaultAdapter.enabled
                 }
                 Round {
                     icon: "drop"
-                    tip: "Liquid Glass"
+                    tip: I18n.tr("Liquid Glass")
                     on: Settings.liquidGlass
                     onClicked: Settings.liquidGlass = !Settings.liquidGlass
                 }
                 Round {
                     icon: "half-circle"
-                    tip: Settings.darkMode ? "Dark Mode" : "Light Mode"
+                    tip: Settings.darkMode ? I18n.tr("Dark Mode") : I18n.tr("Light Mode")
                     on: Settings.darkMode
                     onClicked: { Settings.appearanceAuto = false; Settings.darkMode = !Settings.darkMode; }
                 }
@@ -107,8 +107,8 @@ Item {
                     anchors.top: art.bottom
                     anchors.topMargin: 8
                     width: parent.width - 28
-                    Label { width: parent.width; text: root.player?.trackTitle || "Not Playing"; font.weight: Font.DemiBold; font.pixelSize: 12 }
-                    Label { width: parent.width; text: root.player?.trackArtist ?? ""; color: Theme.textSecondary; font.pixelSize: 11 }
+                    Label { width: parent.width; text: root.player?.trackTitle || "Not Playing"; font.weight: Font.DemiBold; font.pixelSize: Theme.px(12) }
+                    Label { width: parent.width; text: root.player?.trackArtist ?? ""; color: Theme.textSecondary; font.pixelSize: Theme.px(11) }
                 }
                 Row {
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -144,20 +144,20 @@ Item {
                     anchors.left: moon.right
                     anchors.leftMargin: 8
                     anchors.verticalCenter: parent.verticalCenter
-                    Label { text: "Focus"; font.weight: Font.DemiBold; font.pixelSize: 12 }
-                    Label { text: Settings.doNotDisturb ? "Do Not Disturb" : "Off"; color: Theme.textSecondary; font.pixelSize: 11 }
+                    Label { text: I18n.tr("Focus"); font.weight: Font.DemiBold; font.pixelSize: Theme.px(12) }
+                    Label { text: Settings.doNotDisturb ? "Do Not Disturb" : "Off"; color: Theme.textSecondary; font.pixelSize: Theme.px(11) }
                 }
                 MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Settings.doNotDisturb = !Settings.doNotDisturb }
             }
             Round {
                 icon: "eye"
-                tip: "Reduce Transparency"
+                tip: I18n.tr("Reduce Transparency")
                 on: Settings.reduceTransparency
                 onClicked: Settings.reduceTransparency = !Settings.reduceTransparency
             }
             Round {
                 icon: Capture.recording ? "stop" : "screen-capture"
-                tip: Capture.recording ? "Stop Recording" : "Screenshot"
+                tip: Capture.recording ? I18n.tr("Stop Recording") : I18n.tr("Screenshot")
                 on: Capture.recording
                 onClicked: {
                     Panels.closeAll();
@@ -170,13 +170,13 @@ Item {
         // ---- sliders ----
         SliderTile {
             visible: Brightness.available
-            label: "Display"
+            label: I18n.tr("Display")
             icon: "sun-small"
             value: Brightness.value
             onMoved: v => Brightness.set(v)
             HeaderToggle {
                 icon: "nightshift"
-                text: "Night Shift"
+                text: I18n.tr("Night Shift")
                 on: Displays.nightShiftActive
                 onClicked: Settings.nightShiftNow = !Displays.nightShiftActive
             }
@@ -187,11 +187,11 @@ Item {
             width: root.span4
             height: 44
             radius: 22
-            Label { x: 16; anchors.verticalCenter: parent.verticalCenter; text: "Display"; font.weight: Font.DemiBold; font.pixelSize: 12 }
+            Label { x: 16; anchors.verticalCenter: parent.verticalCenter; text: I18n.tr("Display"); font.weight: Font.DemiBold; font.pixelSize: Theme.px(12) }
             HeaderToggle {
                 anchors.verticalCenter: parent.verticalCenter
                 icon: "nightshift"
-                text: "Night Shift"
+                text: I18n.tr("Night Shift")
                 on: Displays.nightShiftActive
                 onClicked: Settings.nightShiftNow = !Displays.nightShiftActive
             }
@@ -199,7 +199,7 @@ Item {
         SliderTile {
             id: soundTile
             property bool devicesOpen: false
-            label: "Sound"
+            label: I18n.tr("Sound")
             icon: Audio.muted ? "speaker-mute" : "speaker"
             value: Audio.muted ? 0 : Audio.volume
             onMoved: v => Audio.setVolume(v)
@@ -208,7 +208,7 @@ Item {
             HeaderToggle {
                 visible: Audio.sinks.length > 0
                 icon: Audio.deviceIcon(Audio.sink)
-                text: Audio.sinks.length > 1 ? "Output" : Audio.deviceName(Audio.sink)
+                text: Audio.sinks.length > 1 ? I18n.tr("Output") : Audio.deviceName(Audio.sink)
                 chevron: true
                 on: soundTile.devicesOpen
                 onClicked: soundTile.devicesOpen = !soundTile.devicesOpen
@@ -244,7 +244,7 @@ Item {
                             anchors.rightMargin: 8
                             anchors.verticalCenter: parent.verticalCenter
                             text: Audio.deviceName(dev.modelData)
-                            font.pixelSize: 12
+                            font.pixelSize: Theme.px(12)
                         }
                         MouseArea { id: devMouse; anchors.fill: parent; hoverEnabled: true; onClicked: Audio.setSink(dev.modelData) }
                     }
@@ -312,7 +312,7 @@ Item {
             color: rb.on ? Theme.accent : Theme.text
         }
         scale: tap.pressed ? 0.92 : (tap.containsMouse ? 1.04 : 1.0)
-        Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutBack } }
+        Behavior on scale { NumberAnimation { duration: Theme.ms(140); easing.type: Easing.OutBack } }
 
         Rectangle {
             visible: tap.containsMouse && rb.tip !== ""
@@ -324,7 +324,7 @@ Item {
             height: 22
             radius: 11
             color: Theme.glassStrong
-            Label { id: tipLabel; anchors.centerIn: parent; text: rb.tip; font.pixelSize: 11 }
+            Label { id: tipLabel; anchors.centerIn: parent; text: rb.tip; font.pixelSize: Theme.px(11) }
         }
         MouseArea {
             id: tap
@@ -367,7 +367,7 @@ Item {
             Icon { size: 12; name: ht.icon; color: ht.on ? "white" : Theme.textSecondary; anchors.verticalCenter: parent.verticalCenter }
             Label {
                 text: ht.text
-                font.pixelSize: 11
+                font.pixelSize: Theme.px(11)
                 color: ht.on ? "white" : Theme.textSecondary
                 width: Math.min(implicitWidth, 120)
                 anchors.verticalCenter: parent.verticalCenter
@@ -387,7 +387,7 @@ Item {
         width: root.span4
         height: 74
         radius: 26
-        Label { x: 16; y: 10; text: st.label; font.weight: Font.DemiBold; font.pixelSize: 12 }
+        Label { x: 16; y: 10; text: st.label; font.weight: Font.DemiBold; font.pixelSize: Theme.px(12) }
         CCSlider {
             x: 12; y: 32
             width: parent.width - 24

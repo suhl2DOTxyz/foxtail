@@ -48,15 +48,15 @@ Item {
 
     Label {
         x: 18; y: 12
-        text: "Downloads"
+        text: I18n.tr("Downloads")
         font.weight: Font.Bold
-        font.pixelSize: 15
+        font.pixelSize: Theme.px(15)
     }
 
     Label {
         visible: root.shown === 0
         anchors.centerIn: parent
-        text: "No downloads yet"
+        text: I18n.tr("No downloads yet")
         color: Theme.textSecondary
     }
 
@@ -95,7 +95,7 @@ Item {
                     elide: Text.ElideMiddle
                     text: tile.name
                     font.family: Theme.font
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.px(11)
                     color: Theme.text
                 }
                 MouseArea {
@@ -119,7 +119,7 @@ Item {
         height: 26
         radius: 13
         color: openMouse.containsMouse ? Theme.pressed : Theme.control
-        Label { id: openLabel; anchors.centerIn: parent; text: "Open in Files"; font.pixelSize: 12 }
+        Label { id: openLabel; anchors.centerIn: parent; text: I18n.tr("Open in Files"); font.pixelSize: Theme.px(12) }
         MouseArea {
             id: openMouse
             anchors.fill: parent

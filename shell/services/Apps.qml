@@ -61,8 +61,8 @@ Singleton {
     function entryForToplevel(t) {
         if (!t) return null;
         if (isShellWindow(t)) {
-            if (t.title === "System Settings") return entry("foxtail-settings");
-            if (t.title === "Install Foxtail") return entry("foxtail-installer");
+            if (t.title === I18n.tr("System Settings")) return entry("foxtail-settings");
+            if (t.title === I18n.tr("Install Foxtail")) return entry("foxtail-installer");
             return null;
         }
         return entry(t.appId);

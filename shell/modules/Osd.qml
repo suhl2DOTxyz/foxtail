@@ -63,7 +63,7 @@ PanelWindow {
             x: 18; y: 8
             text: root.kind === "volume" ? "Sound" : "Display"
             font.weight: Font.DemiBold
-            font.pixelSize: 12
+            font.pixelSize: Theme.px(12)
         }
         CCSlider {
             x: 16; y: 26

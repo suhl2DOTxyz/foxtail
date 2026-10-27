@@ -72,19 +72,24 @@
 - [ ] Custom keyboard shortcuts
 
 ## v1.6: Polish and public beta
-- [ ] Notification grouping, actions and reply
-- [ ] Qt/KDE apps themed to match GTK apps
-- [ ] Accessibility: larger text, zoom, high contrast, reduce motion
-- [ ] Translations (the shell is English-only today; apps follow the chosen language)
-- [ ] Crash and diagnostics reporting (local logs plus "Report a problem")
-- [ ] Docs site: install guide, FAQ, troubleshooting
-- [ ] Public beta: issue templates, a testers' channel, triage
+- ✅ **Notifications:** grouped by app in Notification Center (stacks you can expand), the app's action buttons, inline **Reply**, "5m ago" times; banners stay while you hover or type a reply
+- ✅ **Qt and KDE apps** use Foxtail's colors, accent, fonts and icons in light and dark mode (qt5ct/qt6ct and kdeglobals)
+- ✅ **Accessibility** pane: text size, increase contrast, reduce motion, reduce transparency, zoom (⌥⌘8, ⌥⌘= / ⌥⌘-), screen reader (Orca); passed on to GTK apps too
+- ✅ **Translations:** the whole shell in German, French and Spanish (it follows the language chosen in the installer), with localized dates and calendars
+- ✅ **Report a Problem…** (Help menu) saves a diagnostics report to the Desktop and opens an issue; the desktop offers to report itself after a crash
+- ✅ **Foxtail Guide** in `docs/`: install guide, getting started, troubleshooting, FAQ
+- ✅ **Public beta:** issue templates (bug, hardware report, idea), contributing guide, triage labels
+- [ ] A testers' channel (Discussions or Matrix)
+- [ ] Foxtail's own menus readable by the screen reader
+
+## v1.7: Reliability
+- [ ] Automated tests: QML lint in CI, an ISO boot test in a VM, installer test
+- [ ] Stable and testing update channels
+- [ ] Performance budget: shell idle CPU and RAM, animation frame times on integrated GPUs
 
 ## v2.0: Stable daily driver
 - [ ] Runs well on at least 5 real machines (Intel, AMD, NVIDIA, an older laptop), with every 🟡 above confirmed on real hardware
-- [ ] Fixed, reliable update cadence (stable vs. testing channels)
-- [ ] Automated tests: QML lint in CI, an ISO boot test in a VM, installer test
-- [ ] Performance budget: shell idle CPU and RAM, animation frame times on integrated GPUs
+- [ ] Fixed, reliable update cadence
 - [ ] Polish pass on every screen, with a consistent icon set
 - [ ] Secure Boot support (signed bootloader/kernel)
 

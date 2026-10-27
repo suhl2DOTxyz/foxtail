@@ -1,0 +1,15 @@
+#!/bin/sh
+# foxtail-sync-a11y <text-scale> <contrast 0|1> <reduce-motion 0|1> <screen-reader 0|1>
+# Passes Foxtail's Accessibility settings on to GTK/libadwaita apps (and the
+# Orca screen reader).
+scale=${1:-1.0}; contrast=${2:-0}; motion=${3:-0}; reader=${4:-0}
+gsettings set org.gnome.desktop.interface text-scaling-factor "$scale"
+gsettings set org.gnome.desktop.a11y.interface high-contrast "$([ "$contrast" = 1 ] && echo true || echo false)"
+gsettings set org.gnome.desktop.interface enable-animations "$([ "$motion" = 1 ] && echo false || echo true)"
+gsettings set org.gnome.desktop.a11y.applications screen-reader-enabled "$([ "$reader" = 1 ] && echo true || echo false)"
+if [ "$reader" = 1 ]; then
+    command -v orca >/dev/null && { pgrep -x orca >/dev/null || setsid orca >/dev/null 2>&1 < /dev/null & }
+else
+    pkill -x orca 2>/dev/null
+fi
+exit 0

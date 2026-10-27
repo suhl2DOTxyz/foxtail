@@ -12,7 +12,8 @@ Item {
     property color iconColor: Theme.accent
     default property alias control: ctl.data
     width: parent?.width ?? 0
-    height: sub ? 52 : 40
+    // Grows with its text (long subtitles, larger text sizes).
+    height: Math.max(sub ? 52 : 40, textCol.implicitHeight + 18, ctl.height + 16)
 
     Rectangle {
         id: badge
@@ -24,11 +25,12 @@ Item {
         Icon { anchors.centerIn: parent; size: 16; name: sr.icon; color: sr.iconColor }
     }
     Column {
+        id: textCol
         x: sr.icon ? 52 : 14
         anchors.verticalCenter: parent.verticalCenter
         width: parent.width - ctl.width - x - 26
         Label { width: parent.width; text: sr.label }
-        Label { visible: sr.sub !== ""; width: parent.width; text: sr.sub; font.pixelSize: 11; color: Theme.textSecondary; wrapMode: Text.Wrap; elide: Text.ElideNone }
+        Label { visible: sr.sub !== ""; width: parent.width; text: sr.sub; font.pixelSize: Theme.px(11); color: Theme.textSecondary; wrapMode: Text.Wrap; elide: Text.ElideNone }
     }
     Item {
         id: ctl

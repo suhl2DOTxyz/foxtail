@@ -11,6 +11,8 @@ Item {
 
     property point windowOffset
     property size screenSize
+    // The app group shown expanded ("" = all collapsed).
+    property string expanded: ""
 
     width: 356
     height: col.implicitHeight
@@ -32,25 +34,100 @@ Item {
             width: parent.width
             height: 22
             visible: Notifs.history.length > 0
-            Label { x: 4; text: "Notifications"; font.weight: Font.Bold; color: "white"; style: Text.Raised; styleColor: Qt.rgba(0, 0, 0, 0.25) }
+            Label { x: 4; text: I18n.tr("Notifications"); font.weight: Font.Bold; color: "white"; style: Text.Raised; styleColor: Qt.rgba(0, 0, 0, 0.25) }
             Label {
                 anchors.right: parent.right
                 anchors.rightMargin: 4
-                text: "Clear All"
+                text: I18n.tr("Clear All")
                 color: "white"
                 style: Text.Raised; styleColor: Qt.rgba(0, 0, 0, 0.25)
                 MouseArea { anchors.fill: parent; onClicked: Notifs.clearAll() }
             }
         }
 
+        // Grouped by app, like macOS: a stack shows the newest notification
+        // with the others peeking out beneath; click the stack to expand it.
         Repeater {
-            model: Notifs.history.slice().reverse().slice(0, 6)
-            NotificationCard {
+            model: Notifs.groups.slice(0, 5)
+            Column {
+                id: group
                 required property var modelData
-                notification: modelData
+                readonly property bool open: root.expanded === modelData.key
+                readonly property int count: modelData.items.length
                 width: col.width
-                windowOffset: root.windowOffset
-                screenSize: root.screenSize
+                spacing: 8
+
+                // Header when expanded: app name, Show Less, clear the group.
+                Item {
+                    visible: group.open
+                    width: parent.width
+                    height: 22
+                    Label { x: 4; text: group.modelData.app; font.weight: Font.Bold; color: "white"; style: Text.Raised; styleColor: Qt.rgba(0, 0, 0, 0.25) }
+                    Row {
+                        anchors.right: parent.right
+                        anchors.rightMargin: 4
+                        spacing: 12
+                        Label {
+                            text: I18n.tr("Show Less")
+                            color: "white"; style: Text.Raised; styleColor: Qt.rgba(0, 0, 0, 0.25)
+                            MouseArea { anchors.fill: parent; onClicked: root.expanded = "" }
+                        }
+                        Label {
+                            text: I18n.tr("Clear")
+                            color: "white"; style: Text.Raised; styleColor: Qt.rgba(0, 0, 0, 0.25)
+                            MouseArea { anchors.fill: parent; onClicked: { Notifs.dismissGroup(group.modelData.key); root.expanded = ""; } }
+                        }
+                    }
+                }
+
+                // Expanded: every notification. Collapsed: the newest, with up
+                // to two shrinking cards peeking out below it.
+                Repeater {
+                    model: group.open ? group.modelData.items.slice(0, 10) : group.modelData.items.slice(0, 1)
+                    NotificationCard {
+                        required property var modelData
+                        notification: modelData
+                        width: col.width
+                        windowOffset: root.windowOffset
+                        screenSize: root.screenSize
+                        z: 2
+                    }
+                }
+                Item {
+                    visible: !group.open && group.count > 1
+                    width: parent.width
+                    height: group.count > 2 ? 14 : 7
+                    y: -8
+                    Repeater {
+                        model: Math.min(2, group.count - 1)
+                        Rectangle {
+                            required property int index
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            y: -8 - 18 + index * 7
+                            width: col.width - 16 * (index + 1)
+                            height: 24
+                            radius: 12
+                            z: -index
+                            color: Theme.dark ? Qt.rgba(0.2, 0.2, 0.22, 0.55 - index * 0.15) : Qt.rgba(1, 1, 1, 0.5 - index * 0.15)
+                            border.color: Theme.glassOutline
+                        }
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        anchors.topMargin: -12
+                        onClicked: root.expanded = group.modelData.key
+                    }
+                }
+                // Click the top card's empty stack area to expand too.
+                Label {
+                    visible: !group.open && group.count > 1
+                    anchors.right: parent.right
+                    anchors.rightMargin: 8
+                    text: I18n.tr("%1 more").arg(group.count - 1)
+                    font.pixelSize: Theme.px(11)
+                    color: "white"; style: Text.Raised; styleColor: Qt.rgba(0, 0, 0, 0.25)
+                    MouseArea { anchors.fill: parent; onClicked: root.expanded = group.modelData.key }
+                }
             }
         }
 
@@ -72,15 +149,17 @@ Item {
             readonly property date today: clock.date
             readonly property int year: today.getFullYear()
             readonly property int month: today.getMonth()
-            readonly property int firstDow: new Date(year, month, 1).getDay()
+            // Weeks start on the locale's first day (Monday in most of Europe).
+            readonly property int weekStart: I18n.locale.firstDayOfWeek % 7
+            readonly property int firstDow: (new Date(year, month, 1).getDay() - weekStart + 7) % 7
             readonly property int days: new Date(year, month + 1, 0).getDate()
 
             Label {
                 x: 18; y: 14
-                text: Qt.formatDate(parent.today, "MMMM").toUpperCase()
+                text: I18n.date(parent.today, "MMMM").toUpperCase()
                 color: Theme.accent
                 font.weight: Font.Bold
-                font.pixelSize: 12
+                font.pixelSize: Theme.px(12)
             }
 
             Grid {
@@ -92,13 +171,13 @@ Item {
                 readonly property real cell: (parent.width - 28) / 7
 
                 Repeater {
-                    model: ["S", "M", "T", "W", "T", "F", "S"]
+                    model: [0, 1, 2, 3, 4, 5, 6].map(i => I18n.locale.dayName((i + grid.parent.weekStart) % 7, Locale.NarrowFormat))
                     Label {
                         required property string modelData
                         width: grid.cell; height: 22
                         horizontalAlignment: Text.AlignHCenter
                         text: modelData
-                        font.pixelSize: 10
+                        font.pixelSize: Theme.px(10)
                         font.weight: Font.DemiBold
                         color: Theme.textSecondary
                     }
@@ -121,7 +200,7 @@ Item {
                             anchors.centerIn: parent
                             visible: parent.valid
                             text: parent.day
-                            font.pixelSize: 12
+                            font.pixelSize: Theme.px(12)
                             font.weight: parent.isToday ? Font.Bold : Font.Normal
                             color: parent.isToday ? "white" : Theme.text
                         }
@@ -200,7 +279,7 @@ Item {
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: 10
                     text: (Quickshell.env("TZ") || SystemInfo.timezone || "Local").split("/").pop().replace(/_/g, " ")
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.px(11)
                     font.weight: Font.DemiBold
                     color: Theme.textSecondary
                 }
@@ -245,7 +324,7 @@ Item {
                     Label {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: Power.percent + "%"
-                        font.pixelSize: 15
+                        font.pixelSize: Theme.px(15)
                         font.weight: Font.DemiBold
                     }
                 }
@@ -255,22 +334,22 @@ Item {
                     spacing: 0
                     Label {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: Qt.formatDate(tick.date, "dddd").toUpperCase()
+                        text: I18n.date(tick.date, "dddd").toUpperCase()
                         color: Theme.accent
-                        font.pixelSize: 12
+                        font.pixelSize: Theme.px(12)
                         font.weight: Font.Bold
                     }
                     Label {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: tick.date.getDate()
-                        font.pixelSize: 54
+                        font.pixelSize: Theme.px(54)
                         font.weight: Font.Light
                     }
                     Label {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: Qt.formatDate(tick.date, "MMMM yyyy")
+                        text: I18n.date(tick.date, "MMMM yyyy")
                         color: Theme.textSecondary
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.px(11)
                     }
                 }
             }

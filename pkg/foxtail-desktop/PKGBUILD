@@ -32,6 +32,8 @@ depends=(
     'hyprsunset' 'wf-recorder' 'cups' 'cups-pk-helper' 'system-config-printer' 'avahi' 'nss-mdns'
     # macOS touches (1.5): Quick Look in Files, interface sounds, emoji
     'sushi' 'sound-theme-freedesktop' 'pipewire-audio'
+    # Qt/KDE apps themed like GTK ones (1.6)
+    'qt6ct' 'qt5ct' 'orca'
 )
 optdepends=(
     'firefox: default web browser'
@@ -83,6 +85,7 @@ package() {
         > "$d/etc/skel/.config/gtk-3.0/settings.ini"
 
     # Theming
+    install -Dm644 -t "$d/usr/share/foxtail/qt" theme/qt/foxtail-light.conf theme/qt/foxtail-dark.conf
     install -Dm644 theme/fontconfig/60-foxtail.conf "$d/etc/fonts/conf.d/60-foxtail.conf"
     install -Dm644 theme/fastfetch/config.jsonc "$d/etc/xdg/fastfetch/config.jsonc"
     install -Dm644 theme/fastfetch/foxtail.ans "$d/usr/share/foxtail/fastfetch/foxtail.ans"

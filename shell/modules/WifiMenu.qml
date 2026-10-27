@@ -44,7 +44,7 @@ Item {
         Item {
             width: parent.width
             height: 34
-            Label { x: 14; anchors.verticalCenter: parent.verticalCenter; text: "Wi-Fi"; font.weight: Font.Bold }
+            Label { x: 14; anchors.verticalCenter: parent.verticalCenter; text: I18n.tr("Wi-Fi"); font.weight: Font.Bold }
             Switch {
                 anchors.right: parent.right
                 anchors.rightMargin: 12
@@ -135,7 +135,7 @@ Item {
             Label {
                 x: 14; y: 4
                 text: `Password for “${root.askingFor?.name ?? ""}”`
-                font.pixelSize: 11
+                font.pixelSize: Theme.px(11)
                 color: Theme.textSecondary
             }
             Rectangle {
@@ -155,7 +155,7 @@ Item {
                     echoMode: TextInput.Password
                     color: Theme.text
                     font.family: Theme.font
-                    font.pixelSize: 13
+                    font.pixelSize: Theme.px(13)
                     focus: root.askingFor !== null
                     onAccepted: {
                         root.askingFor.connectWithPsk(text);
@@ -166,8 +166,8 @@ Item {
             }
             Label {
                 x: 14; y: 54
-                text: "Press Return to join"
-                font.pixelSize: 10
+                text: I18n.tr("Press Return to join")
+                font.pixelSize: Theme.px(10)
                 color: Theme.textTertiary
             }
         }
@@ -175,7 +175,7 @@ Item {
         MenuItem { width: parent.width; separator: true }
         MenuItem {
             width: parent.width
-            text: "Wi-Fi Settings…"
+            text: I18n.tr("Wi-Fi Settings…")
             onTriggered: Panels.openSettings("wifi")
         }
     }

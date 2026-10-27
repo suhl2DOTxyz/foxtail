@@ -54,13 +54,13 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             color: Theme.text
             font.family: Theme.font
-            font.pixelSize: 20
+            font.pixelSize: Theme.px(20)
             clip: true
             Label {
                 visible: !input.text
                 anchors.verticalCenter: parent.verticalCenter
-                text: "Clipboard History"
-                font.pixelSize: 20
+                text: I18n.tr("Clipboard History")
+                font.pixelSize: Theme.px(20)
                 color: Theme.textTertiary
             }
             Keys.onUpPressed: root.current = Math.max(0, root.current - 1)
@@ -78,7 +78,7 @@ Item {
             height: 24
             radius: 12
             color: clearMouse.containsMouse ? Theme.hover : "transparent"
-            Label { id: clearLabel; anchors.centerIn: parent; text: "Clear"; font.pixelSize: 12; color: Theme.textSecondary }
+            Label { id: clearLabel; anchors.centerIn: parent; text: I18n.tr("Clear"); font.pixelSize: Theme.px(12); color: Theme.textSecondary }
             MouseArea { id: clearMouse; anchors.fill: parent; hoverEnabled: true; onClicked: Clipboard.clear() }
         }
     }

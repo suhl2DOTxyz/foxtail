@@ -19,7 +19,7 @@ Rectangle {
         id: pbl
         anchors.centerIn: parent
         text: pb.text
-        font.pixelSize: 12
+        font.pixelSize: Theme.px(12)
         color: pb.primary ? "white" : pb.destructive ? "#FF453A" : Theme.text
     }
     MouseArea { id: pbm; anchors.fill: parent; enabled: pb.enabled; onClicked: pb.clicked() }

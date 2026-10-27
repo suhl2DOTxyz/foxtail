@@ -24,7 +24,7 @@ Rectangle {
         verticalAlignment: TextInput.AlignVCenter
         color: Theme.text
         font.family: Theme.font
-        font.pixelSize: 13
+        font.pixelSize: Theme.px(13)
         clip: true
         echoMode: tf.secret ? TextInput.Password : TextInput.Normal
         selectByMouse: true

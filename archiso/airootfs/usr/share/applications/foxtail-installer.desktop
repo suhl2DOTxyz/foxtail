@@ -1,5 +1,8 @@
 [Desktop Entry]
 Name=Install Foxtail
+Name[de]=Foxtail installieren
+Name[fr]=Installer Foxtail
+Name[es]=Instalar Foxtail
 Comment=Install Foxtail on this computer
 Exec=foxtail-ipc installer
 Icon=/usr/share/pixmaps/foxtail.png

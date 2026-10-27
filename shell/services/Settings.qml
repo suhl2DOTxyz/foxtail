@@ -26,6 +26,11 @@ Singleton {
     property alias clockSeconds: adapter.clockSeconds
     property alias doNotDisturb: adapter.doNotDisturb
     property alias reduceTransparency: adapter.reduceTransparency
+    property alias reduceMotion: adapter.reduceMotion
+    property alias increaseContrast: adapter.increaseContrast
+    property alias textScale: adapter.textScale
+    property alias zoomKeys: adapter.zoomKeys
+    property alias screenReader: adapter.screenReader
     property alias lockAfter: adapter.lockAfter
     property alias refractWindows: adapter.refractWindows
     property alias autoCheckUpdates: adapter.autoCheckUpdates
@@ -109,6 +114,11 @@ Singleton {
             property bool clockSeconds: false
             property bool doNotDisturb: false
             property bool reduceTransparency: false
+            property bool reduceMotion: false
+            property bool increaseContrast: false
+            property real textScale: 1.0        // Accessibility ▸ Text size
+            property bool zoomKeys: true        // ⌥⌘8 zoom, ⌥⌘= / ⌥⌘- in and out
+            property bool screenReader: false   // Orca
             property bool autoCheckUpdates: true
             property bool showBatteryPercent: true
             property bool autoLowPower: true

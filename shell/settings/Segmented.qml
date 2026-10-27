@@ -38,7 +38,7 @@ Rectangle {
                     id: segLabel
                     anchors.centerIn: parent
                     text: seg.modelData.text
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.px(12)
                     font.weight: seg.selected ? Font.Medium : Font.Normal
                 }
                 MouseArea {

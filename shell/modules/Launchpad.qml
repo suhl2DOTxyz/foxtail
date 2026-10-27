@@ -76,13 +76,13 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 color: "white"
                 font.family: Theme.font
-                font.pixelSize: 14
+                font.pixelSize: Theme.px(14)
                 clip: true
                 Label {
                     visible: !search.text
-                    text: "Search"
+                    text: I18n.tr("Search")
                     color: Qt.rgba(1, 1, 1, 0.6)
-                    font.pixelSize: 14
+                    font.pixelSize: Theme.px(14)
                     anchors.verticalCenter: parent.verticalCenter
                 }
                 Keys.onEscapePressed: Panels.launchpad = false
@@ -139,7 +139,7 @@ PanelWindow {
                                 sourceSize: Qt.size(width * 2, height * 2)
                                 source: Quickshell.iconPath(cell.modelData.icon, "application-x-executable")
                                 scale: ma.pressed ? 0.9 : 1
-                                Behavior on scale { NumberAnimation { duration: 90 } }
+                                Behavior on scale { NumberAnimation { duration: Theme.ms(90) } }
                             }
                             Label {
                                 id: name
@@ -150,7 +150,7 @@ PanelWindow {
                                 horizontalAlignment: Text.AlignHCenter
                                 text: Apps.title(cell.modelData)
                                 color: "white"
-                                font.pixelSize: 12
+                                font.pixelSize: Theme.px(12)
                                 style: Text.Raised
                                 styleColor: Qt.rgba(0, 0, 0, 0.35)
                             }
