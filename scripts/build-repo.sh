@@ -16,7 +16,7 @@ WORK="$ROOT/build/pkgwork"
 VERSION=$(cat "$ROOT/VERSION")
 PKGREL=${FOXTAIL_PKGREL:-1}
 UNSIGNED=${FOXTAIL_UNSIGNED:-0}
-KEY=$(gpg --list-secret-keys --with-colons "Foxtail OS Package Signing" 2>/dev/null | awk -F: '/^fpr/ {print $10; exit}')
+KEY=$(gpg --list-secret-keys --with-colons "Foxtail OS Package Signing" 2>/dev/null | awk -F: '/^fpr/ {print $10; exit}' || true)
 
 [ "$(id -u)" -ne 0 ] || { echo "run build-repo.sh as a normal user" >&2; exit 1; }
 [ -n "$KEY" ] || [ "$UNSIGNED" = 1 ] || { echo "Foxtail signing key not found in your keyring" >&2; exit 1; }
