@@ -6,6 +6,7 @@
 set -uo pipefail
 ISO=${1:?usage: boot-test.sh <iso> [timeout]}
 TIMEOUT=${2:-600}
+ISO=$(realpath "$ISO")
 cd "$(dirname "$0")"
 mkdir -p out
 OVMF=$(ls /usr/share/OVMF/OVMF_CODE*.fd /usr/share/edk2/x64/OVMF_CODE*.fd /usr/share/ovmf/x64/OVMF_CODE.fd 2>/dev/null | head -1)
@@ -34,5 +35,6 @@ echo "screendump out/screen.ppm" | socat - UNIX-CONNECT:out/monitor.sock >/dev/n
     && command -v convert >/dev/null && convert out/screen.ppm out/screen.png
 grep "FOXTAIL-BOOT" out/serial.log
 if [ $ok = 1 ]; then echo "PASS: the live desktop started"; exit 0; fi
+kill -0 $QEMU 2>/dev/null || { echo "FAIL: QEMU exited before the desktop started (see tests/out/serial.log)"; exit 1; }
 echo "FAIL: the desktop didn't start within ${TIMEOUT}s (see tests/out/serial.log)"
 exit 1

@@ -45,7 +45,12 @@ jobs:
           '
       - name: Boot test
         run: |
-          sudo apt-get update && sudo apt-get install -y qemu-system-x86 ovmf
+          # The container left the checkout owned by its builder user.
+          sudo chown -R "$(id -u):$(id -g)" .
+          # Let QEMU use KVM (software emulation would take far too long).
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+          sudo apt-get update && sudo apt-get install -y qemu-system-x86 ovmf socat imagemagick
           ./tests/boot-test.sh out/foxtail-*.iso
       - uses: actions/upload-artifact@v4
         if: always()
