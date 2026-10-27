@@ -1,4 +1,5 @@
-/* Foxtail: macOS traffic lights for Firefox's titlebar buttons. */
+/* Foxtail: macOS traffic lights for Firefox's titlebar buttons, and the
+ * capsule shapes of macOS 27 toolbars (address field, tabs, buttons). */
 @-moz-document url("chrome://browser/content/browser.xhtml") {
   .titlebar-buttonbox {
     gap: 8px !important;
@@ -33,4 +34,17 @@
     background-color: rgba(128, 128, 128, 0.35) !important;
     box-shadow: none !important;
   }
+
+  /* Capsules, like Safari on macOS 27. */
+  :root {
+    --toolbarbutton-border-radius: 9999px !important;
+    --tab-border-radius: 9999px !important;
+  }
+  #urlbar-background,
+  #searchbar { border-radius: 9999px !important; }
+  #urlbar[breakout-extend] > #urlbar-background { border-radius: 14px !important; }
+  #urlbar:not([breakout-extend]) #urlbar-input { text-align: center !important; }
+  #urlbar:focus-within #urlbar-input { text-align: start !important; }
+  .tab-background { border-radius: 9999px !important; }
+  menupopup, panel { --panel-border-radius: 12px !important; }
 }

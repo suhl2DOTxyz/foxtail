@@ -15,9 +15,8 @@ Singleton {
                                    "system-config-printer", "cups",
                                    "qt5ct", "qt6ct"]   // Qt apps follow System Settings ▸ Appearance
 
-    // The names macOS uses for the equivalent apps (English only: other
-    // languages keep each app's own translated name).
-    readonly property bool english: /^(en|C)([_.@]|$)/.test(Quickshell.env("LC_MESSAGES") || Quickshell.env("LANG") || "C")
+    // The names macOS uses for the equivalent apps, in the user's language
+    // (translated in shell/i18n like the rest of the shell).
     readonly property var macNames: ({
         "org.gnome.Ptyxis": "Terminal",
         "org.gnome.SystemMonitor": "Activity Monitor",
@@ -28,7 +27,7 @@ Singleton {
     })
     function title(e) {
         if (!e) return "";
-        return (english && macNames[e.id]) || e.name;
+        return macNames[e.id] ? I18n.tr(macNames[e.id]) : e.name;
     }
 
     readonly property var all: DesktopEntries.applications.values

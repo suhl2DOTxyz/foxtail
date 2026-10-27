@@ -51,7 +51,7 @@ Item {
         windowOffset: root.windowOffset
         screenSize: root.screenSize
         rimOpacity: 0.85
-        exposure: 0.75   // the overlay dims the desktop by 25% behind this dialog
+        exposure: 0.9   // the overlay dims the desktop by 10% behind this dialog
         bezel: 18
     }
 

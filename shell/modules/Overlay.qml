@@ -50,7 +50,7 @@ PanelWindow {
     Rectangle {
         anchors.fill: parent
         color: "black"
-        opacity: Panels.confirm !== "" ? 0.25 : 0
+        opacity: Panels.confirm !== "" ? 0.10 : 0   // below the blur threshold (ignore_alpha 0.15): macOS keeps the desktop sharp
         Behavior on opacity { NumberAnimation { duration: Theme.anim } }
     }
 

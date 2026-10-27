@@ -52,9 +52,16 @@ Row {
                 color: Qt.rgba(0, 0, 0, 0.55)
             }
 
+            // macOS window buttons work on the first click, even in an
+            // inactive window. Activating the window takes the pointer grab
+            // away from us mid-click (canceled), so count that as a click too.
             MouseArea {
+                property bool armed: false
                 anchors.fill: parent
-                onClicked: root[modelData.s]()
+                onPressed: armed = true
+                onClicked: { armed = false; root[modelData.s](); }
+                onCanceled: { if (armed) root[modelData.s](); armed = false; }
+                onReleased: if (!containsMouse) armed = false
             }
         }
     }

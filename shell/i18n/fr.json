@@ -437,5 +437,11 @@
  "Off": "Désactivé",
  "Clear glass": "Transparent",
  "Not Playing": "Aucune lecture",
- "Unavailable": "Indisponible"
+ "Unavailable": "Indisponible",
+ "Terminal": "Terminal",
+ "Activity Monitor": "Moniteur d’activité",
+ "Disk Utility": "Utilitaire de disque",
+ "App Store": "App Store",
+ "Archive Utility": "Utilitaire d’archive",
+ "Character Viewer": "Visualiseur de caractères"
 }

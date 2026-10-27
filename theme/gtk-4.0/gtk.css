@@ -446,3 +446,6 @@ tabbar tab:selected { background-color: var(--fx-glass); box-shadow: 0 0 0 0.5px
 .boxed-list,
 .card { border-radius: 10px; }
 .boxed-list > row { min-height: 40px; }
+
+/* Finder's sidebar has no title: Files shows its name in the menu bar. */
+.nautilus-window .sidebar-pane headerbar .title { opacity: 0; }

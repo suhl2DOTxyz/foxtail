@@ -437,5 +437,11 @@
  "Off": "Aus",
  "Clear glass": "Klar",
  "Not Playing": "Keine Wiedergabe",
- "Unavailable": "Nicht verfügbar"
+ "Unavailable": "Nicht verfügbar",
+ "Terminal": "Terminal",
+ "Activity Monitor": "Aktivitätsanzeige",
+ "Disk Utility": "Festplattendienstprogramm",
+ "App Store": "App Store",
+ "Archive Utility": "Archivierungsprogramm",
+ "Character Viewer": "Zeichenübersicht"
 }

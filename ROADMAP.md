@@ -89,6 +89,12 @@
 - [ ] Installer test (an automated install into a VM disk)
 - [ ] Animation frame times on integrated GPUs (needs real hardware)
 
+## v1.8: The macOS 27 look
+- ✅ **Apps look like Mac apps:** unified toolbars with glass capsule buttons, an edge-to-edge sidebar with accent icons, accent-highlighted menus, macOS-sized controls and 13px text (GTK 4 and libadwaita apps; menus in GTK 3 apps)
+- ✅ **Windows:** one 20px continuous corner radius, a hairline edge, a deeper shadow on the active window, glassy traffic lights that work on the first click
+- ✅ **Control Center** as one glass panel of modules; **Liquid Glass** with gentler refraction and a Clear-to-Tinted slider
+- ✅ **System Settings** with an edge-to-edge sidebar and accent selection; Launchpad is now **Apps**; Firefox gets capsule tabs and address field
+
 ## v2.0: Stable daily driver
 - [ ] Runs well on at least 5 real machines (Intel, AMD, NVIDIA, an older laptop), with every 🟡 above confirmed on real hardware
 - [ ] Fixed, reliable update cadence
