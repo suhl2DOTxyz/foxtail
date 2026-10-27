@@ -24,8 +24,12 @@ Singleton {
     // gets Finder's menus, Go included.
     readonly property bool filesActive: Panels.desktopActive || !frontWindow || Hypr.activeClass === "org.gnome.Nautilus"
     readonly property bool filesWindow: !Panels.desktopActive && frontWindow && Hypr.activeClass === "org.gnome.Nautilus"
+    // Menus written for the apps Foxtail ships (Wayland has no global menu,
+    // so these send each app's own shortcuts); other apps get the generic set.
+    readonly property var appSet: filesActive ? null : (appMenuSets[Hypr.activeClass] ?? null)
     readonly property var menuTitles: filesActive ? ["File", "Edit", "View", "Go", "Window", "Help"]
-                                                  : ["File", "Edit", "View", "Window", "Help"]
+                                    : appSet ? appSet.titles.concat(["Window", "Help"])
+                                    : ["File", "Edit", "View", "Window", "Help"]
 
     // Go menu: in a Files window, type the place into its location bar;
     // from the desktop, open a new window there.
@@ -185,6 +189,129 @@ Singleton {
         ]
     ]
 
+    readonly property var stdEdit: [
+        { text: "Undo", shortcut: "⌘Z", action: keys(["ctrl"], "z") },
+        { text: "Redo", shortcut: "⇧⌘Z", action: keys(["ctrl", "shift"], "z") },
+        { separator: true },
+        { text: "Cut", shortcut: "⌘X", action: keys(["ctrl"], "x") },
+        { text: "Copy", shortcut: "⌘C", action: keys(["ctrl"], "c") },
+        { text: "Paste", shortcut: "⌘V", action: keys(["ctrl"], "v") },
+        { text: "Select All", shortcut: "⌘A", action: keys(["ctrl"], "a") }
+    ]
+    readonly property var emojiItem: { "text": "Emoji & Symbols", "shortcut": "⌃⌘Space", "action": () => Panels.toggle("emoji", Panels.screen) }
+    readonly property var zoomItems: [
+        { text: "Zoom In", shortcut: "⌘+", action: keys(["ctrl"], "plus") },
+        { text: "Zoom Out", shortcut: "⌘−", action: keys(["ctrl"], "minus") },
+        { text: "Actual Size", shortcut: "⌘0", action: keys(["ctrl"], "0") }
+    ]
+    readonly property var fullScreenItem: { "text": "Enter Full Screen", "shortcut": "⌃⌘F", "action": () => Hypr.toggleFullscreen() }
+
+    readonly property var appMenuSets: ({
+        "org.gnome.TextEditor": {
+            titles: ["File", "Edit", "View"],
+            menus: [
+                [
+                    { text: "New Tab", shortcut: "⌘T", action: keys(["ctrl"], "t") },
+                    { text: "New Window", shortcut: "⌘N", action: keys(["ctrl"], "n") },
+                    { text: "Open…", shortcut: "⌘O", action: keys(["ctrl"], "o") },
+                    { separator: true },
+                    { text: "Close Tab", shortcut: "⌘W", action: keys(["ctrl"], "w") },
+                    { text: "Save", shortcut: "⌘S", action: keys(["ctrl"], "s") },
+                    { text: "Save As…", shortcut: "⇧⌘S", action: keys(["ctrl", "shift"], "s") },
+                    { separator: true },
+                    { text: "Print…", shortcut: "⌘P", action: keys(["ctrl"], "p") }
+                ],
+                stdEdit.concat([
+                    { separator: true },
+                    { text: "Find…", shortcut: "⌘F", action: keys(["ctrl"], "f") },
+                    { text: "Find and Replace…", action: keys(["ctrl"], "h") },
+                    { text: "Go to Line…", shortcut: "⌘I", action: keys(["ctrl"], "i") },
+                    { separator: true },
+                    emojiItem
+                ]),
+                zoomItems.concat([{ separator: true }, fullScreenItem])
+            ]
+        },
+        "firefox": {
+            titles: ["File", "Edit", "View", "History", "Bookmarks"],
+            menus: [
+                [
+                    { text: "New Tab", shortcut: "⌘T", action: keys(["ctrl"], "t") },
+                    { text: "New Window", shortcut: "⌘N", action: keys(["ctrl"], "n") },
+                    { text: "New Private Window", shortcut: "⇧⌘P", action: keys(["ctrl", "shift"], "p") },
+                    { separator: true },
+                    { text: "Open Location…", shortcut: "⌘L", action: keys(["ctrl"], "l") },
+                    { text: "Open File…", shortcut: "⌘O", action: keys(["ctrl"], "o") },
+                    { separator: true },
+                    { text: "Close Tab", shortcut: "⌘W", action: keys(["ctrl"], "w") },
+                    { text: "Save Page As…", shortcut: "⌘S", action: keys(["ctrl"], "s") },
+                    { separator: true },
+                    { text: "Print…", shortcut: "⌘P", action: keys(["ctrl"], "p") }
+                ],
+                stdEdit.concat([
+                    { separator: true },
+                    { text: "Find in Page…", shortcut: "⌘F", action: keys(["ctrl"], "f") },
+                    { separator: true },
+                    emojiItem
+                ]),
+                [
+                    { text: "Reload Page", shortcut: "⌘R", action: keys(["ctrl"], "r") },
+                    { separator: true }
+                ].concat(zoomItems, [{ separator: true }, fullScreenItem]),
+                [
+                    { text: "Back", shortcut: "⌘[", action: keys(["alt"], "Left") },
+                    { text: "Forward", shortcut: "⌘]", action: keys(["alt"], "Right") },
+                    { text: "Home", action: keys(["alt"], "Home") },
+                    { separator: true },
+                    { text: "Reopen Closed Tab", shortcut: "⇧⌘T", action: keys(["ctrl", "shift"], "t") },
+                    { text: "Show All History", shortcut: "⇧⌘H", action: keys(["ctrl", "shift"], "h") }
+                ],
+                [
+                    { text: "Bookmark This Page", shortcut: "⌘D", action: keys(["ctrl"], "d") },
+                    { text: "Show All Bookmarks", shortcut: "⇧⌘O", action: keys(["ctrl", "shift"], "o") }
+                ]
+            ]
+        },
+        "org.gnome.Ptyxis": {
+            titles: ["Shell", "Edit", "View"],
+            menus: [
+                [
+                    { text: "New Tab", shortcut: "⌘T", action: keys(["ctrl"], "t") },
+                    { text: "New Window", shortcut: "⌘N", action: keys(["ctrl"], "n") },
+                    { separator: true },
+                    { text: "Close Tab", shortcut: "⌘W", action: keys(["ctrl"], "w") }
+                ],
+                [
+                    { text: "Copy", shortcut: "⌘C", action: keys(["ctrl"], "c") },
+                    { text: "Paste", shortcut: "⌘V", action: keys(["ctrl"], "v") },
+                    { text: "Select All", shortcut: "⌘A", action: keys(["ctrl"], "a") },
+                    { separator: true },
+                    { text: "Find…", shortcut: "⌘F", action: keys(["ctrl"], "f") }
+                ],
+                zoomItems.concat([{ separator: true }, fullScreenItem])
+            ]
+        },
+        "org.gnome.Calculator": {
+            titles: ["Edit", "View"],
+            menus: [
+                [
+                    { text: "Undo", shortcut: "⌘Z", action: keys(["ctrl"], "z") },
+                    { separator: true },
+                    { text: "Copy", shortcut: "⌘C", action: keys(["ctrl"], "c") },
+                    { text: "Paste", shortcut: "⌘V", action: keys(["ctrl"], "v") }
+                ],
+                [
+                    { text: "Basic", shortcut: "⌘B", action: keys(["ctrl"], "b") },
+                    { text: "Advanced", shortcut: "⌘A", action: keys(["ctrl"], "a") },
+                    { text: "Financial", shortcut: "⌘F", action: keys(["ctrl"], "f") },
+                    { text: "Programming", shortcut: "⌘P", action: keys(["ctrl"], "p") },
+                    { separator: true },
+                    { text: "Keyboard Mode", shortcut: "⌘K", action: keys(["ctrl"], "k") }
+                ]
+            ]
+        }
+    })
+
     // Window menu, macOS Sequoia style: tiling, then the app's windows.
     readonly property var windowMenu: {
         const has = !!Hypr.activeClass;
@@ -237,6 +364,7 @@ Singleton {
             // File, Edit, View, Go, Window, Help
             return [filesMenus[0], appMenus[1], filesMenus[2], filesMenus[3], windowMenu, appMenus[4]][i] ?? [];
         }
+        if (appSet) return appSet.menus.concat([windowMenu, appMenus[4]])[i] ?? [];
         return appMenus[i] ?? [];
     }
 }

@@ -39,10 +39,23 @@ windowcontrols > button.minimize > image { background-color: #FEBC2E; box-shadow
 windowcontrols > button.maximize > image { background-color: #28C840; box-shadow: inset 0 0 0 0.5px #1AAB29; }
 
 windowcontrols:hover > button > image { color: rgba(0, 0, 0, 0.55); }
+
+/* Hyprland doesn't tell apps it can minimize, so GTK disables the yellow
+ * button. Draw it like the others anyway: hypr/foxtail.lua notices clicks on
+ * it (foxtail-minimize-click) and minimizes the window to the Dock. */
+windowcontrols > button.minimize:disabled { opacity: 1; filter: none; }
+windowcontrols > button.minimize:disabled > image {
+    background-color: #FEBC2E;
+    box-shadow: inset 0 0 0 0.5px #DEA123;
+    opacity: 1;
+    filter: none;
+}
+windowcontrols:hover > button.minimize:disabled > image { color: rgba(0, 0, 0, 0.55); }
 windowcontrols > button:active > image { filter: brightness(0.85); }
 
 /* Unfocused windows: grey lights, like macOS. */
-window:backdrop windowcontrols:not(:hover) > button > image {
+window:backdrop windowcontrols:not(:hover) > button > image,
+window:backdrop windowcontrols:not(:hover) > button.minimize:disabled > image {
     background-color: rgba(128, 128, 128, 0.35);
     box-shadow: none;
 }

@@ -108,6 +108,10 @@ unsquashfs -percentage -f -d "$TARGET" "$SFS" | while IFS= read -r pct; do
     if [[ "$pct" =~ ^[0-9]+$ ]]; then progress $((10 + pct * 70 / 100)) "Copying Foxtail…"; fi
 done
 
+# The ISO is built with CachyOS's pacman, which records an %INSTALLED_DB%
+# field Arch's pacman doesn't know (it warns about it for every package).
+/usr/lib/foxtail/fix-pacman-db "$TARGET"
+
 progress 81 "Installing kernel…"
 mkdir -p "$TARGET/boot"
 if [ ! -f "$TARGET/boot/vmlinuz-linux" ]; then

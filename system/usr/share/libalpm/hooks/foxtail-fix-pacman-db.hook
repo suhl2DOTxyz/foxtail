@@ -1,0 +1,14 @@
+# Keep pacman's local database readable by Arch's pacman (see
+# /usr/lib/foxtail/fix-pacman-db). Runs after every transaction; does nothing
+# when there's nothing to fix.
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Operation = Remove
+Type = Package
+Target = *
+
+[Action]
+Description = Tidying the package database...
+When = PostTransaction
+Exec = /usr/lib/foxtail/fix-pacman-db

@@ -12,6 +12,10 @@ import qs.components
 // (⇧/⌃-click to add), drag to move, drag on empty space to select several,
 // double-click to open, Return to rename, ⌫ or ⌘⌫ to move to the Trash.
 // Right-click for New Folder, Get Info, Change Wallpaper, Clean Up, Sort By.
+//
+// Dragging is real drag and drop: icons can be dropped into Files windows,
+// onto folders on the desktop, or onto the Dock's Trash and apps, and files
+// dragged out of Files land on the desktop where they're dropped.
 PanelWindow {
     id: root
 
@@ -24,12 +28,15 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Bottom
     WlrLayershell.namespace: "foxtail-desktop"
     // Clicking the desktop makes it the front "app" (Panels.desktopActive) and
-    // takes the keyboard, so Return, ⌫ and Escape work. It gives the keyboard
-    // back as soon as a window is clicked or activated (hypr/foxtail.lua
-    // reports clicks on windows over IPC: desktopBlur). On-demand focus
-    // can't be used: Hyprland doesn't take it back when you click the window
-    // that was active before.
-    WlrLayershell.keyboardFocus: primary && (Panels.desktopActive || renaming !== "") ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    // gives it the keyboard, so Return, ⌫ and Escape work: it grabs the
+    // keyboard for a moment, then keeps it on demand (exclusive focus would
+    // keep drags from reaching windows). Otherwise it takes no keyboard at
+    // all, so closing a menu doesn't hand the keyboard to the desktop. A click
+    // on a window ends it (hypr/foxtail.lua: desktopBlur).
+    property bool grabKeyboard: false
+    WlrLayershell.keyboardFocus: !primary || !(Panels.desktopActive || renaming !== "") ? WlrKeyboardFocus.None
+                               : grabKeyboard || renaming !== "" ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.OnDemand
+    Timer { id: releaseGrab; interval: 150; onTriggered: root.grabKeyboard = false }
     exclusionMode: ExclusionMode.Normal
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"
@@ -79,8 +86,12 @@ PanelWindow {
         id: store
         path: Settings.dir + "/desktop.json"
         onAdapterUpdated: writeAdapter()
-        onLoaded: Qt.callLater(root.relayout)
-        onLoadFailed: error => { if (error === FileViewError.FileNotFound) writeAdapter(); }
+        onLoaded: { root.positionsLoaded = true; Qt.callLater(root.relayout); }
+        onLoadFailed: error => {
+            root.positionsLoaded = true;
+            if (error === FileViewError.FileNotFound) writeAdapter();
+            Qt.callLater(root.relayout);
+        }
         JsonAdapter {
             id: saved
             property var positions: ({})
@@ -88,6 +99,8 @@ PanelWindow {
     }
 
     property var files: []
+    // Don't lay out (and save) icon positions before the saved ones are read.
+    property bool positionsLoaded: false
     function rebuild() {
         const out = [];
         if (!root.dir) { files = []; return; }
@@ -146,6 +159,7 @@ PanelWindow {
         }
     }
     function relayout() {
+        if (!positionsLoaded) return;
         const order = ordered();
         const free = Settings.desktopSort === "none";
         const pos = free ? (saved.positions ?? {}) : {};
@@ -281,10 +295,137 @@ PanelWindow {
     // This surface sits inside the reserved menu bar / Dock area.
     readonly property point screenOffset: Qt.point(0, Theme.menuBarHeight)
 
-    // ---------------- drag state ----------------
+    // ---------------- drag and drop ----------------
+    // `dragging` is the icon under the pointer when a drag started; the
+    // selection moves with it. dragDx/dragDy follow the pointer while it is
+    // over the desktop.
     property string dragging: ""
     property real dragDx: 0
     property real dragDy: 0
+    property point dragFrom: Qt.point(0, 0)
+    property url dragImage
+
+    function startDrag(name, from) {
+        grabKeyboard = false;      // an exclusive grab would block the drag
+        dragging = name;
+        dragFrom = from;
+        dragDx = 0;
+        dragDy = 0;
+        dragProxy.uris = fileUris(selected[name] ? selectedPaths() : [pathOf(name)]);
+        dragProxy.Drag.imageSource = dragImage;
+        dragProxy.Drag.active = true;
+    }
+    function endDrag() {
+        dragProxy.Drag.active = false;
+        dragging = "";
+        dragDx = 0;
+        dragDy = 0;
+    }
+
+    // The platform drag (Wayland data device): other apps see the files as
+    // text/uri-list, like a drag out of Files.
+    Item {
+        id: dragProxy
+        property var uris: []
+        Drag.dragType: Drag.Automatic
+        // Matched by DropAreas in the shell itself (the Dock); other apps go by
+        // the mime type.
+        Drag.keys: ["text/uri-list"]
+        Drag.supportedActions: Qt.MoveAction | Qt.CopyAction | Qt.LinkAction
+        Drag.proposedAction: Qt.MoveAction
+        Drag.hotSpot: Qt.point(32, 32)
+        Drag.mimeData: ({ "text/uri-list": uris.join("\r\n") + "\r\n" })
+        Drag.onDragFinished: action => {
+            // Nobody took the files: maybe they were let go over the Dock.
+            if (action === Qt.IgnoreAction) {
+                pointerAt.uris = uris;
+                pointerAt.running = true;
+            }
+            root.endDrag();
+        }
+    }
+
+    Process {
+        id: pointerAt
+        property var uris: []
+        command: ["hyprctl", "cursorpos"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const m = /(-?[\d.]+),\s*(-?[\d.]+)/.exec(text);
+                if (m) Panels.fileDragEnded(pointerAt.uris, parseFloat(m[1]) - root.screen.x, parseFloat(m[2]) - root.screen.y);
+            }
+        }
+    }
+
+    // Name of the desktop folder at a point, if any.
+    function folderAt(x, y) {
+        for (const f of files) {
+            if (!f.isDir) continue;
+            const s = slots[f.name];
+            const fx = slotX(s) + 18, fy = slotY(s) + 4;
+            if (x >= fx && x < fx + cellW - 36 && y >= fy && y < fy + cellH - 8) return f.name;
+        }
+        return "";
+    }
+
+    // Moves files (paths) into a folder, like a drop in Files: same disk moves,
+    // another disk copies.
+    function moveInto(dir, paths) {
+        if (!paths.length) return;
+        Quickshell.execDetached(["sh", "-c",
+            'dest=$1; shift; for f; do if [ "$(stat -c %d "$f")" = "$(stat -c %d "$dest")" ]; then gio move -- "$f" "$dest/"; else gio copy -r -- "$f" "$dest/"; fi; done',
+            "sh", dir].concat(paths));
+    }
+
+    DropArea {
+        id: dropZone
+        anchors.fill: parent
+        keys: ["text/uri-list"]
+        property string target: ""      // folder being hovered
+        onPositionChanged: drag => {
+            if (root.dragging) {
+                root.dragDx = drag.x - root.dragFrom.x;
+                root.dragDy = drag.y - root.dragFrom.y;
+            }
+            const f = root.folderAt(drag.x, drag.y);
+            target = f && !(root.dragging && (f === root.dragging || root.selected[f])) ? f : "";
+        }
+        onExited: target = ""
+        onDropped: drop => {
+            const folder = target;
+            target = "";
+            const paths = drop.urls.map(u => decodeURIComponent(String(u).replace(/^file:\/\//, "")));
+            if (folder) {
+                root.moveInto(root.pathOf(folder), paths.filter(p => p !== root.pathOf(folder)));
+                drop.accept(Qt.MoveAction);
+            } else if (root.dragging) {
+                // Rearranging icons on the desktop.
+                root.dragDx = drop.x - root.dragFrom.x;
+                root.dragDy = drop.y - root.dragFrom.y;
+                root.dropAt(root.dragging);
+                drop.accept(Qt.IgnoreAction);
+            } else {
+                // Files dragged in from elsewhere land where they're dropped.
+                const start = root.slotAt(drop.x - root.cellW / 2, drop.y - root.cellH / 2);
+                if (Settings.desktopSort === "none") {
+                    const pos = Object.assign({}, saved.positions ?? {});
+                    const taken = {};
+                    for (const n of Object.keys(root.slots)) taken[root.slots[n]] = true;
+                    let s = start;
+                    for (const p of paths) {
+                        while (taken[s]) s++;
+                        pos[p.split("/").pop()] = s;
+                        taken[s] = true;
+                    }
+                    saved.positions = pos;
+                }
+                root.moveInto(root.dir, paths.filter(p => p.slice(0, p.lastIndexOf("/")) !== root.dir));
+                drop.accept(Qt.MoveAction);
+            }
+            root.dragging = "";
+        }
+    }
+
     function dropAt(name) {
         const from = slots[name];
         const target = slotAt(slotX(from) + dragDx, slotY(from) + dragDy);
@@ -319,9 +460,9 @@ PanelWindow {
         property point start
         property bool banding: false
         onPressed: m => {
-            root.activate();
             if (root.renaming) { root.renaming = ""; }
             if (m.button === Qt.RightButton) {
+                root.activate();
                 root.selected = {};
                 root.contextAt(root.desktopMenu(), m.x, m.y);
                 return;
@@ -346,7 +487,7 @@ PanelWindow {
             }
             root.selected = sel;
         }
-        onReleased: banding = false
+        onReleased: { banding = false; root.activate(); }
     }
 
     Rectangle {
@@ -364,6 +505,10 @@ PanelWindow {
     // the window that was in front (hypr/foxtail.lua checks foxtail_desktop).
     function activate() {
         if (!primary) return;
+        if (!Panels.desktopActive) {
+            grabKeyboard = true;
+            releaseGrab.restart();
+        }
         Panels.desktopActive = true;
         keys.forceActiveFocus();
     }
@@ -444,12 +589,12 @@ PanelWindow {
 
             // Selection: a soft dark rounded square behind the icon.
             Rectangle {
-                visible: cell.isSelected
+                visible: cell.isSelected || dropZone.target === cell.name
                 anchors.horizontalCenter: parent.horizontalCenter
                 y: 2
                 width: 68; height: 68
                 radius: 8
-                color: Qt.rgba(0, 0, 0, 0.22)
+                color: dropZone.target === cell.name ? Qt.rgba(1, 1, 1, 0.35) : Qt.rgba(0, 0, 0, 0.22)
                 border.width: 1
                 border.color: Qt.rgba(1, 1, 1, 0.25)
             }
@@ -535,8 +680,10 @@ PanelWindow {
                 anchors.margins: 6
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
                 property point pressAt
+                // The desktop takes the keyboard on release: changing its keyboard
+                // mode during a press would cancel a drag before it starts.
+                onReleased: if (root.dragging === "") root.activate()
                 onPressed: m => {
-                    root.activate();
                     Panels.closeAll();
                     if (root.renaming && root.renaming !== cell.name) root.renaming = "";
                     if (m.button === Qt.RightButton) {
@@ -548,17 +695,14 @@ PanelWindow {
                     if (add) root.select(cell.name, true);
                     else if (!cell.isSelected) root.select(cell.name, false);
                     pressAt = mapToItem(null, m.x, m.y);
+                    // The picture that follows the pointer if this becomes a drag.
+                    icon.grabToImage(r => root.dragImage = r.url, Qt.size(64, 64));
                 }
                 onPositionChanged: m => {
-                    if (!(pressedButtons & Qt.LeftButton)) return;
+                    if (!(pressedButtons & Qt.LeftButton) || root.dragging !== "") return;
                     const p = mapToItem(null, m.x, m.y);
-                    if (root.dragging === "" && Math.hypot(p.x - pressAt.x, p.y - pressAt.y) < 6) return;
-                    root.dragging = cell.name;
-                    root.dragDx = p.x - pressAt.x;
-                    root.dragDy = p.y - pressAt.y;
-                }
-                onReleased: m => {
-                    if (root.dragging === cell.name) root.dropAt(cell.name);
+                    if (Math.hypot(p.x - pressAt.x, p.y - pressAt.y) < 6) return;
+                    root.startDrag(cell.name, pressAt);
                 }
                 onDoubleClicked: m => {
                     if (m.button === Qt.LeftButton) root.open(root.selectedPaths());

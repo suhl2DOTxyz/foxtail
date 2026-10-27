@@ -62,6 +62,10 @@ Singleton {
         popover = "context";
     }
 
+    // A drag of files from the desktop ended without a taker, at x, y
+    // (screen coordinates); the Dock checks whether it was over one of its items.
+    signal fileDragEnded(var uris, real x, real y)
+
     // Dock ▸ Downloads stack: horizontal center of the icon it opens from.
     property real downloadsX: 0
 

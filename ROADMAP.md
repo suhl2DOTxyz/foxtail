@@ -67,6 +67,7 @@
   - Hot Corners, Emoji & Symbols (⌃⌘Space), submenus, Apple-menu Recent Items, Finder's Go menu and shortcuts in Files
   - Notification Center widgets (clock, batteries), interface sounds and a startup chime, Auto appearance, Dynamic wallpaper
   - System Settings: Menu Bar, Trackpad and Mouse panes, Login Items, Hot Corners, sound effects
+- ✅ **Fewer limitations:** the yellow traffic light minimizes GTK 4 apps; drag and drop between the desktop, Files and the Dock (Trash, Downloads, apps); Finder-style menus for Text Editor, Firefox, Terminal and Calculator; no more pacman "unknown key" warnings
 - [ ] Snapping menu on the green button (GTK draws its own buttons; needs a compositor-side menu)
 - [ ] Custom keyboard shortcuts
 
@@ -91,10 +92,9 @@
 
 ## Known limitations (current)
 - **Liquid Glass refraction uses a snapshot.** Menus, Control Center and Spotlight lens a snapshot of the screen taken just before they open (refreshed when windows change), so moving video behind an open menu won't animate in the glass edges (the frosted middle is live). The Dock lenses the wallpaper.
-- **Desktop items are on the main display only**, and dragging files between the desktop and Files windows isn't supported yet (use copy and paste).
+- **Desktop items are on the main display only.**
 - **Window tiling uses ⌃⌥ instead of Fn⌃** (PC keyboards don't pass the Fn/Globe key to the system).
-- **App menus are generic.** File/Edit/View items send each app's standard shortcuts. Wayland has no global-menu protocol, and GTK4 apps don't export their menus. ⌘ shortcuts themselves work everywhere.
+- **App menus are written by Foxtail, not read from apps.** Files, Text Editor, Firefox, Terminal and Calculator have their own menus; other apps get a generic File/Edit/View set. Wayland has no global-menu protocol, and GTK 4 apps don't export their menus. ⌘ shortcuts themselves work everywhere.
 - **VMs use software rendering.** VirtualBox's 3D driver can't create Qt's EGL surfaces (tested on VirtualBox 7.2), so animations are slower there. Real hardware uses the GPU.
 - **The encryption password prompt is plain text.** GRUB asks for it before the boot splash, and unlocking takes a few seconds (GRUB's decryption is slow).
-- **The yellow (minimize) button is greyed out in GTK apps.** Hyprland doesn't tell apps it can minimize, so GTK disables the button. ⌘M and the Window menu minimize to the Dock.
 - **Installing alongside needs free space already.** Foxtail doesn't shrink existing partitions; make room first (for example with Windows Disk Management).

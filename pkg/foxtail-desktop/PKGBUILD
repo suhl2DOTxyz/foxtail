@@ -66,7 +66,7 @@ package() {
 
     # System integration (session, configs, Firefox defaults, pacman hook)
     cp -a system/. "$d/"
-    chmod 755 "$d/usr/lib/foxtail/os-release"
+    chmod 755 "$d/usr/lib/foxtail/os-release" "$d/usr/lib/foxtail/fix-pacman-db"
     sed -i "s|@VERSION@|$pkgver|g" "$d/usr/lib/foxtail/os-release"
 
     # Per-user defaults for new accounts

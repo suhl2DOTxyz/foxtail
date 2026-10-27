@@ -124,7 +124,10 @@ Singleton {
         for (const m of mods) args.push("-M", m);
         args.push("-k", key);
         for (const m of mods) args.push("-m", m);
-        // Give the compositor a beat to hand focus back to the app after the menu closes.
-        Quickshell.execDetached(["sh", "-c", "sleep 0.08; exec \"$@\"", "wtype"].concat(args));
+        // After the menu closes, give the keyboard back to the app (Hyprland
+        // doesn't when the app's window was active all along), then type.
+        const a = Hyprland.activeToplevel?.address ?? "";
+        const refocus = a ? `hyprctl dispatch 'hl.dsp.focus({ window = "address:${a.startsWith("0x") ? "" : "0x"}${a}" })' >/dev/null; ` : "";
+        Quickshell.execDetached(["sh", "-c", "sleep 0.08; " + refocus + "sleep 0.05; exec \"$@\"", "wtype"].concat(args));
     }
 }

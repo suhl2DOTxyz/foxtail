@@ -1,0 +1,10 @@
+#!/bin/sh
+# fix-pacman-db [root]: remove the %INSTALLED_DB% field from pacman's local
+# database. Some pacman builds (CachyOS's, which builds the Foxtail ISO) write
+# it; Arch's pacman doesn't know it and warns "unknown key" for every package.
+root=${1:-}
+db="$root/var/lib/pacman/local"
+files=$(grep -l '^%INSTALLED_DB%$' "$db"/*/desc 2>/dev/null) || exit 0
+for f in $files; do
+    sed -i '/^%INSTALLED_DB%$/,/^$/d' "$f"
+done

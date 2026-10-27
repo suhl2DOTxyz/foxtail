@@ -1,0 +1,22 @@
+#!/bin/sh
+# foxtail-minimize-click <window-address> <x> <y>
+# Called by hypr/foxtail.lua for a click on the spot where GTK 4 draws the
+# yellow (minimize) traffic light at <x>,<y>. Minimizes the window to the
+# Dock if that spot really shows the yellow button.
+#
+# Four points inside the button are checked, clear of the "−" glyph shown on
+# hover; the mouse pointer (drawn into captures on some setups) can cover at
+# most two of them, so two yellow ones are enough.
+addr=$1; x=$2; y=$3
+[ -n "$addr" ] && [ -n "$y" ] || exit 1
+sleep 0.12   # the click focuses the window first: its lights turn from grey to color
+yellow=0
+for p in "-4 -3" "4 -3" "-4 3" "4 3"; do
+    set -- $p
+    rgb=$(grim -g "$((x + $1)),$((y + $2)) 1x1" -t ppm - 2>/dev/null | tail -c 3 | od -An -tu1)
+    set -- $rgb
+    # #FEBC2E, allowing for blending and color management.
+    [ "${1:-0}" -ge 220 ] && [ "${2:-0}" -ge 150 ] && [ "${2:-0}" -le 215 ] && [ "${3:-255}" -le 110 ] && yellow=$((yellow + 1))
+done
+[ "$yellow" -ge 2 ] || exit 0
+hyprctl dispatch "hl.dsp.window.move({ workspace = \"special:minimized\", follow = false, window = \"address:$addr\" })" >/dev/null

@@ -426,6 +426,30 @@ PanelWindow {
                     }
                 }
 
+                // Files dragged from the desktop and let go over this item:
+                // onto the Trash to trash them, onto Downloads to move them
+                // there, onto an app to open them with it. (Hyprland doesn't
+                // deliver drags to the Dock's layer, so the desktop reports
+                // where its drags end - see Desktop.qml.)
+                Connections {
+                    target: Panels
+                    function onFileDragEnded(uris, x, y) {
+                        const it = cell.modelData;
+                        if (["trash", "app", "downloads"].indexOf(it.kind) < 0) return;
+                        const p = cell.mapToItem(null, 0, 0);
+                        const top = dock.screen.height - dock.height;
+                        if (x < p.x || x >= p.x + cell.width || y < top + p.y - 8 || y >= top + p.y + cell.height + 8) return;
+                        if (it.kind === "trash") {
+                            Quickshell.execDetached(["gio", "trash", "--"].concat(uris));
+                            Sounds.play("trash");
+                        } else if (it.kind === "downloads") {
+                            Quickshell.execDetached(["gio", "move", "--"].concat(uris, [Quickshell.env("HOME") + "/Downloads/"]));
+                        } else {
+                            Quickshell.execDetached(["gtk-launch", it.id].concat(uris));
+                        }
+                    }
+                }
+
                 Connections {
                     target: dock
                     function onAttention(appId) {

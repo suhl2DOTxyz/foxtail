@@ -180,6 +180,7 @@ for _, ns in ipairs({ "menubar", "dock", "popover", "banner", "osd", "launchpad"
 end
 hl.layer_rule({ name = "foxtail-wallpaper-noanim", match = { namespace = "^foxtail-(wallpaper|desktop)$" }, no_anim = true })
 hl.layer_rule({ name = "foxtail-popover-noanim", match = { namespace = "^foxtail-popover$" }, no_anim = true })
+
 hl.layer_rule({ name = "foxtail-launchpad-anim", match = { namespace = "^foxtail-launchpad$" }, animation = "fade" })
 
 ---------------------------------------------------------------- window rules
@@ -285,23 +286,54 @@ local DESKTOP_KEYS = { A = true, I = true, O = true, C = true, ["SHIFT+N"] = tru
 
 -- While the desktop has the keyboard, a click on a window hands it back.
 -- (A global shortcut can't be used here: they aren't sent for mouse binds.)
+-- The topmost window under the pointer: of the windows there, the one
+-- focused most recently (floating windows are raised when focused).
 local function window_under_cursor()
     local c = hl.get_cursor_pos()
     if not c then return nil end
+    local best
     for _, w in ipairs(hl.get_windows()) do
         local ws = w.workspace
         if w.mapped and not w.hidden and ws and not ws.special and ws.visible then
             local x, y = xy(w.at)
             local sw, sh = xy(w.size)
-            if c.x >= x and c.x < x + sw and c.y >= y and c.y < y + sh then return w end
+            if c.x >= x and c.x < x + sw and c.y >= y and c.y < y + sh
+               and (not best or w.focus_history_id < best.focus_history_id) then
+                best = w
+            end
         end
     end
-    return nil
+    return best
 end
+-- The yellow traffic light in GTK 4 apps: GTK draws it disabled (see
+-- theme/gtk-4.0/gtk.css), so its clicks never reach the app. GTK 4 header
+-- bars put it 44px in and 23px down; foxtail-minimize-click checks the pixel
+-- there really is the yellow button before minimizing.
+local MIN_X, MIN_Y, MIN_R = 44, 23, 8
+
 hl.bind("mouse:272", function()
-    if foxtail_desktop and window_under_cursor() then
-        foxtail_desktop = false
-        hl.exec_cmd("foxtail-ipc desktopBlur")
+    local w = window_under_cursor()
+    if w then
+        -- A shell surface (the desktop, a menu) may still hold the keyboard;
+        -- Hyprland doesn't take it back when the clicked window was already
+        -- the active one, so hand it over explicitly.
+        local active = hl.get_active_window()
+        if active and active.address == w.address then
+            hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address }))
+        end
+        if foxtail_desktop then
+            foxtail_desktop = false
+            hl.exec_cmd("foxtail-ipc desktopBlur")
+        end
+    end
+    if w and w.floating and w.fullscreen == 0 and not w.xwayland then
+        local c = hl.get_cursor_pos()
+        local x, y = xy(w.at)
+        local dx, dy = c.x - x - MIN_X, c.y - y - MIN_Y
+        if dx * dx + dy * dy <= MIN_R * MIN_R then
+            hl.exec_cmd(string.format("foxtail-minimize-click %s %d %d", w.address,
+                math.floor(x + MIN_X), math.floor(y + MIN_Y)))
+        end
     end
 end, { non_consuming = true })
 
