@@ -429,5 +429,13 @@
  "as List": "par liste",
  "now": "maintenant",
  "to": "à",
- "⌥⌘8 turns zoom on or off; ⌥⌘= and ⌥⌘- zoom in and out. The zoomed view follows the pointer.": "⌥⌘8 active ou désactive le zoom ; ⌥⌘= et ⌥⌘- zooment et dézooment. La vue agrandie suit le pointeur."
+ "⌥⌘8 turns zoom on or off; ⌥⌘= and ⌥⌘- zoom in and out. The zoomed view follows the pointer.": "⌥⌘8 active ou désactive le zoom ; ⌥⌘= et ⌥⌘- zooment et dézooment. La vue agrandie suit le pointeur.",
+ "Apps": "Apps",
+ "Stop": "Arrêter",
+ "Not Connected": "Non connecté",
+ "On": "Activé",
+ "Off": "Désactivé",
+ "Clear glass": "Transparent",
+ "Not Playing": "Aucune lecture",
+ "Unavailable": "Indisponible"
 }

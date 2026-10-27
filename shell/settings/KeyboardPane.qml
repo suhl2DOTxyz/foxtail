@@ -156,7 +156,7 @@ Column {
                 ["Full screen", "⌃⌘F"],
                 ["Switch desktop", "⌃1 … 9  /  ⌃⌘← →"],
                 ["Move window to desktop", "⌃⇧1 … 9"],
-                ["Launchpad", "F4  /  ⌥⌘L"],
+                ["Apps", "F4  /  ⌥⌘L"],
                 ["Control Center", "⌥⌘C"],
                 ["Files  /  Terminal", "⌥⌘Space  /  ⌥⌘Return"],
                 ["Lock screen", "⌃⌘Q"],

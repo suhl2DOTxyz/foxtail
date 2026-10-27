@@ -64,7 +64,8 @@ hl.config({
     general = {
         gaps_in = 6,
         gaps_out = 12,
-        border_size = 0,
+        -- macOS draws a hairline around every window; see foxtail_appearance().
+        border_size = 1,
         resize_on_border = true,
         extend_border_grab_area = 12,
         layout = "dwindle",
@@ -73,18 +74,22 @@ hl.config({
     },
 
     decoration = {
-        rounding = 16,
-        rounding_power = 3,   -- squircle-ish corners, like macOS
+        -- macOS 27 gives every window the same corner radius (20, the
+        -- Hyprland maximum); the power makes it a continuous, squircle-like curve.
+        rounding = 20,
+        rounding_power = 2.6,
         active_opacity = 1.0,
         inactive_opacity = 1.0,
 
+        -- A deep, soft shadow on the active window and a much lighter one on
+        -- the others, so the active window stands out like in macOS 27.
         shadow = {
             enabled = true,
-            range = 42,
+            range = 56,
             render_power = 3,
-            offset = { 0, 14 },
-            color = "rgba(00000050)",
-            color_inactive = "rgba(00000028)",
+            offset = { 0, 18 },
+            color = "rgba(00000066)",
+            color_inactive = "rgba(00000022)",
         },
 
         blur = {
@@ -163,6 +168,22 @@ hl.animation({ leaf = "border", enabled = false })
 -- Accessibility ▸ Reduce motion: windows and desktops change without animating.
 if foxtail_reduce_motion then
     hl.config({ animations = { enabled = false } })
+end
+
+---------------------------------------------------------------- appearance
+-- Window hairlines follow Light/Dark mode: a faint dark line in Light mode, a
+-- faint light rim in Dark mode, like macOS. foxtail-sync-appearance calls this
+-- (hyprctl eval) when the appearance changes; at startup it reads the setting.
+function foxtail_appearance(dark)
+    hl.config({ general = { col = dark
+        and { active_border = "rgba(ffffff2e)", inactive_border = "rgba(ffffff1a)" }
+        or { active_border = "rgba(00000033)", inactive_border = "rgba(0000001f)" } } })
+end
+do
+    local f = io.open(HOME .. "/.config/foxtail/settings.json", "r")
+    local text = f and f:read("a") or ""
+    if f then f:close() end
+    foxtail_appearance(text:match('"darkMode"%s*:%s*true') ~= nil)
 end
 
 ---------------------------------------------------------------- gestures
@@ -556,7 +577,7 @@ for key, where in pairs({ left = "left", right = "right", up = "top", down = "bo
 end
 hl.bind(CMD .. " + space", ipc("spotlight"), { desc = "Spotlight" })
 hl.bind(CMD .. " + ALT + space", hl.dsp.exec_cmd("nautilus --new-window"), { desc = "Files" })
-hl.bind("F4", ipc("launchpad"), { desc = "Launchpad" })
+hl.bind("F4", ipc("launchpad"), { desc = "Apps" })
 hl.bind("F11", function() foxtail_show_desktop() end, { desc = "Show Desktop" })
 hl.bind(CMD .. " + F3", function() foxtail_show_desktop() end)
 hl.bind(CMD .. " + ALT + L", function()                    -- Files: Downloads (Finder's ⌥⌘L)

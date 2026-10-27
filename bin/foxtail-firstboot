@@ -19,13 +19,25 @@ if [ ! -f "$HOME/.config/foxtail/.favorites-done" ]; then
     touch "$HOME/.config/foxtail/.favorites-done"
 fi
 
+# macOS-sized text (13px, Inter 10pt) for apps. Accounts made before 1.8 had
+# 11pt; move them over once, unless they picked a font of their own.
+if [ ! -f "$HOME/.config/foxtail/.font13-done" ]; then
+    for k in font-name document-font-name; do
+        [ "$(gsettings get org.gnome.desktop.interface $k)" = "'Inter 11'" ] &&
+            gsettings set org.gnome.desktop.interface $k 'Inter 10'
+    done
+    [ "$(gsettings get org.gnome.desktop.interface monospace-font-name)" = "'JetBrains Mono 11'" ] &&
+        gsettings set org.gnome.desktop.interface monospace-font-name 'JetBrains Mono 10'
+    touch "$HOME/.config/foxtail/.font13-done"
+fi
+
 [ -f "$stamp" ] && exit 0
 
 # Window controls on the left, macOS order.
 gsettings set org.gnome.desktop.wm.preferences button-layout 'close,minimize,maximize:'
-gsettings set org.gnome.desktop.interface font-name 'Inter 11'
-gsettings set org.gnome.desktop.interface document-font-name 'Inter 11'
-gsettings set org.gnome.desktop.interface monospace-font-name 'JetBrains Mono 11'
+gsettings set org.gnome.desktop.interface font-name 'Inter 10'
+gsettings set org.gnome.desktop.interface document-font-name 'Inter 10'
+gsettings set org.gnome.desktop.interface monospace-font-name 'JetBrains Mono 10'
 gsettings set org.gnome.desktop.interface icon-theme 'WhiteSur'
 gsettings set org.gnome.desktop.interface cursor-theme 'macOS'
 gsettings set org.gnome.desktop.interface cursor-size 24

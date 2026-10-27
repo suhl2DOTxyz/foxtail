@@ -11,6 +11,10 @@ Singleton {
 
     property alias liquidGlass: adapter.liquidGlass
     property alias glassTinted: adapter.glassTinted
+    // Liquid Glass transparency, macOS 27 style: 0 = clearest, 1 = fully
+    // tinted. Accounts from before the slider keep their Clear/Tinted choice.
+    property alias glassTint: adapter.glassTint
+    readonly property real glassTintLevel: adapter.glassTint >= 0 ? adapter.glassTint : (adapter.glassTinted ? 1 : 0.25)
     property alias darkMode: adapter.darkMode
     property alias appearanceAuto: adapter.appearanceAuto
     property alias accent: adapter.accent
@@ -90,7 +94,8 @@ Singleton {
         JsonAdapter {
             id: adapter
             property bool liquidGlass: true
-            property bool glassTinted: false   // Liquid Glass "Tinted": more opaque, more contrast (macOS 26.1)
+            property bool glassTinted: false   // Liquid Glass "Tinted" (macOS 26.1); superseded by glassTint
+            property real glassTint: -1        // 0..1 transparency slider (macOS 27); -1 = not set yet
             property bool darkMode: false
             property bool appearanceAuto: false   // Light by day, Dark from 7 PM to 7 AM
             property string accent: "#FF7A1A"
@@ -106,7 +111,7 @@ Singleton {
                 "foxtail-settings"
             ]
             property real dockIconSize: 54
-            property bool dockMagnification: true
+            property bool dockMagnification: false   // off by default, as on macOS
             property real dockMagnifySize: 1.75
             property bool dockAutoHide: false
             property bool showRecents: true

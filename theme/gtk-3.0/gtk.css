@@ -34,3 +34,17 @@ headerbar:backdrop button.titlebutton {
 }
 
 selection, *:selected { background-color: @accent_bg_color; }
+
+/* macOS menus: rounded, compact, the hovered item filled with the accent
+ * colour in white text. */
+menu, .menu, .context-menu { border-radius: 10px; padding: 5px; }
+menu menuitem, .menu menuitem, .context-menu menuitem {
+    min-height: 22px;
+    padding: 0 10px;
+    border-radius: 6px;
+}
+menu menuitem:hover, .menu menuitem:hover, .context-menu menuitem:hover {
+    background-color: @accent_bg_color;
+    color: #FFFFFF;
+}
+menu menuitem:hover accelerator { color: rgba(255, 255, 255, 0.85); }

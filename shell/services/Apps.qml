@@ -12,7 +12,8 @@ Singleton {
     readonly property var hidden: ["qvidcap", "qv4l2", "lstopo", "htop", "vim", "gvim",
                                    "gnome-system-monitor-kde", "avahi-discover", "bssh", "bvnc",
                                    "cmake-gui", "nm-connection-editor", "xgps", "xgpsspeed",
-                                   "system-config-printer", "cups"]
+                                   "system-config-printer", "cups",
+                                   "qt5ct", "qt6ct"]   // Qt apps follow System Settings ▸ Appearance
 
     // The names macOS uses for the equivalent apps (English only: other
     // languages keep each app's own translated name).

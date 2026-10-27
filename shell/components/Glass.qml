@@ -28,12 +28,13 @@ Item {
     // is "thicker", as Apple puts it: deeper lensing, softer light).
     property real bezel: Math.min(22, Math.min(width, height) * 0.36)
     property real thickness: 1.6
-    // How far, at most, the rim reaches inward for what it shows (px).
-    property real refraction: Math.min(16, bezel * 0.75)
+    // How far, at most, the rim reaches inward for what it shows (px). Kept
+    // modest: macOS 27 made refraction gentler and more uniform than Tahoe's.
+    property real refraction: Math.min(9, bezel * 0.45)
     property real dispersion: 0.5
     // How clear the lens is right at the lip (it frosts toward the middle).
-    // "Tinted" glass (Appearance settings) is frostier.
-    property real clarity: Settings.glassTinted ? 0.45 : 0.8
+    // More tint (the Appearance slider) makes it frostier.
+    property real clarity: 0.85 - 0.45 * Settings.glassTintLevel
     // How strongly the lensed rim covers the compositor's live blur.
     property real rimOpacity: 0.9
     // Brightness of the backdrop as seen by the viewer; lower it when the
@@ -152,7 +153,7 @@ Item {
         property real rimOpacity: root.rimOpacity
         property real exposure: root.exposure
         property real adapt: root.adapt
-        property real contrast: Settings.glassTinted ? 1 : 0
+        property real contrast: Settings.glassTintLevel
         property real materialize: root.materialize
         property real clarity: root.clarity
         property vector3d press: Qt.vector3d(root.pressPoint.x, root.pressPoint.y, root.glow)

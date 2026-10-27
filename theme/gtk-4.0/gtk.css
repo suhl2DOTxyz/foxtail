@@ -1,16 +1,102 @@
-/* Foxtail: GTK 4 / libadwaita tweaks, installed to
+/* Foxtail: GTK 4 / libadwaita restyle, installed to
  * /usr/share/foxtail/gtk-4.0/foxtail.css and imported by each user's
  * ~/.config/gtk-4.0/gtk.css (with the accent from foxtail-accent.css).
- * Window controls become macOS traffic lights. */
+ *
+ * Makes libadwaita apps look like macOS 27 apps: unified toolbars with glass
+ * capsule buttons, an edge-to-edge shaded sidebar with accent-coloured icons,
+ * accent-highlighted menus, macOS-sized controls and traffic lights.
+ * Sizes assume the 13px system font (Inter 10pt). */
 
+/* ------------------------------------------------------------------ colors */
+:root {
+    --window-bg-color: #FFFFFF;
+    --window-fg-color: rgba(0, 0, 0, 0.85);
+    --view-bg-color: #FFFFFF;
+    --view-fg-color: rgba(0, 0, 0, 0.85);
+    --headerbar-bg-color: #FFFFFF;
+    --headerbar-fg-color: rgba(0, 0, 0, 0.85);
+    --headerbar-backdrop-color: #FFFFFF;
+    --headerbar-shade-color: rgba(0, 0, 0, 0.07);
+    --headerbar-border-color: rgba(0, 0, 0, 0.85);
+    --sidebar-bg-color: #EEEEF0;
+    --sidebar-fg-color: rgba(0, 0, 0, 0.85);
+    --sidebar-backdrop-color: #F4F4F5;
+    --sidebar-shade-color: rgba(0, 0, 0, 0.06);
+    --sidebar-border-color: rgba(0, 0, 0, 0.08);
+    --secondary-sidebar-bg-color: #F6F6F7;
+    --secondary-sidebar-backdrop-color: #F9F9FA;
+    --card-bg-color: #FFFFFF;
+    --dialog-bg-color: #F5F5F6;
+    --popover-bg-color: rgba(246, 246, 247, 0.97);
+    --popover-fg-color: rgba(0, 0, 0, 0.85);
+    --thumbnail-bg-color: #FFFFFF;
+    --border-color: rgba(0, 0, 0, 0.10);
+
+    /* Foxtail-only helpers */
+    --fx-glass: #FFFFFF;
+    --fx-glass-hover: #F3F3F4;
+    --fx-glass-active: #E6E6E8;
+    --fx-glass-ring: rgba(0, 0, 0, 0.09);
+    --fx-glass-shadow: rgba(0, 0, 0, 0.10);
+    --fx-control: #FFFFFF;
+    --fx-field: #FFFFFF;
+    --fx-field-ring: rgba(0, 0, 0, 0.14);
+    --fx-track: rgba(0, 0, 0, 0.10);
+    --fx-select: rgba(0, 0, 0, 0.09);
+    --fx-row-alt: rgba(0, 0, 0, 0.028);
+    --fx-tooltip: #F2F2F3;
+    --fx-tooltip-fg: rgba(0, 0, 0, 0.85);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --window-bg-color: #1E1E1E;
+        --window-fg-color: rgba(255, 255, 255, 0.86);
+        --view-bg-color: #1E1E1E;
+        --view-fg-color: rgba(255, 255, 255, 0.86);
+        --headerbar-bg-color: #1E1E1E;
+        --headerbar-fg-color: rgba(255, 255, 255, 0.86);
+        --headerbar-backdrop-color: #1E1E1E;
+        --headerbar-shade-color: rgba(0, 0, 0, 0.36);
+        --sidebar-bg-color: #29292B;
+        --sidebar-fg-color: rgba(255, 255, 255, 0.86);
+        --sidebar-backdrop-color: #262628;
+        --sidebar-shade-color: rgba(0, 0, 0, 0.25);
+        --sidebar-border-color: rgba(0, 0, 0, 0.45);
+        --secondary-sidebar-bg-color: #242426;
+        --secondary-sidebar-backdrop-color: #222224;
+        --card-bg-color: #2A2A2C;
+        --dialog-bg-color: #262628;
+        --popover-bg-color: rgba(40, 40, 42, 0.97);
+        --popover-fg-color: rgba(255, 255, 255, 0.88);
+        --thumbnail-bg-color: #2A2A2C;
+        --border-color: rgba(255, 255, 255, 0.10);
+
+        --fx-glass: rgba(255, 255, 255, 0.09);
+        --fx-glass-hover: rgba(255, 255, 255, 0.14);
+        --fx-glass-active: rgba(255, 255, 255, 0.20);
+        --fx-glass-ring: rgba(255, 255, 255, 0.10);
+        --fx-glass-shadow: rgba(0, 0, 0, 0.40);
+        --fx-control: rgba(255, 255, 255, 0.16);
+        --fx-field: rgba(255, 255, 255, 0.05);
+        --fx-field-ring: rgba(255, 255, 255, 0.14);
+        --fx-track: rgba(255, 255, 255, 0.14);
+        --fx-select: rgba(255, 255, 255, 0.11);
+        --fx-row-alt: rgba(255, 255, 255, 0.035);
+        --fx-tooltip: #2E2E30;
+        --fx-tooltip-fg: rgba(255, 255, 255, 0.88);
+    }
+}
+
+/* -------------------------------------------------------- traffic lights */
 windowcontrols {
     border-spacing: 8px;
 }
 
 /* macOS spacing: a little in from the window edge, and a clear gap before
  * the first header-bar button or title. */
-windowcontrols.start { margin-left: 12px; margin-right: 6px; }
-windowcontrols.end { margin-right: 12px; margin-left: 6px; }
+windowcontrols.start { margin-left: 12px; margin-right: 8px; }
+windowcontrols.end { margin-right: 12px; margin-left: 8px; }
 
 windowcontrols > button {
     min-width: 12px;
@@ -22,21 +108,24 @@ windowcontrols > button {
     border: none;
 }
 
+/* macOS 27 gives the lights a glassy, Aqua-like shading: a soft highlight
+ * at the top over the flat colour. */
 windowcontrols > button > image {
     min-width: 12px;
     min-height: 12px;
     padding: 0;
     border-radius: 9999px;
     background-color: #D0D0D2;
+    background-image: radial-gradient(ellipse 75% 55% at 50% 22%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 70%);
     box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.12);
     color: transparent;
     -gtk-icon-size: 8px;
     transition: color 120ms ease;
 }
 
-windowcontrols > button.close > image { background-color: #FF5F57; box-shadow: inset 0 0 0 0.5px #E0443E; }
-windowcontrols > button.minimize > image { background-color: #FEBC2E; box-shadow: inset 0 0 0 0.5px #DEA123; }
-windowcontrols > button.maximize > image { background-color: #28C840; box-shadow: inset 0 0 0 0.5px #1AAB29; }
+windowcontrols > button.close > image { background-color: #FF5F57; box-shadow: inset 0 0 0 0.5px #E0443E, inset 0 -1px 1px rgba(180, 30, 20, 0.25); }
+windowcontrols > button.minimize > image { background-color: #FEBC2E; box-shadow: inset 0 0 0 0.5px #DEA123, inset 0 -1px 1px rgba(170, 110, 0, 0.25); }
+windowcontrols > button.maximize > image { background-color: #28C840; box-shadow: inset 0 0 0 0.5px #1AAB29, inset 0 -1px 1px rgba(0, 110, 20, 0.25); }
 
 windowcontrols:hover > button > image { color: rgba(0, 0, 0, 0.55); }
 
@@ -46,7 +135,7 @@ windowcontrols:hover > button > image { color: rgba(0, 0, 0, 0.55); }
 windowcontrols > button.minimize:disabled { opacity: 1; filter: none; }
 windowcontrols > button.minimize:disabled > image {
     background-color: #FEBC2E;
-    box-shadow: inset 0 0 0 0.5px #DEA123;
+    box-shadow: inset 0 0 0 0.5px #DEA123, inset 0 -1px 1px rgba(170, 110, 0, 0.25);
     opacity: 1;
     filter: none;
 }
@@ -56,9 +145,304 @@ windowcontrols > button:active > image { filter: brightness(0.85); }
 /* Unfocused windows: grey lights, like macOS. */
 window:backdrop windowcontrols:not(:hover) > button > image,
 window:backdrop windowcontrols:not(:hover) > button.minimize:disabled > image {
-    background-color: rgba(128, 128, 128, 0.35);
+    background-color: rgba(128, 128, 128, 0.32);
+    background-image: none;
+    box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.06);
+}
+
+/* ----------------------------------------------------------------- toolbar */
+/* A unified macOS toolbar: taller, same colour as the window, title in
+ * semibold 13px, and every button a glass capsule. */
+headerbar {
+    min-height: 52px;
+    padding: 0 8px;
+    box-shadow: none;
+}
+headerbar .title { font-weight: 700; font-size: 13px; }
+headerbar .subtitle { font-size: 11px; opacity: 0.55; }
+
+headerbar button:not(.titlebutton):not(.suggested-action):not(.destructive-action),
+headerbar menubutton > button,
+headerbar splitbutton > button,
+headerbar splitbutton > menubutton > button,
+.toolbar button:not(.suggested-action):not(.destructive-action),
+toolbarview > .bottom-bar button:not(.suggested-action):not(.destructive-action) {
+    min-height: 30px;
+    min-width: 30px;
+    padding: 0 7px;
+    border-radius: 9999px;
+    background-color: var(--fx-glass);
+    box-shadow: 0 0 0 0.5px var(--fx-glass-ring), 0 1px 3px var(--fx-glass-shadow);
+    transition: background-color 120ms ease;
+}
+headerbar button:not(.titlebutton):hover,
+headerbar menubutton > button:hover,
+.toolbar button:hover { background-color: var(--fx-glass-hover); }
+headerbar button:not(.titlebutton):active,
+headerbar button:not(.titlebutton):checked,
+headerbar menubutton > button:checked,
+.toolbar button:active { background-color: var(--fx-glass-active); }
+headerbar button:disabled { box-shadow: 0 0 0 0.5px var(--fx-glass-ring); }
+
+/* ...but not the traffic lights (as specific as the capsule rule above). */
+headerbar windowcontrols > button:not(.titlebutton):not(.suggested-action):not(.destructive-action),
+headerbar windowcontrols > button:not(.titlebutton):not(.suggested-action):not(.destructive-action):hover,
+headerbar windowcontrols > button:not(.titlebutton):not(.suggested-action):not(.destructive-action):active {
+    min-width: 12px;
+    min-height: 12px;
+    padding: 0;
+    background: none;
     box-shadow: none;
 }
 
-/* Slightly softer, rounder controls overall. */
-button.pill, button.suggested-action { border-radius: 9999px; }
+/* Grouped toolbar buttons share one capsule, like macOS segmented items. */
+headerbar .linked,
+headerbar splitbutton {
+    border-radius: 9999px;
+    background-color: var(--fx-glass);
+    box-shadow: 0 0 0 0.5px var(--fx-glass-ring), 0 1px 3px var(--fx-glass-shadow);
+}
+headerbar .linked > button,
+headerbar .linked > menubutton > button,
+headerbar splitbutton > button,
+headerbar splitbutton > menubutton > button {
+    background-color: transparent;
+    box-shadow: none;
+}
+headerbar .linked > button:hover,
+headerbar .linked > menubutton > button:hover,
+headerbar splitbutton > button:hover,
+headerbar splitbutton > menubutton > button:hover { background-color: var(--fx-glass-hover); }
+headerbar splitbutton > separator { background: none; }
+
+/* Buttons inside a toolbar's search or path entry stay plain. */
+headerbar entry button,
+headerbar .path-bar button,
+headerbar .linked > entry { box-shadow: none; }
+
+/* The toolbar draws a hairline only once content scrolls under it. */
+toolbarview > .top-bar.raised,
+toolbarview > .top-bar.raised headerbar { box-shadow: 0 1px var(--headerbar-shade-color); }
+
+/* ----------------------------------------------------------------- sidebar */
+/* macOS 27: the sidebar is an edge-to-edge shaded column again, with
+ * coloured icons. */
+.sidebar-pane,
+.navigation-sidebar,
+placessidebar,
+.sidebar-pane headerbar,
+.sidebar-pane toolbarview { background-color: var(--sidebar-bg-color); }
+.sidebar-pane:backdrop,
+.sidebar-pane:backdrop headerbar { background-color: var(--sidebar-backdrop-color); }
+
+.navigation-sidebar { padding: 4px 10px; }
+.navigation-sidebar > row,
+.navigation-sidebar > listview > row,
+placessidebar row {
+    min-height: 28px;
+    margin: 0;
+    padding: 0 8px;
+    border-radius: 7px;
+    font-size: 13px;
+}
+.navigation-sidebar > row image,
+.navigation-sidebar row image,
+placessidebar row image { color: var(--accent-bg-color); -gtk-icon-size: 16px; }
+.navigation-sidebar > row:selected,
+.navigation-sidebar row:selected,
+placessidebar row:selected {
+    background-color: var(--fx-select);
+    color: inherit;
+}
+.navigation-sidebar > separator,
+.navigation-sidebar separator { margin: 6px 8px; background: none; min-height: 6px; }
+.navigation-sidebar .heading,
+.navigation-sidebar .dim-label.heading { font-size: 11px; font-weight: 700; opacity: 0.5; }
+
+/* ------------------------------------------------------------------- menus */
+/* macOS menus: rounded panel, compact rows, and the hovered item filled with
+ * the accent colour in white text. */
+popover > contents,
+popover.menu > contents {
+    border-radius: 12px;
+    padding: 5px;
+    box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.22), 0 10px 30px rgba(0, 0, 0, 0.22);
+}
+popover.menu > contents { min-width: 180px; }
+popover.menu modelbutton,
+popover.menu row,
+popover.menu .menu-item {
+    min-height: 24px;
+    padding: 0 10px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+popover.menu modelbutton:hover,
+popover.menu modelbutton:focus-visible,
+popover.menu modelbutton:selected,
+popover.menu row:hover,
+popover.menu row:selected {
+    background-color: var(--accent-bg-color);
+    color: var(--accent-fg-color);
+}
+popover.menu modelbutton:hover accelerator,
+popover.menu modelbutton:selected accelerator { color: var(--accent-fg-color); opacity: 0.85; }
+popover.menu modelbutton:disabled { color: alpha(currentColor, 0.35); }
+popover.menu separator { margin: 5px 10px; }
+popover.menu accelerator { opacity: 0.5; margin-left: 20px; }
+
+/* ----------------------------------------------------------------- buttons */
+/* macOS 27 push buttons: capsules, white with a hairline and soft shadow;
+ * the default (suggested) button is filled with the accent colour. */
+button:not(.flat):not(.titlebutton):not(.image-button):not(.circular):not(.sidebar-button) {
+    border-radius: 9999px;
+}
+.dialog-action-area button,
+.response-area button,
+button.text-button:not(.flat) {
+    min-height: 28px;
+    padding: 0 14px;
+}
+button.text-button:not(.flat):not(.suggested-action):not(.destructive-action):not(.opaque),
+.response-area button:not(.suggested):not(.destructive) {
+    background-color: var(--fx-control);
+    box-shadow: 0 0 0 0.5px var(--fx-glass-ring), 0 1px 2px var(--fx-glass-shadow);
+}
+button.suggested-action,
+.response-area button.suggested {
+    background-color: var(--accent-bg-color);
+    color: var(--accent-fg-color);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+button.pill { border-radius: 9999px; }
+
+/* ------------------------------------------------------------ text fields */
+entry,
+spinbutton,
+.entry {
+    min-height: 28px;
+    border-radius: 8px;
+    background-color: var(--fx-field);
+    box-shadow: inset 0 0 0 0.5px var(--fx-field-ring), inset 0 0.5px 1px rgba(0, 0, 0, 0.06);
+}
+entry.search,
+searchbar entry,
+headerbar entry,
+.path-bar-box,
+.search-entry {
+    border-radius: 9999px;
+}
+entry:focus-within,
+spinbutton:focus-within {
+    outline: 3px solid alpha(var(--accent-color), 0.45);
+    outline-offset: 0;
+    box-shadow: inset 0 0 0 0.5px var(--accent-color);
+}
+
+/* ---------------------------------------------------------------- switches */
+/* macOS-size switch: 38 x 22, white knob with a shadow, accent when on. */
+switch {
+    min-width: 36px;
+    min-height: 20px;
+    padding: 1px;
+    border-radius: 9999px;
+    background-color: var(--fx-track);
+    box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.06);
+}
+switch:checked { background-color: var(--accent-bg-color); }
+switch > slider {
+    min-width: 20px;
+    min-height: 20px;
+    margin: 0;
+    border-radius: 9999px;
+    background-color: #FFFFFF;
+    box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.10), 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+switch > image { opacity: 0; }
+
+/* ------------------------------------------------- checkboxes and radios */
+check, radio {
+    min-width: 14px;
+    min-height: 14px;
+    padding: 1px;
+    background-color: var(--fx-control);
+    box-shadow: inset 0 0 0 0.5px var(--fx-field-ring), 0 0.5px 1px rgba(0, 0, 0, 0.08);
+}
+check { border-radius: 4px; }
+radio { border-radius: 9999px; }
+check:checked, check:indeterminate, radio:checked {
+    background-color: var(--accent-bg-color);
+    color: var(--accent-fg-color);
+    box-shadow: none;
+}
+
+/* ------------------------------------------------------------------ sliders */
+/* A thin track and a glass pill knob, like macOS 26 and later. */
+scale > trough {
+    min-height: 4px;
+    border-radius: 9999px;
+    background-color: var(--fx-track);
+}
+scale.vertical > trough { min-width: 4px; }
+scale > trough > highlight {
+    border-radius: 9999px;
+    background-color: var(--accent-bg-color);
+}
+scale > trough > slider {
+    min-width: 24px;
+    min-height: 18px;
+    margin: -8px -4px;
+    border-radius: 9999px;
+    background-color: #FFFFFF;
+    box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.22);
+}
+
+/* -------------------------------------------------------- lists and grids */
+/* Finder: list views have alternating rows, and the selection is the accent
+ * colour with white text. */
+columnview > listview > row:nth-child(even) { background-color: var(--fx-row-alt); }
+columnview > listview > row:selected,
+columnview > listview > row:selected:hover {
+    background-color: var(--accent-bg-color);
+    color: var(--accent-fg-color);
+}
+columnview > listview > row { border-radius: 6px; }
+columnview > listview { padding: 0 8px; }
+
+/* Finder icon view: a soft grey rounded plate behind the selected item. */
+gridview > child { border-radius: 10px; }
+gridview > child:selected,
+gridview > child:selected:hover {
+    background-color: var(--fx-select);
+    color: inherit;
+}
+gridview > child:selected label { color: inherit; background: none; }
+
+/* ---------------------------------------------------------------- tooltips */
+tooltip {
+    border-radius: 7px;
+    padding: 3px 7px;
+    background-color: var(--fx-tooltip);
+    color: var(--fx-tooltip-fg);
+    box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.18), 0 3px 10px rgba(0, 0, 0, 0.18);
+    font-size: 11px;
+}
+tooltip > box { color: var(--fx-tooltip-fg); }
+
+/* ----------------------------------------------------------------- dialogs */
+/* Alerts: rounder, with a soft shadow and macOS-sized text. */
+dialog.alert floating-sheet > sheet,
+dialog.alert > sheet,
+window.dialog.message,
+dialog.alert .dialog-contents { border-radius: 22px; }
+dialog.alert .heading,
+dialog.alert .title-2 { font-size: 13px; font-weight: 700; }
+dialog.alert .body { font-size: 11px; }
+
+/* -------------------------------------------------------------------- misc */
+tabbar .box { background-color: var(--window-bg-color); }
+tabbar tab { border-radius: 9999px; min-height: 26px; }
+tabbar tab:selected { background-color: var(--fx-glass); box-shadow: 0 0 0 0.5px var(--fx-glass-ring), 0 1px 3px var(--fx-glass-shadow); }
+.boxed-list,
+.card { border-radius: 10px; }
+.boxed-list > row { min-height: 40px; }

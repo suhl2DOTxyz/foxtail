@@ -366,7 +366,7 @@ PanelWindow {
                         anchors.centerIn: parent
                         text: cell.modelData.kind === "trash" ? I18n.tr("Trash")
                             : cell.modelData.kind === "downloads" ? I18n.tr("Downloads")
-                            : cell.modelData.kind === "launchpad" ? I18n.tr("Launchpad")
+                            : cell.modelData.kind === "launchpad" ? I18n.tr("Apps")
                             : cell.modelData.kind === "min" ? (cell.modelData.toplevel.title || "Window")
                             : Apps.nameFor(cell.modelData.id)
                     }

@@ -41,28 +41,31 @@ FloatingWindow {
         width: 220
         height: parent.height
 
-        // Tahoe: the sidebar is its own floating glass card inside the window.
+        // macOS 27: the sidebar is an edge-to-edge shaded column again (Tahoe
+        // floated it as an inset card), rounded only by the window's corners.
         Rectangle {
             anchors.fill: parent
-            anchors.margins: Theme.liquid ? 8 : 0
-            radius: Theme.liquid ? 20 : 12
-            color: Theme.dark ? Qt.rgba(1, 1, 1, Theme.liquid ? 0.07 : 0.05) : Qt.rgba(0, 0, 0, Theme.liquid ? 0.045 : 0.035)
-            border.color: Theme.liquid ? (Theme.dark ? Qt.rgba(1, 1, 1, 0.10) : Qt.rgba(1, 1, 1, 0.9)) : "transparent"
-            Rectangle {   // soft lift
-                visible: Theme.liquid
-                z: -1
-                anchors.fill: parent
-                anchors.topMargin: 2
-                radius: parent.radius
-                color: Qt.rgba(0, 0, 0, Theme.dark ? 0.25 : 0.05)
+            radius: Theme.windowRadius
+            color: Theme.dark ? "#29292B" : "#EEEEF0"
+            Rectangle {   // square off the corners on the content side
+                anchors.right: parent.right
+                width: parent.radius
+                height: parent.height
+                color: parent.color
+            }
+            Rectangle {   // hairline between sidebar and content
+                anchors.right: parent.right
+                width: 1
+                height: parent.height
+                color: Theme.dark ? Qt.rgba(0, 0, 0, 0.45) : Qt.rgba(0, 0, 0, 0.08)
             }
         }
 
         MouseArea { anchors.fill: parent; onPressed: win.startMove() }
 
         TrafficLights {
-            x: Theme.liquid ? 22 : 18
-            y: Theme.liquid ? 22 : 18
+            x: 18
+            y: 20
             onClose: Panels.settings = false
             onMinimize: Panels.settings = false
             onZoom: Hypr.dispatch("hl.dsp.window.fullscreen({ mode = \"maximized\" })")
@@ -149,9 +152,10 @@ FloatingWindow {
                             anchors.fill: parent
                             anchors.leftMargin: 10
                             anchors.rightMargin: 10
-                            radius: Theme.liquid ? height / 2 : 6
-                            color: navItem.selected
-                                ? (Theme.liquid ? (Theme.dark ? Qt.rgba(1, 1, 1, 0.14) : Qt.rgba(0, 0, 0, 0.08)) : Theme.accent)
+                            // macOS System Settings: the selected pane is filled
+                            // with the accent colour, in white text.
+                            radius: 8
+                            color: navItem.selected ? Theme.accent
                                 : (navMouse.containsMouse ? Theme.hover : "transparent")
                         }
 
@@ -170,8 +174,7 @@ FloatingWindow {
                             anchors.leftMargin: 8
                             anchors.verticalCenter: parent.verticalCenter
                             text: navItem.modelData.name ?? ""
-                            color: navItem.selected && !Theme.liquid ? "white" : Theme.text
-                            font.weight: navItem.selected && Theme.liquid ? Font.DemiBold : Font.Normal
+                            color: navItem.selected ? "white" : Theme.text
                         }
                         MouseArea {
                             id: navMouse
@@ -664,11 +667,18 @@ FloatingWindow {
                     label: I18n.tr("Glass style")
                     sub: I18n.tr("Clear shows more of what's behind the glass. Tinted is more opaque, with more contrast.")
                     opacity: Settings.liquidGlass ? 1 : 0.4
-                    Segmented {
-                        enabled: Settings.liquidGlass
-                        options: [{ text: I18n.tr("Clear"), value: false }, { text: I18n.tr("Tinted"), value: true }]
-                        value: Settings.glassTinted
-                        onPicked: v => Settings.glassTinted = v
+                    Row {
+                        spacing: 10
+                        // "Clear" as in clear glass (I18n "Clear" means erase).
+                        Label { text: I18n.english ? "Clear" : I18n.tr("Clear glass"); font.pixelSize: Theme.px(11); color: Theme.textSecondary; anchors.verticalCenter: parent.verticalCenter }
+                        PlainSlider {
+                            width: 150
+                            anchors.verticalCenter: parent.verticalCenter
+                            enabled: Settings.liquidGlass
+                            value: Settings.glassTintLevel
+                            onMoved: v => Settings.glassTint = v
+                        }
+                        Label { text: I18n.tr("Tinted"); font.pixelSize: Theme.px(11); color: Theme.textSecondary; anchors.verticalCenter: parent.verticalCenter }
                     }
                 }
                 SettingRow {
@@ -759,7 +769,7 @@ FloatingWindow {
                         Choice {
                             menuWidth: 200
                             options: [["", "—"], ["mission", "Mission Control"], ["desktop", "Desktop"],
-                                      ["notifications", "Notification Center"], ["launchpad", "Launchpad"],
+                                      ["notifications", "Notification Center"], ["launchpad", "Apps"],
                                       ["lock", "Lock Screen"], ["sleep", "Put Display to Sleep"]]
                             value: Settings.hotCorners[modelData[0]] ?? ""
                             onPicked: v => {

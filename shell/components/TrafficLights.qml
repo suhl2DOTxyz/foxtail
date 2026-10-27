@@ -31,6 +31,19 @@ Row {
             border.width: 0.5
             border.color: root.active || hover.hovered ? modelData.b : "transparent"
 
+            // macOS 27's glassy shading: a soft highlight across the top.
+            Rectangle {
+                visible: root.active || hover.hovered
+                x: 2.5; y: 1
+                width: parent.width - 5
+                height: parent.height * 0.5
+                radius: height / 2
+                gradient: Gradient {
+                    GradientStop { position: 0; color: Qt.rgba(1, 1, 1, 0.55) }
+                    GradientStop { position: 1; color: Qt.rgba(1, 1, 1, 0) }
+                }
+            }
+
             Icon {
                 anchors.centerIn: parent
                 visible: hover.hovered

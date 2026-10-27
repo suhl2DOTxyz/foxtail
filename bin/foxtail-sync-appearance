@@ -12,6 +12,9 @@ else
     gsettings set org.gnome.desktop.interface gtk-theme adw-gtk3
 fi
 
+# Window hairlines (hypr/foxtail.lua).
+hyprctl eval "foxtail_appearance($([ "$mode" = dark ] && echo true || echo false))" >/dev/null 2>&1
+
 # libadwaita's built-in accent names; pick the nearest for its own widgets.
 case "$(echo "$accent" | tr a-f A-F)" in
     "#FF7A1A") name=orange ;;
@@ -55,7 +58,7 @@ if [ -f "$pal" ]; then
             printf '%s\n' "# Foxtail (managed: delete this line to keep your own settings)" \
                 '[Appearance]' "color_scheme_path=$HOME/.config/$v/colors/foxtail.conf" \
                 'custom_palette=true' 'icon_theme=WhiteSur' 'standard_dialogs=xdgdesktopportal' 'style=Fusion' \
-                '[Fonts]' 'fixed="JetBrains Mono,11,-1,5,50,0,0,0,0,0"' 'general="Inter,11,-1,5,50,0,0,0,0,0"' > "$conf"
+                '[Fonts]' 'fixed="JetBrains Mono,10,-1,5,50,0,0,0,0,0"' 'general="Inter,10,-1,5,50,0,0,0,0,0"' > "$conf"
         fi
     done
     # KDE apps (KColorScheme): window, view, button and selection colors.
@@ -66,7 +69,7 @@ if [ -f "$pal" ]; then
     if [ ! -f "$kg" ] || grep -q '^# Foxtail' "$kg"; then
         {
             echo "# Foxtail (managed: delete this line to keep your own settings)"
-            echo "[General]"; echo "ColorScheme=Foxtail"; echo "font=Inter,11,-1,5,50,0,0,0,0,0"; echo "fixed=JetBrains Mono,11,-1,5,50,0,0,0,0,0"
+            echo "[General]"; echo "ColorScheme=Foxtail"; echo "font=Inter,10,-1,5,50,0,0,0,0,0"; echo "fixed=JetBrains Mono,10,-1,5,50,0,0,0,0,0"
             echo "[Icons]"; echo "Theme=WhiteSur"
             for s in Window View Button Tooltip Header Complementary; do
                 bg=$win; [ $s = View ] && bg=$view; [ $s = Button ] && bg=$btn
