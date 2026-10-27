@@ -12,7 +12,7 @@ Singleton {
 
     readonly property string language: {
         const l = Quickshell.env("LC_MESSAGES") || Quickshell.env("LC_ALL") || Quickshell.env("LANG") || "en";
-        return l.slice(0, 2).toLowerCase();
+        return l.split(/[_.@]/)[0].toLowerCase();       // "de_DE.UTF-8" -> "de", "C.UTF-8" -> "c"
     }
     readonly property bool english: language === "en" || language === "c"
     property var table: ({})
@@ -26,7 +26,7 @@ Singleton {
     }
 
     // Dates in the user's language ("Di. 27. Okt."), e.g. I18n.date(d, "ddd d MMM").
-    readonly property var locale: Qt.locale(Quickshell.env("LANG")?.split(".")[0] || "en_US")
+    readonly property var locale: Qt.locale(english ? "en_US" : (Quickshell.env("LANG")?.split(".")[0] || "en_US"))
     function date(d, fmt) {
         return locale.toString(d, fmt);
     }
