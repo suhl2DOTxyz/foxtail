@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Static checks for the whole repo (also run by CI):
 #   QML (qmllint, against Quickshell's type info), shell scripts (sh -n /
-#   shellcheck errors), the Hyprland Lua config, and translation files.
+#   ShellCheck errors), the Hyprland Lua config, and translation files.
 #   ./scripts/lint.sh [path-to-quickshell-qml-imports]
 set -uo pipefail
 cd "$(dirname "$0")/.."
