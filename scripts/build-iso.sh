@@ -20,7 +20,8 @@ command -v mkarchiso >/dev/null || { echo "install archiso first: pacman -S arch
 
 # ---- signed [foxtail] repo: foxtail-desktop, keyring, AUR themes ----
 # Built as the invoking user (makepkg refuses root; the signing key is theirs).
-sudo -u "${SUDO_USER:?run via sudo from your user account}" "$ROOT/scripts/build-repo.sh"
+sudo -u "${SUDO_USER:?run via sudo from your user account}" \
+    env FOXTAIL_UNSIGNED="${FOXTAIL_UNSIGNED:-0}" "$ROOT/scripts/build-repo.sh"
 
 echo ":: assembling profile"
 rm -rf "$PROFILE"

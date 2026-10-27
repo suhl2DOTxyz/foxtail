@@ -41,7 +41,7 @@ jobs:
             chown -R builder /src
             sudo -u builder ./scripts/build-aur.sh
             # CI has no signing key: build an unsigned test image.
-            sudo -u builder env FOXTAIL_UNSIGNED=1 SUDO_USER=builder ./scripts/build-iso.sh
+            FOXTAIL_UNSIGNED=1 SUDO_USER=builder ./scripts/build-iso.sh
           '
       - name: Boot test
         run: |

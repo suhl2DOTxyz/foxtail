@@ -18,7 +18,7 @@ for p in "${PKGS[@]}"; do
     fi
     echo ":: building $p"
     if [ -d "$SRC/$p/.git" ]; then git -C "$SRC/$p" pull -q; else git clone -q "https://aur.archlinux.org/$p.git" "$SRC/$p"; fi
-    (cd "$SRC/$p" && PKGDEST="$REPO" makepkg --noconfirm --clean --cleanbuild --needed)
+    (cd "$SRC/$p" && PKGDEST="$REPO" makepkg --noconfirm --clean --cleanbuild --needed --syncdeps)
 done
 
 rm -f "$REPO"/foxtail-local.db* "$REPO"/foxtail-local.files*
