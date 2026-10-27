@@ -1,0 +1,29 @@
+#!/bin/sh
+# foxtail-channel [stable|testing]
+# Without an argument, prints the update channel. With one, switches the
+# [foxtail] repository to it (run as root; Software Update uses pkexec).
+#   stable   tested releases (the default)
+#   testing  new Foxtail versions a little earlier, for beta testers
+# Arch packages always come from Arch's own repositories either way.
+set -e
+CONF=/etc/pacman.conf
+BASE=https://github.com/suhl2DOTxyz/foxtail/releases/download
+current() {
+    if grep -q "^Server = $BASE/repo-testing\$" "$CONF"; then echo testing; else echo stable; fi
+}
+[ $# -eq 0 ] && { current; exit 0; }
+case "$1" in
+    stable) tag=repo ;;
+    testing) tag=repo-testing ;;
+    *) echo "usage: foxtail-channel [stable|testing]" >&2; exit 2 ;;
+esac
+[ "$(id -u)" -eq 0 ] || { echo "foxtail-channel must run as root" >&2; exit 1; }
+grep -q '^\[foxtail\]' "$CONF" || { echo "no [foxtail] repository in $CONF" >&2; exit 1; }
+# Replace the Server line inside the [foxtail] section only.
+awk -v url="$BASE/$tag" '
+    /^\[/ { sect = $0 }
+    sect == "[foxtail]" && /^Server *=/ { print "Server = " url; next }
+    { print }
+' "$CONF" > "$CONF.new" && mv "$CONF.new" "$CONF"
+pacman -Sy --noconfirm >/dev/null 2>&1 || true
+echo "channel: $(current)"

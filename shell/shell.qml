@@ -22,17 +22,23 @@ ShellRoot {
         Scope {
             id: perScreen
             required property var modelData
+            property bool launchpadUsed: false
+            Connections {
+                target: Panels
+                function onLaunchpadChanged() { if (Panels.launchpad) perScreen.launchpadUsed = true; }
+            }
             Wallpaper { modelData: perScreen.modelData }
             Desktop { modelData: perScreen.modelData }
             MenuBar { modelData: perScreen.modelData }
             Dock { modelData: perScreen.modelData }
             Overlay { modelData: perScreen.modelData }
-            Launchpad { modelData: perScreen.modelData }
+            // Loaded on first use, then kept so they open instantly.
+            LazyLoader { active: perScreen.launchpadUsed; Launchpad { modelData: perScreen.modelData } }
             Banners { modelData: perScreen.modelData }
             Osd { modelData: perScreen.modelData }
             AppSwitcher { modelData: perScreen.modelData }
             MissionControl { modelData: perScreen.modelData }
-            CaptureBar { modelData: perScreen.modelData }
+            LazyLoader { active: Panels.screenshotBar || Capture.recording; CaptureBar { modelData: perScreen.modelData } }
             ScreenshotThumb { modelData: perScreen.modelData }
             HotCorners { modelData: perScreen.modelData }
         }
@@ -91,10 +97,11 @@ ShellRoot {
         onPressed: { Panels.popover = ""; Panels.spotlight = false; Panels.missionControl = !Panels.missionControl; }
     }
 
-    SettingsWindow {}
-    AboutWindow {}
-    ForceQuitWindow {}
-    InstallerWindow {}
+    // App windows exist only while open, so they cost no memory otherwise.
+    LazyLoader { active: Panels.settings; SettingsWindow {} }
+    LazyLoader { active: Panels.about; AboutWindow {} }
+    LazyLoader { active: Panels.forceQuit; ForceQuitWindow {} }
+    LazyLoader { active: Panels.installer; InstallerWindow {} }
 
     // Keep GTK/libadwaita apps in step with Foxtail's appearance settings.
     Connections {

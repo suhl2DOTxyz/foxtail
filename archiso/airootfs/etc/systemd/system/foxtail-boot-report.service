@@ -1,0 +1,14 @@
+# Live ISO: report boot progress on the serial console, for the automated
+# boot test (tests/boot-test.sh). Harmless on real hardware.
+[Unit]
+Description=Report Foxtail live boot progress
+After=display-manager.service
+
+[Service]
+Type=simple
+ExecStart=/usr/lib/foxtail/boot-report
+StandardOutput=tty
+TTYPath=/dev/ttyS0
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,21 @@
+#!/bin/sh
+# Waits for the live user's desktop shell and reports it (see the service).
+echo "FOXTAIL-BOOT: system up"
+for _ in $(seq 300); do
+    if pgrep -u liveuser -x Hyprland >/dev/null; then
+        if [ -n "${hypr_seen:-}" ] || { hypr_seen=1; echo "FOXTAIL-BOOT: session started"; }; then :; fi
+        log=/run/user/$(id -u liveuser)/foxtail-shell.log
+        if grep -q "Configuration Loaded" "$log" 2>/dev/null; then
+            echo "FOXTAIL-BOOT: shell ready"
+            exit 0
+        fi
+        if grep -qE "Failed to load configuration" "$log" 2>/dev/null; then
+            echo "FOXTAIL-BOOT: failed (shell configuration)"
+            grep -E "ERROR|caused by" "$log" | head -5 | sed 's/^/FOXTAIL-BOOT:   /'
+            exit 1
+        fi
+    fi
+    sleep 2
+done
+echo "FOXTAIL-BOOT: failed (timeout)"
+exit 1

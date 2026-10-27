@@ -10,14 +10,16 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 REPO_SLUG=suhl2DOTxyz/foxtail
-TAG=repo
+# FOXTAIL_CHANNEL=testing publishes to the beta channel (tag "repo-testing").
+TAG=repo; [ "${FOXTAIL_CHANNEL:-stable}" = testing ] && TAG=repo-testing
 DIR=build/foxtail-repo
 
 [ -f "$DIR/foxtail.db" ] || { echo "build the repo first: scripts/build-repo.sh" >&2; exit 1; }
+[ -f "$DIR/foxtail.db.sig" ] || { echo "this repo is unsigned (FOXTAIL_UNSIGNED build); refusing to publish" >&2; exit 1; }
 
 if ! gh release view "$TAG" --repo "$REPO_SLUG" >/dev/null 2>&1; then
     gh release create "$TAG" --repo "$REPO_SLUG" --latest=false \
-        --title "Foxtail package repository" \
+        --title "Foxtail package repository ($([ "$TAG" = repo ] && echo stable || echo testing))" \
         --notes "Signed pacman repository for installed Foxtail systems. Not an installer - see the latest release for the ISO."
 fi
 

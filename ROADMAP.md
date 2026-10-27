@@ -83,9 +83,11 @@
 - [ ] Foxtail's own menus readable by the screen reader
 
 ## v1.7: Reliability
-- [ ] Automated tests: QML lint in CI, an ISO boot test in a VM, installer test
-- [ ] Stable and testing update channels
-- [ ] Performance budget: shell idle CPU and RAM, animation frame times on integrated GPUs
+- ✅ **CI** (GitHub Actions): QML lint, shell and Lua checks and translation checks on every push; on version tags, an ISO build and a boot test in QEMU (`tests/boot-test.sh`)
+- ✅ **Beta updates:** stable and testing update channels, switchable in Software Update
+- ✅ **Performance budget** (`tests/perf.sh`): the shell idles at ~0.1% CPU; System Settings, the installer, Launchpad and the capture bar now load only when used (−260 MB)
+- [ ] Installer test (an automated install into a VM disk)
+- [ ] Animation frame times on integrated GPUs (needs real hardware)
 
 ## v2.0: Stable daily driver
 - [ ] Runs well on at least 5 real machines (Intel, AMD, NVIDIA, an older laptop), with every 🟡 above confirmed on real hardware

@@ -28,6 +28,24 @@ Singleton {
     readonly property int count: available.length
     readonly property bool foxtailUpdate: available.some(u => u.name === "foxtail-desktop")
 
+    // Update channel: "stable" or "testing" (beta builds of Foxtail).
+    property string channel: "stable"
+    Process {
+        id: channelReader
+        running: true
+        command: ["foxtail-channel"]
+        stdout: StdioCollector { onStreamFinished: root.channel = text.trim() || "stable" }
+    }
+    function setChannel(c) {
+        if (c === channel) return;
+        channelWriter.command = ["pkexec", "/usr/bin/foxtail-channel", c];
+        channelWriter.running = true;
+    }
+    Process {
+        id: channelWriter
+        onExited: { channelReader.running = true; root.check(); }
+    }
+
     function check() {
         if (checking || installing) return;
         checking = true;

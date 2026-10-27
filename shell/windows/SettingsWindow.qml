@@ -530,8 +530,13 @@ FloatingWindow {
                 SettingRow {
                     label: I18n.tr("Check for updates automatically")
                     sub: I18n.tr("You'll get a notification when updates are ready. Nothing installs without you.")
-                    last: true
                     Switch { checked: Settings.autoCheckUpdates; onToggled: c => Settings.autoCheckUpdates = c }
+                }
+                SettingRow {
+                    label: I18n.tr("Beta updates")
+                    sub: I18n.tr("Get new versions of Foxtail before they're released, to help test them. They may have more bugs.")
+                    last: true
+                    Switch { checked: Updates.channel === "testing"; onToggled: c => Updates.setChannel(c ? "testing" : "stable") }
                 }
             }
 
