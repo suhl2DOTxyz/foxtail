@@ -36,7 +36,7 @@ jobs:
       - name: Build the ISO (in an Arch container)
         run: |
           docker run --privileged --rm -v "$PWD:/src" -w /src archlinux:latest bash -c '
-            pacman -Syu --noconfirm --needed archiso base-devel git sudo python jq
+            pacman -Syu --noconfirm --needed archiso base-devel git sudo python jq imagemagick
             useradd -m builder && echo "builder ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/builder
             chown -R builder /src
             sudo -u builder ./scripts/build-aur.sh
