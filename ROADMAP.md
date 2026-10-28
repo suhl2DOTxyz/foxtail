@@ -31,7 +31,7 @@
 - ✅ **Software Update** pane: checks pacman + Flatpak, notifies, installs with one click
 - ✅ **Btrfs + snapshots** before and after every update, restorable from System Settings or the boot menu
 - [ ] Publish the repo (`scripts/publish-repo.sh`) and build it in GitHub Actions on every tag
-- [ ] Move per-user defaults out of `/etc/skel` so existing users get new defaults too
+- ✅ Per-user files are stubs that load the shared, updated defaults (1.9); settings that must live per user are migrated once at login
 
 ## v1.4: Real hardware
 - 🟡 NVIDIA: driver on the ISO and kept only on machines with an NVIDIA GPU (Turing / GTX 16-series and newer; older cards aren't supported by the open driver)
@@ -41,7 +41,8 @@
 - ✅ Installer: **full-disk encryption** (one password at startup)
 - ✅ Laptops: battery menu with time remaining, Low Power / Balanced / Performance, Battery settings, low-battery warnings, auto Low Power at 10%
 - ✅ zram compressed swap
-- [ ] Hibernate, and lid-close behaviour settings
+- ✅ Lid-close setting (sleep, lock, nothing) and macOS-style closed-lid mode with an external display (1.9)
+- [ ] Hibernate
 - [ ] Wi-Fi during install (only needed for online extras; installs work offline)
 - [ ] Test on at least 5 real machines (Intel, AMD, NVIDIA, and one older laptop)
 
@@ -69,7 +70,7 @@
   - System Settings: Menu Bar, Trackpad and Mouse panes, Login Items, Hot Corners, sound effects
 - ✅ **Fewer limitations:** the yellow traffic light minimizes GTK 4 apps; drag and drop between the desktop, Files and the Dock (Trash, Downloads, apps); Finder-style menus for Text Editor, Firefox, Terminal and Calculator; no more pacman "unknown key" warnings
 - [ ] Snapping menu on the green button (GTK draws its own buttons; needs a compositor-side menu)
-- [ ] Custom keyboard shortcuts
+- ✅ Custom keyboard shortcuts: open an app or run a command (1.9)
 
 ## v1.6: Polish and public beta
 - ✅ **Notifications:** grouped by app in Notification Center (stacks you can expand), the app's action buttons, inline **Reply**, "5m ago" times; banners stay while you hover or type a reply
@@ -80,7 +81,7 @@
 - ✅ **Foxtail Guide** in `docs/`: install guide, getting started, troubleshooting, FAQ
 - ✅ **Public beta:** issue templates (bug, hardware report, idea), contributing guide, triage labels
 - [ ] A testers' channel (Discussions or Matrix)
-- [ ] Foxtail's own menus readable by the screen reader
+- 🟡 Foxtail's menus, menu bar, Dock, window buttons and Control Center carry screen-reader names and roles (1.9); not yet tried with Orca
 
 ## v1.7: Reliability
 - ✅ **CI** (GitHub Actions): QML lint, shell and Lua checks and translation checks on every push; on version tags, an ISO build and a boot test in QEMU (`tests/boot-test.sh`)
@@ -94,6 +95,12 @@
 - ✅ **Windows:** one 20px continuous corner radius, a hairline edge, a deeper shadow on the active window, glassy traffic lights that work on the first click
 - ✅ **Control Center** as one glass panel of modules; **Liquid Glass** with gentler refraction and a Clear-to-Tinted slider
 - ✅ **System Settings** with an edge-to-edge sidebar and accent selection; Launchpad is now **Apps**; Firefox gets capsule tabs and address field
+
+## v1.9: Everyday essentials
+- ✅ **Custom keyboard shortcuts** (Keyboard settings): open any app or run a command with your own key combination
+- ✅ **The lid:** choose what closing it does (sleep, lock, nothing); with an external display connected it only turns off the built-in screen, like macOS
+- ✅ **Screen reader labels** for Foxtail's menus, menu bar, Dock, window buttons and Control Center
+- ✅ Keyboard shortcuts list and battery status translated; the 13px font reaches GTK 3 settings of existing accounts
 
 ## v2.0: Stable daily driver
 - [ ] Runs well on at least 5 real machines (Intel, AMD, NVIDIA, an older laptop), with every 🟡 above confirmed on real hardware

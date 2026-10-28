@@ -102,6 +102,7 @@ PanelWindow {
                     required property string modelData
                     required property int index
                     readonly property string key: "app:" + index
+                    accessibleName: modelData
                     active: Panels.popover === key && bar.menuOpen
                     width: titleLabel.implicitWidth + 20
                     onPressed: bar.openMenu(key, menuTitle)
@@ -306,8 +307,12 @@ PanelWindow {
     component BarButton: Item {
         id: btn
         property bool active: false
+        property string accessibleName: ""
         signal pressed()
         signal hoverSwitch()
+        Accessible.role: Accessible.MenuItem
+        Accessible.name: accessibleName
+        Accessible.onPressAction: btn.pressed()
         height: Theme.menuBarHeight
         Rectangle {
             anchors.fill: parent

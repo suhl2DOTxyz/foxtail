@@ -52,6 +52,10 @@ Row {
                 color: Qt.rgba(0, 0, 0, 0.55)
             }
 
+            Accessible.role: Accessible.Button
+            Accessible.name: modelData.s === "close" ? I18n.tr("Close") : modelData.s === "minimize" ? I18n.tr("Minimize") : I18n.tr("Zoom")
+            Accessible.onPressAction: root[modelData.s]()
+
             // macOS window buttons work on the first click, even in an
             // inactive window. Activating the window takes the pointer grab
             // away from us mid-click (canceled), so count that as a click too.

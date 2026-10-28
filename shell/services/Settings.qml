@@ -40,6 +40,8 @@ Singleton {
     property alias autoCheckUpdates: adapter.autoCheckUpdates
     property alias showBatteryPercent: adapter.showBatteryPercent
     property alias autoLowPower: adapter.autoLowPower
+    property alias lidAction: adapter.lidAction
+    property alias customShortcuts: adapter.customShortcuts
     property alias displayOffAfter: adapter.displayOffAfter
     property alias displays: adapter.displays
     property alias nightShiftNow: adapter.nightShiftNow
@@ -127,6 +129,9 @@ Singleton {
             property bool autoCheckUpdates: true
             property bool showBatteryPercent: true
             property bool autoLowPower: true
+            property string lidAction: "sleep"   // closing the lid: "sleep" | "lock" | "nothing"
+            // Keyboard ▸ Custom shortcuts: [{ mods: ["SUPER", ...], key: "T", app: "<desktop id>" | "", command: "" }]
+            property var customShortcuts: []
             property bool refractWindows: true  // Liquid Glass popovers refract windows, not just the wallpaper
             property int lockAfter: 5          // minutes idle before locking; 0 = never
             property int displayOffAfter: 10   // minutes idle before the display sleeps; 0 = never

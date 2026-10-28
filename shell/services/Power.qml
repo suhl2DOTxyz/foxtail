@@ -1,12 +1,25 @@
 pragma Singleton
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.UPower
 
 // Battery and power modes. Wraps UPower's display device and
 // power-profiles-daemon, and posts low-battery warnings like macOS.
 Singleton {
     id: root
+
+    // The lid: while the shell runs, it takes the lid switch over from logind
+    // so closing the lid can do what System Settings says (and turn off just
+    // the built-in display when an external one is connected, like macOS).
+    // Hyprland reports the switch to foxtail-lid. If the shell stops, the
+    // inhibitor goes with it and logind's default (sleep) applies again.
+    Process {
+        running: root.hasBattery
+        command: ["systemd-inhibit", "--what=handle-lid-switch", "--who=Foxtail",
+                  "--why=Foxtail handles the lid (System Settings > Battery)", "--mode=block",
+                  "sleep", "infinity"]
+    }
 
     readonly property var device: UPower.displayDevice
     readonly property bool hasBattery: device?.isLaptopBattery ?? false
@@ -20,10 +33,10 @@ Singleton {
         const secs = charging ? (device?.timeToFull ?? 0) : (device?.timeToEmpty ?? 0);
         if (!secs || secs <= 0 || full) return "";
         const h = Math.floor(secs / 3600), m = Math.round((secs % 3600) / 60);
-        return `${h}:${String(m).padStart(2, "0")} ${charging ? "until full" : "remaining"}`;
+        return `${h}:${String(m).padStart(2, "0")} ${charging ? I18n.tr("until full") : I18n.tr("remaining")}`;
     }
 
-    readonly property string source: full ? "Fully Charged" : charging ? "Charging" : onAc ? "Power Adapter" : "Battery"
+    readonly property string source: full ? I18n.tr("Fully Charged") : charging ? I18n.tr("Charging") : onAc ? I18n.tr("Power Adapter") : I18n.tr("Battery")
 
     // "power-saver" | "balanced" | "performance"
     readonly property bool hasPerformance: PowerProfiles.hasPerformanceProfile

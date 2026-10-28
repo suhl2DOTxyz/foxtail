@@ -646,6 +646,10 @@ hl.bind("CTRL + " .. CMD .. " + right", hl.dsp.focus({ workspace = "e+1" }))
 hl.bind(CMD .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
 hl.bind(CMD .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
+-- The laptop lid (the shell holds logind's lid switch; see foxtail-lid).
+pcall(hl.bind, "switch:on:Lid Switch", hl.dsp.exec_cmd("foxtail-lid close"), { locked = true })
+pcall(hl.bind, "switch:off:Lid Switch", hl.dsp.exec_cmd("foxtail-lid open"), { locked = true })
+
 hl.bind("XF86AudioRaiseVolume", ipc("volumeUp"), { locked = true, repeating = true })
 hl.bind("XF86AudioLowerVolume", ipc("volumeDown"), { locked = true, repeating = true })
 hl.bind("XF86AudioMute", ipc("volumeMute"), { locked = true })

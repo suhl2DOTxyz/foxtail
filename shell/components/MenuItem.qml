@@ -21,6 +21,15 @@ Item {
     signal triggered()
     signal entered()
 
+    // Screen readers (Orca) see each row as a menu item with its shortcut.
+    Accessible.role: separator ? Accessible.Separator : (header ? Accessible.StaticText : Accessible.MenuItem)
+    Accessible.name: text
+    Accessible.description: shortcut
+    Accessible.checkable: checkable
+    Accessible.checked: checked
+    Accessible.focusable: !separator && !header && available
+    Accessible.onPressAction: if (available && !separator && !header) triggered()
+
     implicitHeight: separator ? 11 : (header ? 24 : 24)
     implicitWidth: separator ? 0 : row.implicitWidth + 24
 

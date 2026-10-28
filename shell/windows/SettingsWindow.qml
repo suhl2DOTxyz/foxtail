@@ -415,8 +415,18 @@ FloatingWindow {
                 SettingRow {
                     label: I18n.tr("Switch to Low Power at 10%")
                     sub: I18n.tr("You'll also get a warning at 20%, 10% and 5%.")
-                    last: true
                     Switch { checked: Settings.autoLowPower; onToggled: c => Settings.autoLowPower = c }
+                }
+                SettingRow {
+                    label: I18n.tr("When the lid is closed")
+                    sub: I18n.tr("With an external display connected, closing the lid only turns off the built-in display.")
+                    last: true
+                    Choice {
+                        menuWidth: 160
+                        options: [["sleep", I18n.tr("Sleep")], ["lock", I18n.tr("Lock Screen")], ["nothing", I18n.tr("Do Nothing")]]
+                        value: Settings.lidAction
+                        onPicked: v => Settings.lidAction = v
+                    }
                 }
             }
         }

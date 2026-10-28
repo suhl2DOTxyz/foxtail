@@ -28,6 +28,8 @@ if [ ! -f "$HOME/.config/foxtail/.font13-done" ]; then
     done
     [ "$(gsettings get org.gnome.desktop.interface monospace-font-name)" = "'JetBrains Mono 11'" ] &&
         gsettings set org.gnome.desktop.interface monospace-font-name 'JetBrains Mono 10'
+    ini="$HOME/.config/gtk-3.0/settings.ini"
+    [ -f "$ini" ] && sed -i 's/^gtk-font-name=Inter 11$/gtk-font-name=Inter 10/' "$ini"
     touch "$HOME/.config/foxtail/.font13-done"
 fi
 

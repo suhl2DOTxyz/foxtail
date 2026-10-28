@@ -217,6 +217,14 @@ PanelWindow {
 
                 width: modelData.kind === "sep" ? 13 : dock.iconSize * s
                 height: dock.iconSize
+
+                Accessible.role: modelData.kind === "sep" ? Accessible.Separator : Accessible.Button
+                Accessible.name: modelData.kind === "trash" ? I18n.tr("Trash")
+                    : modelData.kind === "downloads" ? I18n.tr("Downloads")
+                    : modelData.kind === "launchpad" ? I18n.tr("Apps")
+                    : modelData.kind === "min" ? (modelData.toplevel.title || "Window")
+                    : modelData.kind === "app" ? Apps.nameFor(modelData.id) : ""
+                Accessible.description: running ? I18n.tr("Running") : ""
                 Behavior on width { enabled: !dock.hovered; NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
 
                 // Separator

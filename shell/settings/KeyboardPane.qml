@@ -167,9 +167,122 @@ Column {
             SettingRow {
                 required property var modelData
                 required property int index
-                label: modelData[0]
+                label: I18n.tr(modelData[0])
                 last: index === shortcuts.count - 1
                 Label { text: modelData[1]; color: Theme.textSecondary; font.family: Theme.font }
+            }
+        }
+    }
+
+    // ---- Custom shortcuts: open an app or run a command (written to
+    // generated.lua by HyprConfig) ----
+    SectionTitle { text: I18n.tr("Custom Shortcuts") }
+    Note { text: I18n.tr("Open an app or run a command with your own key combination. Use at least one modifier; combinations Foxtail already uses (above) would do both things.") }
+    Group {
+        id: custom
+        readonly property var modSyms: [["CTRL", "⌃"], ["ALT", "⌥"], ["SHIFT", "⇧"], ["SUPER", "⌘"]]
+        function combo(sc) {
+            return modSyms.filter(m => sc.mods.indexOf(m[0]) >= 0).map(m => m[1]).join("") + sc.key;
+        }
+        function describe(sc) {
+            if (sc.app) return I18n.tr("Open %1").replace("%1", Apps.title(Apps.entry(sc.app)) || sc.app);
+            return sc.command;
+        }
+
+        Repeater {
+            model: Settings.customShortcuts
+            SettingRow {
+                required property var modelData
+                required property int index
+                label: custom.describe(modelData)
+                Row {
+                    spacing: 10
+                    Label { text: custom.combo(modelData); color: Theme.textSecondary; anchors.verticalCenter: parent.verticalCenter }
+                    PushButton {
+                        text: I18n.tr("Remove")
+                        anchors.verticalCenter: parent.verticalCenter
+                        onClicked: Settings.customShortcuts = Settings.customShortcuts.filter((_, i) => i !== index)
+                    }
+                }
+            }
+        }
+
+        // The editor: modifiers, key, and what it does.
+        Item {
+            id: editor
+            width: parent.width
+            height: editCol.implicitHeight + 20
+            property var mods: ["SUPER", "ALT"]
+            property string target: Apps.all.length ? Apps.all[0].id : ""
+            readonly property bool isCommand: target === "__command__"
+            readonly property string key: {
+                const k = keyField.text.trim();
+                if (/^[A-Za-z0-9]$/.test(k)) return k.toUpperCase();
+                if (/^[Ff]([1-9]|1[0-2])$/.test(k)) return k.toUpperCase();
+                return "";
+            }
+            readonly property bool valid: mods.length > 0 && key !== ""
+                                          && (isCommand ? cmdField.text.trim() !== "" : target !== "")
+
+            Column {
+                id: editCol
+                x: 14
+                y: 10
+                width: parent.width - 28
+                spacing: 10
+                Row {
+                    spacing: 6
+                    Repeater {
+                        model: custom.modSyms
+                        Rectangle {
+                            required property var modelData
+                            readonly property bool on: editor.mods.indexOf(modelData[0]) >= 0
+                            width: 30; height: 26; radius: 7
+                            color: on ? Theme.accent : Theme.control
+                            border.color: on ? "transparent" : Theme.separator
+                            Label { anchors.centerIn: parent; text: modelData[1]; color: parent.on ? "white" : Theme.text; font.pixelSize: Theme.px(13) }
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: editor.mods = parent.on ? editor.mods.filter(m => m !== modelData[0])
+                                                                 : editor.mods.concat([modelData[0]])
+                            }
+                        }
+                    }
+                    TextField {
+                        id: keyField
+                        width: 56
+                        placeholder: I18n.tr("Key")
+                    }
+                    Choice {
+                        id: what
+                        width: 210
+                        menuWidth: 240
+                        options: Apps.all.map(e => [e.id, I18n.tr("Open %1").replace("%1", Apps.title(e))])
+                                 .concat([["__command__", I18n.tr("Run a Command…")]])
+                        value: editor.target
+                        onPicked: v => editor.target = v
+                    }
+                }
+                TextField {
+                    id: cmdField
+                    visible: editor.isCommand
+                    width: parent.width
+                    placeholder: I18n.tr("Command, e.g. firefox --private-window")
+                }
+                PushButton {
+                    text: I18n.tr("Add Shortcut")
+                    primary: true
+                    enabled: editor.valid
+                    onClicked: {
+                        Settings.customShortcuts = Settings.customShortcuts.concat([{
+                            mods: editor.mods.slice(), key: editor.key,
+                            app: editor.isCommand ? "" : editor.target,
+                            command: editor.isCommand ? cmdField.text.trim() : ""
+                        }]);
+                        keyField.text = "";
+                        cmdField.text = "";
+                    }
+                }
             }
         }
     }

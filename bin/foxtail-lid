@@ -1,0 +1,34 @@
+#!/bin/sh
+# foxtail-lid close|open: called by Hyprland when the laptop lid moves
+# (hypr/foxtail.lua). The shell holds logind's lid switch while it runs, so
+# this decides what happens:
+#   - an external display is connected: only the built-in display turns off
+#     (and comes back when the lid opens), like macOS's closed-lid mode
+#   - otherwise: System Settings > Battery > "When the lid is closed"
+#     (sleep, lock the screen, or nothing)
+settings="$HOME/.config/foxtail/settings.json"
+action=$(jq -r '.lidAction // "sleep"' "$settings" 2>/dev/null)
+[ -n "$action" ] || action=sleep
+
+internal=$(hyprctl -j monitors all | jq -r '[.[] | select(.name | test("^(eDP|LVDS|DSI)"))][0].name // empty')
+external=$(hyprctl -j monitors | jq -r '[.[] | select(.name | test("^(eDP|LVDS|DSI)") | not)] | length')
+
+case "$1" in
+close)
+    if [ -n "$internal" ] && [ "${external:-0}" -gt 0 ]; then
+        hyprctl eval "hl.monitor({ output = \"$internal\", disabled = true })" >/dev/null
+        exit 0
+    fi
+    case "$action" in
+        sleep) foxtail-ipc lock; sleep 0.5; systemctl suspend ;;
+        lock) foxtail-ipc lock ;;
+    esac
+    ;;
+open)
+    # Bring the built-in display back (with its System Settings arrangement)
+    # if closing the lid turned it off.
+    if [ -n "$internal" ] && ! hyprctl -j monitors | jq -e --arg m "$internal" 'any(.[]; .name == $m)' >/dev/null; then
+        hyprctl reload >/dev/null
+    fi
+    ;;
+esac

@@ -168,6 +168,7 @@ ShellRoot {
         }
         function settings(pane: string): void { Panels.openSettings(pane); }
         function about(): void { Panels.about = true; }
+        function launchApp(id: string): void { Apps.launch(id); }
         function forceQuit(): void { Panels.forceQuit = true; }
         function installer(): void { Panels.installer = true; }
         function lock(): void { Lock.lock(); }

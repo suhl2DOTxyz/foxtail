@@ -28,6 +28,16 @@ Singleton {
         // Accessibility
         lines.push(`foxtail_reduce_motion = ${Settings.reduceMotion}`);
         lines.push(`foxtail_zoom_keys = ${Settings.zoomKeys}`);
+        // Keyboard ▸ Custom Shortcuts. Commands go in Lua long strings, so
+        // they keep their quotes.
+        for (const sc of Settings.customShortcuts) {
+            const mods = (sc.mods ?? []).filter(m => /^(SUPER|ALT|CTRL|SHIFT)$/.test(m));
+            if (!mods.length || !/^([A-Z0-9]|F([1-9]|1[0-2]))$/.test(sc.key ?? "")) continue;
+            const cmd = sc.app ? "foxtail-ipc launchApp " + String(sc.app).replace(/[^A-Za-z0-9._-]/g, "")
+                               : String(sc.command ?? "").replace(/\]=*\]/g, "");
+            if (!cmd) continue;
+            lines.push(`pcall(hl.bind, ${q(mods.join(" + ") + " + " + sc.key)}, hl.dsp.exec_cmd([==[${cmd}]==]))`);
+        }
         const d = Settings.displays;
         for (const name of Object.keys(d).sort()) {
             const c = d[name];

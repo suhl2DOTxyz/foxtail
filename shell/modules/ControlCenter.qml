@@ -320,6 +320,12 @@ Item {
         property string subtitle
         property bool on: false
         signal clicked()
+        Accessible.role: Accessible.CheckBox
+        Accessible.name: title
+        Accessible.description: subtitle
+        Accessible.checkable: true
+        Accessible.checked: on
+        Accessible.onPressAction: t.clicked()
         width: parent.width
         height: 30
         opacity: enabled ? 1 : 0.45
@@ -341,6 +347,11 @@ Item {
         property string icon
         property string title
         property bool on: false
+        Accessible.role: Accessible.CheckBox
+        Accessible.name: title
+        Accessible.checkable: true
+        Accessible.checked: on
+        Accessible.onPressAction: s.clicked()
         width: (root.half - root.gap) / 2
         height: width
         pressable: true
