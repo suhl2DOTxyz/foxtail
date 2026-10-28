@@ -42,6 +42,14 @@ Singleton {
     property alias autoLowPower: adapter.autoLowPower
     property alias lidAction: adapter.lidAction
     property alias customShortcuts: adapter.customShortcuts
+    property alias desktopWidgets: adapter.desktopWidgets
+    property alias setupVersion: adapter.setupVersion
+    property alias dynamicPair: adapter.dynamicPair
+    // The dynamic wallpaper's picture for Light or Dark mode.
+    function dynamicFile(dark) {
+        const pair = dynamicPair === "dunes" ? ["foxtail-dawn", "foxtail-dusk"] : ["foxtail-vixen-day", "foxtail-vixen-night"];
+        return wallpaperDir + "/" + pair[dark ? 1 : 0] + ".jpg";
+    }
     property alias displayOffAfter: adapter.displayOffAfter
     property alias displays: adapter.displays
     property alias nightShiftNow: adapter.nightShiftNow
@@ -79,6 +87,8 @@ Singleton {
     property alias trackpadGestures: adapter.trackpadGestures
 
     readonly property string dir: Quickshell.env("HOME") + "/.config/foxtail"
+    // True once settings.json has been read (or found missing).
+    property bool loaded: false
     readonly property string wallpaperDir: "/usr/share/backgrounds/foxtail"
 
     FileView {
@@ -86,7 +96,9 @@ Singleton {
         watchChanges: true
         onFileChanged: reload()
         onAdapterUpdated: writeAdapter()
+        onLoaded: root.loaded = true
         onLoadFailed: error => {
+            root.loaded = true;
             if (error === FileViewError.FileNotFound) {
                 Quickshell.execDetached(["mkdir", "-p", root.dir]);
                 writeAdapter();
@@ -101,8 +113,9 @@ Singleton {
             property bool darkMode: false
             property bool appearanceAuto: false   // Light by day, Dark from 7 PM to 7 AM
             property string accent: "#FF7A1A"
-            property string wallpaper: "/usr/share/backgrounds/foxtail/foxtail-dawn.jpg"
-            property bool dynamicWallpaper: true   // Dawn in Light mode, Dusk in Dark mode
+            property string wallpaper: "/usr/share/backgrounds/foxtail/foxtail-vixen-day.jpg"
+            property bool dynamicWallpaper: true   // a light picture in Light mode, a dark one in Dark mode
+            property string dynamicPair: "vixen"   // "vixen" (Foxtail 2.0) or "dunes" (Dawn and Dusk)
             property list<string> pinnedApps: [
                 "org.gnome.Nautilus",
                 "firefox",
@@ -132,6 +145,11 @@ Singleton {
             property string lidAction: "sleep"   // closing the lid: "sleep" | "lock" | "nothing"
             // Keyboard ▸ Custom shortcuts: [{ mods: ["SUPER", ...], key: "T", app: "<desktop id>" | "", command: "" }]
             property var customShortcuts: []
+            // Desktop widgets: [{ id, kind, x, y }] (modules/DesktopWidgets.qml)
+            property var desktopWidgets: []
+            // The last major version whose Setup Assistant this account has
+            // been through (shown once on first login and after major updates).
+            property int setupVersion: 0
             property bool refractWindows: true  // Liquid Glass popovers refract windows, not just the wallpaper
             property int lockAfter: 5          // minutes idle before locking; 0 = never
             property int displayOffAfter: 10   // minutes idle before the display sleeps; 0 = never

@@ -102,6 +102,16 @@ ShellRoot {
     LazyLoader { active: Panels.about; AboutWindow {} }
     LazyLoader { active: Panels.forceQuit; ForceQuitWindow {} }
     LazyLoader { active: Panels.installer; InstallerWindow {} }
+    LazyLoader { active: Panels.setupAssistant; SetupAssistant {} }
+
+    // Setup Assistant: on an account's first login, and once after each major
+    // update (like macOS's setup screens). Not in the live session, where the
+    // installer opens instead.
+    Timer {
+        interval: 2500
+        running: Settings.loaded && Settings.setupVersion < 2 && Quickshell.env("USER") !== "liveuser"
+        onTriggered: Panels.setupAssistant = true
+    }
 
     // Keep GTK/libadwaita apps in step with Foxtail's appearance settings.
     Connections {
@@ -110,7 +120,7 @@ ShellRoot {
             root.syncGtk();
             // Dynamic wallpaper follows the appearance.
             if (Settings.dynamicWallpaper)
-                Settings.wallpaper = Settings.wallpaperDir + (Settings.darkMode ? "/foxtail-dusk.jpg" : "/foxtail-dawn.jpg");
+                Settings.wallpaper = Settings.dynamicFile(Settings.darkMode);
         }
         function onAccentChanged() { root.syncGtk(); }
     }
@@ -132,11 +142,16 @@ ShellRoot {
         syncGtk();
         syncA11y();
         Sounds.startup();
-        // Dynamic wallpaper: on for the Foxtail pictures that have a light and
-        // a dark version; a wallpaper picked before it existed stays put.
-        if (Settings.dynamicWallpaper) {
-            if (!/foxtail-(dawn|dusk)\.jpg$/.test(Settings.wallpaper)) Settings.dynamicWallpaper = false;
-            else Settings.wallpaper = Settings.wallpaperDir + (Settings.darkMode ? "/foxtail-dusk.jpg" : "/foxtail-dawn.jpg");
+    }
+    // Dynamic wallpaper: on for the Foxtail pictures that have a light and a
+    // dark version; a wallpaper picked before it existed stays put. Checked
+    // once settings.json has been read (not against the defaults).
+    Connections {
+        target: Settings
+        function onLoadedChanged() {
+            if (!Settings.loaded || !Settings.dynamicWallpaper) return;
+            if (!/foxtail-(dawn|dusk|vixen-day|vixen-night)\.jpg$/.test(Settings.wallpaper)) Settings.dynamicWallpaper = false;
+            else Settings.wallpaper = Settings.dynamicFile(Settings.darkMode);
         }
     }
 
@@ -171,6 +186,7 @@ ShellRoot {
         function launchApp(id: string): void { Apps.launch(id); }
         function forceQuit(): void { Panels.forceQuit = true; }
         function installer(): void { Panels.installer = true; }
+        function setupAssistant(): void { Panels.setupAssistant = true; }
         function lock(): void { Lock.lock(); }
         function power(kind: string): void { Panels.confirm = kind; }
         function closeAll(): void { Panels.closeAll(); }

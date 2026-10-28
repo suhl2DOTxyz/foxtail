@@ -835,51 +835,60 @@ FloatingWindow {
                 property var files: []
                 width: parent.width
                 spacing: 12
-                // Dynamic: Dawn in Light mode, Dusk in Dark mode, like macOS's
-                // dynamic desktops.
-                Rectangle {
-                    width: (grid.width - 36) / 4
-                    height: width * 0.62
-                    radius: 8
-                    color: "transparent"
-                    border.width: Settings.dynamicWallpaper ? 3 : 0
-                    border.color: Theme.accent
-                    Item {
-                        anchors.fill: parent
-                        anchors.margins: 3
-                        clip: true
-                        Image {
+                // Dynamic: a light picture in Light mode and a dark one in Dark
+                // mode, like macOS's dynamic desktops. Two pairs: Vixen (2.0)
+                // and Dunes (Dawn and Dusk).
+                Repeater {
+                    model: [{ id: "vixen", n: "Vixen", a: "foxtail-vixen-day", b: "foxtail-vixen-night" },
+                            { id: "dunes", n: I18n.tr("Dunes"), a: "foxtail-dawn", b: "foxtail-dusk" }]
+                    Rectangle {
+                        id: dyn
+                        required property var modelData
+                        readonly property bool current: Settings.dynamicWallpaper && Settings.dynamicPair === modelData.id
+                        width: (grid.width - 36) / 4
+                        height: width * 0.62
+                        radius: 8
+                        color: "transparent"
+                        border.width: current ? 3 : 0
+                        border.color: Theme.accent
+                        Item {
                             anchors.fill: parent
-                            source: "file://" + Settings.wallpaperDir + "/foxtail-dawn.jpg"
-                            sourceSize: Qt.size(240, 150)
-                            fillMode: Image.PreserveAspectCrop
+                            anchors.margins: 3
+                            clip: true
+                            Image {
+                                anchors.fill: parent
+                                source: "file://" + Settings.wallpaperDir + "/" + dyn.modelData.a + ".jpg"
+                                sourceSize: Qt.size(240, 150)
+                                fillMode: Image.PreserveAspectCrop
+                            }
+                            Image {   // the dark half
+                                width: parent.width / 2
+                                height: parent.height
+                                x: parent.width / 2
+                                source: "file://" + Settings.wallpaperDir + "/" + dyn.modelData.b + ".jpg"
+                                sourceSize: Qt.size(240, 150)
+                                fillMode: Image.PreserveAspectCrop
+                                horizontalAlignment: Image.AlignRight
+                            }
                         }
-                        Image {   // the dark half
-                            width: parent.width / 2
-                            height: parent.height
-                            x: parent.width / 2
-                            source: "file://" + Settings.wallpaperDir + "/foxtail-dusk.jpg"
-                            sourceSize: Qt.size(240, 150)
-                            fillMode: Image.PreserveAspectCrop
-                            horizontalAlignment: Image.AlignRight
+                        Label {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.bottom: parent.bottom
+                            anchors.bottomMargin: 6
+                            text: I18n.tr("Dynamic") + " · " + dyn.modelData.n
+                            color: "white"
+                            style: Text.Outline
+                            styleColor: Qt.rgba(0, 0, 0, 0.3)
+                            font.pixelSize: Theme.px(11)
+                            font.weight: Font.DemiBold
                         }
-                    }
-                    Label {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.bottom: parent.bottom
-                        anchors.bottomMargin: 6
-                        text: I18n.tr("Dynamic")
-                        color: "white"
-                        style: Text.Outline
-                        styleColor: Qt.rgba(0, 0, 0, 0.3)
-                        font.pixelSize: Theme.px(11)
-                        font.weight: Font.DemiBold
-                    }
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: {
-                            Settings.dynamicWallpaper = true;
-                            Settings.wallpaper = Settings.wallpaperDir + (Settings.darkMode ? "/foxtail-dusk.jpg" : "/foxtail-dawn.jpg");
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                Settings.dynamicPair = dyn.modelData.id;
+                                Settings.dynamicWallpaper = true;
+                                Settings.wallpaper = Settings.dynamicFile(Settings.darkMode);
+                            }
                         }
                     }
                 }

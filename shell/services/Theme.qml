@@ -49,7 +49,7 @@ Singleton {
                  : (dark ? Qt.rgba(0.12, 0.12, 0.12, 0.45) : Qt.rgba(1, 1, 1, 0.45))
     // Menu bar text sits on the wallpaper when clear, so it follows wallpaper brightness.
     readonly property color menuBarText: liquid && !Settings.menuBarBackground ? (wallpaperDark ? "#FFFFFF" : "#000000") : text
-    property bool wallpaperDark: Settings.wallpaper.indexOf("dusk") >= 0 || Settings.wallpaper.indexOf("ember") >= 0
+    property bool wallpaperDark: /dusk|ember|night/.test(Settings.wallpaper)
 
     readonly property string font: "Inter"
     readonly property string fontDisplay: "Inter Display"

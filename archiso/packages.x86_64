@@ -72,6 +72,7 @@ foxtail-keyring
 # ---- apps ----
 firefox
 nautilus
+sushi
 ptyxis
 gnome-text-editor
 gnome-calculator

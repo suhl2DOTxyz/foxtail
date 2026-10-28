@@ -8,7 +8,7 @@ Singleton {
     id: root
 
     property string version: ""
-    readonly property string codename: "Kit"
+    readonly property string codename: "Vixen"
     property string cpu: ""
     property string memory: ""
     property string gpu: ""

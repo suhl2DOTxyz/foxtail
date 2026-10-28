@@ -16,6 +16,7 @@ Singleton {
     property bool about: false
     property bool forceQuit: false
     property bool installer: false
+    property bool setupAssistant: false
     property bool missionControl: false
     property bool screenshotBar: false
     property string settingsPane: "appearance"
@@ -99,6 +100,8 @@ Singleton {
     // The desktop has keyboard focus (Files is the front app), and ⌘ keys
     // pressed there: "backspace", "A", "I", "O", "down", "SHIFT+N", "C".
     property bool desktopActive: false
+    // Desktop widgets' edit mode (the widget gallery is showing).
+    property bool editingWidgets: false
     signal desktopKey(string key)
     // ⌘1–⌘4 while Spotlight is open (Applications, Files, Actions, Clipboard).
     signal spotlightMode(int index)

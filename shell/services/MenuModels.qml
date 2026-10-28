@@ -16,6 +16,7 @@ Singleton {
     readonly property bool frontWindow: !!Hypr.activeClass && !Hypr.isMinimized(Hypr.activeToplevel) && !Hypr.isHidden(Hypr.activeToplevel)
     readonly property string appName: {
         if (Panels.desktopActive || !frontWindow) return "Files";
+        if (Hypr.activeClass === "org.gnome.NautilusPreviewer") return "Files";   // Quick Look
         if (Apps.isShellWindow(Hypr.activeToplevel)) return activeEntry ? Apps.title(activeEntry) : Hypr.activeTitle;
         return activeEntry ? Apps.title(activeEntry) : prettify(Hypr.activeClass);
     }

@@ -38,7 +38,8 @@ Singleton {
     // such as the GTK file chooser never get their own Dock icon, as on macOS.
     readonly property var helperIds: ["xdg-desktop-portal-gtk", "xdg-desktop-portal-gnome",
                                       "xdg-desktop-portal-hyprland", "hyprpolkitagent",
-                                      "org.freedesktop.impl.portal.desktop.gtk"]
+                                      "org.freedesktop.impl.portal.desktop.gtk",
+                                      "org.gnome.NautilusPreviewer"]   // Quick Look belongs to Files
     readonly property var toplevels: ToplevelManager.toplevels.values
         .filter(t => !t.parent && helperIds.indexOf(t.appId) < 0)
 

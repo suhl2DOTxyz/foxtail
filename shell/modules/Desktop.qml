@@ -274,6 +274,7 @@ PanelWindow {
             { text: I18n.tr("Get Info"), action: () => root.fileManager("ShowItemProperties", [root.dir]) },
             { separator: true },
             { text: I18n.tr("Change Wallpaper…"), action: () => Panels.openSettings("wallpaper") },
+            { text: I18n.tr("Edit Widgets…"), action: () => Panels.editingWidgets = true },
             { separator: true },
             { text: I18n.tr("Clean Up"), enabled: Settings.desktopSort === "none", action: () => root.cleanUp() },
             { text: I18n.tr("Sort By"), submenu: [
@@ -468,6 +469,7 @@ PanelWindow {
                 return;
             }
             Panels.closeAll();
+            Panels.editingWidgets = false;   // clicking the desktop ends widget editing, as on macOS
             if (!(m.modifiers & (Qt.ShiftModifier | Qt.ControlModifier))) root.selected = {};
             start = Qt.point(m.x, m.y);
             banding = true;
@@ -497,6 +499,15 @@ PanelWindow {
         border.width: 1
         border.color: Qt.rgba(1, 1, 1, 0.7)
         radius: 2
+    }
+
+    // ---------------- widgets ----------------
+    DesktopWidgets {
+        visible: root.primary
+        anchors.fill: parent
+        screenSize: Qt.size(root.modelData.width, root.modelData.height)
+        windowOffset: root.screenOffset
+        onContextMenu: (model, x, y) => root.contextAt(model, x, y)
     }
 
     // ---------------- keyboard ----------------
