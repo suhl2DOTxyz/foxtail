@@ -102,10 +102,16 @@
 - ✅ **Screen reader labels** for Foxtail's menus, menu bar, Dock, window buttons and Control Center
 - ✅ Keyboard shortcuts list and battery status translated; the 13px font reaches GTK 3 settings of existing accounts
 
-## v2.0: Stable daily driver
+## v2.0 “Vixen”: the first major release
+- ✅ **Desktop widgets:** Clock, Calendar, Battery, System and Notes on the wallpaper, with a gallery to add and remove them
+- ✅ **Setup Assistant** on first login and after major updates: appearance, Liquid Glass, accent color, widgets
+- ✅ **Quick Look:** Space in Files previews the selected file
+- ✅ **Vixen** wallpapers (day and night) as the new default dynamic wallpaper
+- ✅ Polish pass on every screen (1.8–2.0)
+
+## Daily driver (next)
 - [ ] Runs well on at least 5 real machines (Intel, AMD, NVIDIA, an older laptop), with every 🟡 above confirmed on real hardware
 - [ ] Fixed, reliable update cadence
-- [ ] Polish pass on every screen, with a consistent icon set
 - [ ] Secure Boot support (signed bootloader/kernel)
 
 ---

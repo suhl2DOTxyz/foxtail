@@ -19,7 +19,7 @@ So copy is ⌘C (**Super+C**), Spotlight is ⌘Space, switching apps is ⌘Tab. 
 | **Control Center** | Wi-Fi, Bluetooth, Liquid Glass, dark mode, Focus, display and sound |
 | **Clock** | Notification Center, with the calendar and widgets |
 | **Dock** | Your apps; Downloads and the Trash on the right |
-| **Launchpad** (F4) | Every app |
+| **Apps** (F4) | Every app |
 | **Mission Control** (F3) | All windows and desktops |
 
 ## Coming from Windows

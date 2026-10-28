@@ -8,7 +8,7 @@
 
 A macOS-style desktop on Arch Linux: a hand-built shell, orange through and through, wrapped in **Liquid Glass**.
 
-[![Version](https://img.shields.io/badge/version-1.5-FF7A1A?style=for-the-badge)](https://github.com/suhl2DOTxyz/foxtail/releases/latest)
+[![Version](https://img.shields.io/badge/version-2.0-FF7A1A?style=for-the-badge)](https://github.com/suhl2DOTxyz/foxtail/releases/latest)
 [![Arch Linux](https://img.shields.io/badge/based_on-Arch_Linux-1793D1?style=for-the-badge&logo=archlinux&logoColor=white)](https://archlinux.org)
 [![Hyprland](https://img.shields.io/badge/compositor-Hyprland-58E1FF?style=for-the-badge)](https://hyprland.org)
 [![Quickshell](https://img.shields.io/badge/shell-Quickshell_(QML)-41CD52?style=for-the-badge&logo=qt&logoColor=white)](https://quickshell.org)
@@ -30,6 +30,8 @@ Foxtail is a Linux distribution that looks and behaves like a Mac, not just a Li
 
 It's Arch underneath, so you get current software, the AUR and Flatpak. On top, it's designed so that everyday things never need a terminal.
 
+**New in 2.0 “Vixen”:** widgets on your desktop, a Setup Assistant, Quick Look (press Space in Files), apps restyled to look like macOS 27 apps, custom keyboard shortcuts, and a new pair of wallpapers.
+
 <br>
 
 <a id="features"></a>
@@ -43,7 +45,7 @@ It's Arch underneath, so you get current software, the AUR and Flatpak. On top, 
 <td width="50%" valign="top">
 
 ### 💧 Liquid Glass
-A material modelled on macOS Tahoe's: glass edges **bend what's behind them** like a real lens (Snell's law over a squircle bevel), clear at the rim and frosted in the middle, with a thin highlight that catches the light and a glow when you press it. The tint adapts so text stays readable over anything. Pick **Clear** or **Tinted**, or turn it off for classic frosted vibrancy.
+A material modelled on macOS 26 and 27: glass edges **bend what's behind them** like a real lens (Snell's law over a squircle bevel), clear at the rim and frosted in the middle, with a thin highlight that catches the light and a glow when you press it. The tint adapts so text stays readable over anything. A slider goes from **Clear** to **Tinted**, or turn it off for classic frosted vibrancy.
 
 </td>
 <td width="50%" valign="top">
@@ -63,7 +65,7 @@ Windows float and open centered. The traffic lights sit where you expect them, a
 <td valign="top">
 
 ### 🖥️ Desktop & Dock
-Files on your desktop with real thumbnails, drag-to-arrange and a right-click menu. A magnifying Dock with a **Downloads stack**, a Trash that fills up, notification badges and drag-to-reorder. Plus **Mission Control**, **⌘Tab**, **Launchpad** and **Hot Corners**.
+**Widgets** on the wallpaper (Clock, Calendar, Battery, System, Notes) that you drag anywhere. Files on your desktop with real thumbnails and a right-click menu. A Dock with a **Downloads stack**, a Trash that fills up, notification badges and drag-to-reorder. Plus **Mission Control**, **⌘Tab**, **Apps** and **Hot Corners**.
 
 </td>
 </tr>
@@ -113,7 +115,7 @@ A friendly installer with language and keyboard setup, **full-disk encryption** 
 <td><img src="docs/screenshots/dark-notifications.png" alt="Dark mode with Notification Center widgets"><p align="center"><b>Dark mode</b>: the wallpaper follows along</p></td>
 </tr>
 <tr>
-<td><img src="docs/screenshots/launchpad.png" alt="Launchpad grid of apps"><p align="center"><b>Launchpad</b>: all your apps</p></td>
+<td><img src="docs/screenshots/launchpad.png" alt="Apps grid"><p align="center"><b>Apps</b>: all your apps</p></td>
 <td><img src="docs/screenshots/lock-screen.png" alt="The lock screen with a large clock"><p align="center"><b>Lock screen</b>: big clock, blurred wallpaper</p></td>
 </tr>
 </table>
@@ -136,7 +138,7 @@ The Super (Windows) key is **⌘**, Alt is **⌥**, Ctrl is **⌃**. Shortcuts w
 | ⌃⌘F | Full screen | | ⌃⌘Q | Lock screen |
 | ⌃⌥ ← → ↑ ↓ | Tile to a half | | ⌥⌘Esc | Force Quit |
 | ⌃⌥F / ⌃⌥C | Fill / Center window | | F3 or ⌃↑ | Mission Control |
-| ⌃1 … ⌃9 | Go to desktop 1–9 | | F4 | Launchpad |
+| ⌃1 … ⌃9 | Go to desktop 1–9 | | F4 | Apps |
 | ⌘← → / ⌥← → | Line / word navigation | | F11 | Show Desktop |
 
 <br>
@@ -184,7 +186,7 @@ sudo ./scripts/build-iso.sh       # -> out/foxtail-<version>-<date>-x86_64.iso
 
 | Path | What's inside |
 |---|---|
-| `shell/` | The desktop (Quickshell/QML): menu bar, Dock, desktop icons, Control Center, Spotlight, Launchpad, Mission Control, Notification Center, lock screen, System Settings, installer |
+| `shell/` | The desktop (Quickshell/QML): menu bar, Dock, desktop icons, Control Center, Spotlight, Apps, desktop widgets, Mission Control, Notification Center, lock screen, System Settings, Setup Assistant, installer |
 | `shell/shaders/liquidglass.frag` | The Liquid Glass shader. Rebuild the `.qsb` with `/usr/lib/qt6/bin/qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o X.qsb X` |
 | `hypr/` | Hyprland Lua config: floating windows, macOS shortcuts, tiling, blur rules, animations |
 | `bin/` | `foxtail-*` helpers: IPC, installer backend, updates, screenshots, recording, users |
@@ -202,7 +204,7 @@ sudo ./scripts/build-iso.sh       # -> out/foxtail-<version>-<date>-x86_64.iso
 
 ## 🗺️ Where it's heading
 
-Foxtail is young. Everything is building toward **2.0**: the stable release you can use as your everyday computer. See the **[roadmap](ROADMAP.md)** for what's done, what's next and the known limitations.
+**2.0** is the first major release. What's still missing before it's a proven daily driver is mostly testing on real computers: if you try Foxtail on yours, a [hardware report](https://github.com/suhl2DOTxyz/foxtail/issues/new?template=hardware_report.yml) helps a lot. See the **[roadmap](ROADMAP.md)** for what's done, what's next and the known limitations.
 
 <br>
 
