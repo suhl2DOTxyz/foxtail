@@ -37,7 +37,6 @@ Item {
         screenSize: root.screenSize
         rimOpacity: 0.85
         bezel: 20
-        refraction: 14
     }
 
     Item {

@@ -126,7 +126,7 @@ void main() {
     lens.b = sampleBackdrop(px + inward * reach * lensShift(sinA, ior + split), frost).b;
     // A lens gathers light: the curved band reads a touch brighter, and glass
     // gives what it shows a slight lift in saturation (macOS "vibrancy").
-    lens = mix(vec3(luma(lens)), lens, 1.12) * exposure * (1.0 + 0.05 * (1.0 - t));
+    lens = mix(vec3(luma(lens)), lens, 1.22) * exposure * (1.0 + 0.06 * (1.0 - t));
 
     // The lensed band covers the live blur near the edge and hands over to it
     // across the inner part of the bezel.
@@ -153,6 +153,17 @@ void main() {
     vec3 rgb = tintA * tint.rgb + (1.0 - tintA) * band * lens;
     float alpha = tintA + band - tintA * band;
 
+    // ---- edge definition ----------------------------------------------------
+    // The slab's far edge, turned away from the light, reads as a faint dark
+    // contour - in light mode it is what separates glass from a light
+    // backdrop (where the sheen alone would vanish).
+    vec2 toKey = light * itemSize - px;
+    float away = max(-dot(outward, toKey / max(length(toKey), 1e-3)), 0.0);
+    float contour = (1.0 - smoothstep(0.6, 2.6, inset)) * (0.35 + 0.65 * away);
+    float shade = contour * mix(0.10, 0.18, dark) * grow;
+    rgb *= 1.0 - shade;
+    alpha += shade * (1.0 - alpha);
+
     // ---- specular sheen -----------------------------------------------------
     // Light from `light` grazes the rim: brightest where the edge faces it,
     // with a fainter return on the opposite side (light that crossed the slab).
@@ -164,7 +175,9 @@ void main() {
     float glow = pow(1.0 - smoothstep(0.0, b * 0.7, inset), 2.0);      // soft inner falloff
     // Light also enters the top of the slab: a faint sky gradient.
     float sky = (1.0 - qt_TexCoord0.y) * 0.035 * (1.0 - dark);
-    float sheen = lip * (0.30 + 0.70 * lit) + glow * 0.22 * lit + sky;
+    // Apple's sheen is directional: bright where an edge faces the light,
+    // nearly gone where it doesn't (no even outline all the way round).
+    float sheen = lip * (0.08 + 0.92 * lit) + glow * 0.26 * lit + sky;
     sheen *= rimLight * grow * mix(1.0, 0.75, dark);
 
     // Pressed glass lights up from within, starting under the pointer and

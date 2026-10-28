@@ -35,8 +35,18 @@ Singleton {
     readonly property color glassStrong: solid
         ? (dark ? "#323234" : "#F4F4F6")
         : liquid
-            ? (dark ? Qt.rgba(0.12, 0.12, 0.13, 0.55) : Qt.rgba(1, 1, 1, 0.52))
+            ? (dark ? Qt.rgba(0.12, 0.12, 0.13, 0.42) : Qt.rgba(1, 1, 1, 0.36))
             : (dark ? Qt.rgba(0.16, 0.16, 0.17, 0.84) : Qt.rgba(0.97, 0.97, 0.98, 0.86))
+    // How strongly the compositor frosts what is behind glass (Hyprland blur
+    // size; passes are fixed). Liquid Glass lenses light rather than
+    // scattering it, so it only softens the backdrop - shapes stay readable
+    // through it - and frosts more as the Clear/Tinted slider moves toward
+    // Tinted. Classic vibrancy is the old heavy frost.
+    readonly property int glassBlurSize: liquid ? Math.round(2 + 5 * Settings.glassTintLevel) : 9
+    readonly property int glassBlurPasses: liquid ? 2 : 3
+    // About the radius of that blur in screen pixels, for the textures the
+    // glass shader lenses (they must match it to meet the live blur seamlessly).
+    readonly property real glassBlur: glassBlurSize * Math.pow(2, glassBlurPasses)
     // Tiles inside Control Center etc.
     readonly property color tile: dark ? Qt.rgba(1, 1, 1, liquid ? 0.10 : 0.08) : Qt.rgba(1, 1, 1, liquid ? 0.38 : 0.55)
     readonly property color glassBorder: dark ? Qt.rgba(1, 1, 1, 0.16) : Qt.rgba(1, 1, 1, 0.55)

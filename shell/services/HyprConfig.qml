@@ -25,6 +25,8 @@ Singleton {
                    + `touchpad = { natural_scroll = ${Settings.trackpadNaturalScroll}, tap_to_click = ${Settings.tapToClick}, `
                    + `clickfinger_behavior = ${Settings.twoFingerSecondary}, scroll_factor = ${Settings.trackpadScrollSpeed.toFixed(2)} } } })`);
         lines.push(`foxtail_gestures = ${Settings.trackpadGestures}`);
+        // Appearance: how much the glass frosts (Theme.glassBlurSize).
+        lines.push(`hl.config({ decoration = { blur = { size = ${Theme.glassBlurSize}, passes = ${Theme.glassBlurPasses}, vibrancy = ${Theme.liquid ? 0.5 : 0.25} } } })`);
         // Accessibility
         lines.push(`foxtail_reduce_motion = ${Settings.reduceMotion}`);
         lines.push(`foxtail_zoom_keys = ${Settings.zoomKeys}`);

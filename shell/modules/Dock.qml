@@ -183,7 +183,6 @@ PanelWindow {
             screenSize: Qt.size(dock.width, dock.screen.height)
             windowOffset: Qt.point(0, dock.screen.height - dock.height)
             bezel: 20
-            refraction: 16
             adapt: 0.35   // icons, not text: let the wallpaper's color through
         }
 

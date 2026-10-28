@@ -48,7 +48,6 @@ Item {
         screenSize: root.screenSize
         windowOffset: root.windowOffset
         bezel: 14
-        refraction: 6
     }
 
     Column {

@@ -109,6 +109,10 @@
 - ✅ **Vixen** wallpapers (day and night) as the new default dynamic wallpaper
 - ✅ Polish pass on every screen (1.8–2.0)
 
+## v2.0.1
+- ✅ **Liquid Glass, redone:** the glass now lenses what is behind it instead of frosting it (a light blur that keeps shapes readable, stronger refraction at the rim that grows with the size of the glass, a directional edge highlight and a faint contour on the far edge); the Clear/Tinted slider also sets how much it frosts
+- ✅ Clicking in a window no longer moves the pointer to the window's center
+
 ## Daily driver (next)
 - [ ] Runs well on at least 5 real machines (Intel, AMD, NVIDIA, an older laptop), with every 🟡 above confirmed on real hardware
 - [ ] Fixed, reliable update cadence

@@ -3,7 +3,7 @@ import QtQuick.Effects
 import qs.services
 
 // The wallpaper, cropped like the desktop shows it and blurred about as much
-// as the compositor blurs it, as a texture for Liquid Glass to lens. Used by
+// as the compositor blurs it (Theme.glassBlur), as a texture for Liquid Glass to lens. Used by
 // glass that only ever sits over the desktop picture (Dock, banners, OSD) and
 // as the fallback when popovers don't refract windows.
 Item {
@@ -14,9 +14,9 @@ Item {
     readonly property Item sharp: sharpTex
     readonly property Item texture: blurred
 
-    // A quarter-resolution copy is plenty for something this blurry.
-    readonly property size texSize: Qt.size(Math.max(1, Math.round(screenSize.width / 4)),
-                                            Math.max(1, Math.round(screenSize.height / 4)))
+    // Half resolution: Liquid Glass shows the backdrop nearly sharp at its rim.
+    readonly property size texSize: Qt.size(Math.max(1, Math.round(screenSize.width / 2)),
+                                            Math.max(1, Math.round(screenSize.height / 2)))
 
     Item {
         id: box
@@ -52,7 +52,7 @@ Item {
         autoPaddingEnabled: false
         blurEnabled: true
         blur: 1.0
-        blurMax: 16
+        blurMax: Math.round(Math.min(64, Theme.glassBlur / 2))
     }
 
     ShaderEffectSource {

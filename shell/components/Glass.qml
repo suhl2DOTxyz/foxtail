@@ -26,21 +26,22 @@ Item {
     // Liquid tuning
     // Width of the curved rim, and how tall the dome over it is (bigger glass
     // is "thicker", as Apple puts it: deeper lensing, softer light).
-    property real bezel: Math.min(22, Math.min(width, height) * 0.36)
+    property real bezel: Math.min(24, Math.min(width, height) * 0.4)
     property real thickness: 1.6
-    // How far, at most, the rim reaches inward for what it shows (px). Kept
-    // modest: macOS 27 made refraction gentler and more uniform than Tahoe's.
-    property real refraction: Math.min(9, bezel * 0.45)
+    // How far, at most, the rim reaches inward for what it shows (px).
+    // Lensing is what defines Liquid Glass (it bends light where older
+    // materials scattered it), and bigger glass lenses more.
+    property real refraction: Math.min(24, bezel * 0.95)
     property real dispersion: 0.5
     // How clear the lens is right at the lip (it frosts toward the middle).
     // More tint (the Appearance slider) makes it frostier.
-    property real clarity: 0.85 - 0.45 * Settings.glassTintLevel
+    property real clarity: 0.95 - 0.35 * Settings.glassTintLevel
     // How strongly the lensed rim covers the compositor's live blur.
     property real rimOpacity: 0.9
     // Brightness of the backdrop as seen by the viewer; lower it when the
     // surface sits on a dimmed scrim so the rim matches its surroundings.
     property real exposure: 1.0
-    property real rimLight: Theme.dark ? 0.8 : 1.0
+    property real rimLight: Theme.dark ? 0.9 : 1.15
     // Raise the tint where the content behind would make text hard to read.
     property real adapt: 1.0
 

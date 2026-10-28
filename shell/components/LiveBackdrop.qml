@@ -58,7 +58,7 @@ Item {
         autoPaddingEnabled: false
         blurEnabled: root.wanted
         blur: 1.0
-        blurMax: 32
+        blurMax: Math.round(Math.min(64, Theme.glassBlur / 2))
     }
 
     ShaderEffectSource {
