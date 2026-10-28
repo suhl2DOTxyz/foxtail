@@ -47,6 +47,8 @@ wpa_supplicant
 wireless-regdb
 bluez
 bluez-utils
+python-dbus
+python-gobject
 
 # ---- audio ----
 pipewire

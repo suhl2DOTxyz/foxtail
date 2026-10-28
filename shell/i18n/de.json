@@ -506,5 +506,10 @@
  "Welcome to Foxtail 2.0": "Willkommen bei Foxtail 2.0",
  "Widgets": "Widgets",
  "Widgets on your desktop": "Widgets auf deinem Schreibtisch",
- "You're all set": "Alles bereit"
+ "You're all set": "Alles bereit",
+ "Bluetooth Connection Request": "Bluetooth-Verbindungsanfrage",
+ "Connect": "Verbinden",
+ "To pair “%1”, type this code on it, then press Return.": "Gib diesen Code auf „%1“ ein und drücke den Zeilenschalter, um es zu koppeln.",
+ "“%1” would like to connect to this computer.": "„%1“ möchte sich mit diesem Computer verbinden.",
+ "“%1” would like to pair with this computer. Make sure the code shown on “%1” matches the code below.": "„%1“ möchte sich mit diesem Computer koppeln. Vergewissere dich, dass der auf „%1“ angezeigte Code mit dem Code unten übereinstimmt."
 }

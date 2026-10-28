@@ -21,6 +21,7 @@ depends=(
     'sushi'   # Quick Look: Space previews the selected file in Files
     'libnotify' 'brightnessctl' 'playerctl' 'xdg-user-dirs' 'xdg-utils'
     'sddm' 'plymouth' 'pipewire' 'wireplumber' 'networkmanager' 'bluez'
+    'python-dbus' 'python-gobject'   # foxtail-bt-agent
     # look
     'adw-gtk-theme' 'inter-font' 'ttf-jetbrains-mono' 'noto-fonts' 'noto-fonts-emoji'
     'noto-fonts-cjk' 'whitesur-icon-theme' 'apple_cursor' 'fastfetch'

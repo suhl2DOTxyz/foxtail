@@ -110,7 +110,8 @@
 - ✅ Polish pass on every screen (1.8–2.0)
 
 ## v2.0.1
-- ✅ **Liquid Glass, redone:** the glass now lenses what is behind it instead of frosting it (a light blur that keeps shapes readable, stronger refraction at the rim that grows with the size of the glass, a directional edge highlight and a faint contour on the far edge); the Clear/Tinted slider also sets how much it frosts
+- ✅ **Liquid Glass, redone** after Apple's own pictures: milky glass that lets the colors behind it through, a bright beveled rim all the way round (brightest toward the light), a soft shade inside the far edge, and stronger lensing at the rim that grows with the size of the glass; the Clear/Tinted slider also sets how much it frosts
+- ✅ **Bluetooth pairing with phones:** a pairing agent shows the macOS “Bluetooth Connection Request” with the six-digit code to compare (phones wouldn't pair without one)
 - ✅ Clicking in a window no longer moves the pointer to the window's center
 
 ## Daily driver (next)

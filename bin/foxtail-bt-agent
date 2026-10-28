@@ -1,0 +1,172 @@
+#!/usr/bin/env python3
+# Foxtail's Bluetooth pairing agent. Phones (and most modern devices) pair
+# only once both sides confirm the same six-digit code; BlueZ asks an agent
+# for that, and without one pairing fails. This agent shows the macOS
+# "Bluetooth Connection Request" in the shell and waits for the answer.
+#
+#   foxtail-bt-agent                 run the agent (started with the session)
+#   foxtail-bt-agent --reply ID yes|no   answer request ID (used by the shell)
+import os
+import subprocess
+import sys
+
+FIFO = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "foxtail-bt-agent")
+
+if len(sys.argv) == 4 and sys.argv[1] == "--reply":
+    try:
+        fd = os.open(FIFO, os.O_WRONLY | os.O_NONBLOCK)
+        os.write(fd, f"{sys.argv[2]} {sys.argv[3]}\n".encode())
+        os.close(fd)
+    except OSError:
+        pass
+    sys.exit(0)
+
+import dbus
+import dbus.mainloop.glib
+import dbus.service
+from gi.repository import GLib
+
+AGENT_PATH = "/org/foxtail/BluetoothAgent"
+TIMEOUT_S = 30
+
+
+class Rejected(dbus.DBusException):
+    _dbus_error_name = "org.bluez.Error.Rejected"
+
+
+class Canceled(dbus.DBusException):
+    _dbus_error_name = "org.bluez.Error.Canceled"
+
+
+def device_name(path):
+    try:
+        props = dbus.Interface(bus.get_object("org.bluez", path), "org.freedesktop.DBus.Properties")
+        return str(props.Get("org.bluez.Device1", "Alias"))
+    except dbus.DBusException:
+        return path.rsplit("dev_", 1)[-1].replace("_", ":")
+
+
+def ipc(*args):
+    subprocess.Popen(["foxtail-ipc", *args], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+class Agent(dbus.service.Object):
+    def __init__(self, conn, path):
+        super().__init__(conn, path)
+        self.next_id = 1
+        self.pending = None   # (id, ok, err, timeout source)
+
+    # Ask the shell; ok()/err() are called once it answers (or after 30 s).
+    def ask(self, kind, device, passkey, ok, err):
+        self.drop(Canceled())
+        rid = str(self.next_id)
+        self.next_id += 1
+        source = GLib.timeout_add_seconds(TIMEOUT_S, self.expire, rid)
+        self.pending = (rid, ok, err, source)
+        ipc("bluetoothRequest", rid, kind, device_name(device), passkey)
+
+    def answer(self, rid, yes):
+        if not self.pending or self.pending[0] != rid:
+            return
+        _, ok, err, source = self.pending
+        self.pending = None
+        GLib.source_remove(source)
+        ok() if yes else err(Rejected("Rejected by user"))
+
+    def expire(self, rid):
+        if self.pending and self.pending[0] == rid:
+            self.drop(Rejected("No answer"))
+        return False
+
+    def drop(self, error):
+        if not self.pending:
+            return
+        rid, _, err, source = self.pending
+        self.pending = None
+        GLib.source_remove(source)
+        err(error)
+        ipc("bluetoothRequestDone", rid)
+
+    @dbus.service.method("org.bluez.Agent1", in_signature="", out_signature="")
+    def Release(self):
+        pass
+
+    @dbus.service.method("org.bluez.Agent1", in_signature="ou", out_signature="",
+                         async_callbacks=("ok", "err"))
+    def RequestConfirmation(self, device, passkey, ok, err):
+        self.ask("confirm", device, f"{int(passkey):06d}", ok, err)
+
+    @dbus.service.method("org.bluez.Agent1", in_signature="o", out_signature="",
+                         async_callbacks=("ok", "err"))
+    def RequestAuthorization(self, device, ok, err):
+        self.ask("authorize", device, "", ok, err)
+
+    @dbus.service.method("org.bluez.Agent1", in_signature="os", out_signature="")
+    def AuthorizeService(self, device, uuid):
+        # Services of a device the user already paired with.
+        try:
+            props = dbus.Interface(bus.get_object("org.bluez", device), "org.freedesktop.DBus.Properties")
+            if props.Get("org.bluez.Device1", "Paired"):
+                return
+        except dbus.DBusException:
+            pass
+        raise Rejected("Not paired")
+
+    # Keyboards: the code is typed on the device; show it until it's done.
+    @dbus.service.method("org.bluez.Agent1", in_signature="ouq", out_signature="")
+    def DisplayPasskey(self, device, passkey, entered):
+        if entered == 0:
+            ipc("bluetoothRequest", "0", "display", device_name(device), f"{int(passkey):06d}")
+
+    @dbus.service.method("org.bluez.Agent1", in_signature="os", out_signature="")
+    def DisplayPinCode(self, device, pincode):
+        ipc("bluetoothRequest", "0", "display", device_name(device), str(pincode))
+
+    # Old devices with a fixed PIN (headsets): almost always 0000.
+    @dbus.service.method("org.bluez.Agent1", in_signature="o", out_signature="s")
+    def RequestPinCode(self, device):
+        return "0000"
+
+    @dbus.service.method("org.bluez.Agent1", in_signature="o", out_signature="u")
+    def RequestPasskey(self, device):
+        return dbus.UInt32(0)
+
+    @dbus.service.method("org.bluez.Agent1", in_signature="", out_signature="")
+    def Cancel(self):
+        self.drop(Canceled("Canceled"))
+        ipc("bluetoothRequestDone", "0")
+
+
+def register():
+    try:
+        manager = dbus.Interface(bus.get_object("org.bluez", "/org/bluez"), "org.bluez.AgentManager1")
+        manager.RegisterAgent(AGENT_PATH, "KeyboardDisplay")
+        manager.RequestDefaultAgent(AGENT_PATH)
+    except dbus.DBusException as e:
+        print("foxtail-bt-agent: can't register:", e, file=sys.stderr)
+
+
+def on_fifo(fd, condition):
+    data = os.read(fd, 4096).decode(errors="replace")
+    for line in data.splitlines():
+        parts = line.split()
+        if len(parts) == 2:
+            agent.answer(parts[0], parts[1] == "yes")
+    return True
+
+
+dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+bus = dbus.SystemBus()
+agent = Agent(bus, AGENT_PATH)
+
+if os.path.exists(FIFO):
+    os.unlink(FIFO)
+os.mkfifo(FIFO, 0o600)
+# Opened read-write so it never sees end-of-file between writers.
+fifo_fd = os.open(FIFO, os.O_RDWR | os.O_NONBLOCK)
+GLib.io_add_watch(fifo_fd, GLib.IO_IN, on_fifo)
+
+register()
+# Register again whenever bluetoothd (re)starts.
+bus.watch_name_owner("org.bluez", lambda owner: owner and register())
+GLib.MainLoop().run()

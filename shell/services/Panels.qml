@@ -50,8 +50,20 @@ Singleton {
         { id: "printers", name: I18n.tr("Printers & Scanners"), icon: "printer", color: "#8E8E93", keywords: "cups print" },
         { id: "defaultapps", name: I18n.tr("Default Apps"), icon: "apps", color: "#FF7A1A", keywords: "browser mail open with" }
     ]
-    // Pending power confirmation: "" | "restart" | "shutdown" | "logout"
+    // Pending power confirmation: "" | "restart" | "shutdown" | "logout" |
+    // "emptyTrash" | "bluetooth"
     property string confirm: ""
+    // Bluetooth Connection Request from foxtail-bt-agent: { id, kind, name, code },
+    // kind "confirm" (codes must match), "authorize" or "display" (type the
+    // code on the keyboard). Answered with answerBluetooth().
+    property var bluetoothRequest: null
+    function answerBluetooth(yes) {
+        const r = bluetoothRequest;
+        if (!r) return;
+        bluetoothRequest = null;
+        if (confirm === "bluetooth") confirm = "";
+        if (r.id !== "0") Quickshell.execDetached(["foxtail-bt-agent", "--reply", r.id, yes ? "yes" : "no"]);
+    }
 
     // Right-click menu anywhere (desktop, desktop icons): a MenuPanel model
     // shown at `contextPos` (screen coordinates) on `screen`.

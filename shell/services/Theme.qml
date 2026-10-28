@@ -30,20 +30,20 @@ Singleton {
     readonly property color glass: solid
         ? (dark ? "#2A2A2C" : "#ECECEE")
         : liquid
-            ? (dark ? Qt.rgba(0.10, 0.10, 0.11, 0.34) : Qt.rgba(1, 1, 1, 0.20))
+            ? (dark ? Qt.rgba(0.10, 0.10, 0.11, 0.38) : Qt.rgba(1, 1, 1, 0.30))
             : (dark ? Qt.rgba(0.14, 0.14, 0.15, 0.72) : Qt.rgba(0.96, 0.96, 0.97, 0.74))
     readonly property color glassStrong: solid
         ? (dark ? "#323234" : "#F4F4F6")
         : liquid
-            ? (dark ? Qt.rgba(0.12, 0.12, 0.13, 0.42) : Qt.rgba(1, 1, 1, 0.36))
+            ? (dark ? Qt.rgba(0.12, 0.12, 0.13, 0.50) : Qt.rgba(1, 1, 1, 0.46))
             : (dark ? Qt.rgba(0.16, 0.16, 0.17, 0.84) : Qt.rgba(0.97, 0.97, 0.98, 0.86))
     // How strongly the compositor frosts what is behind glass (Hyprland blur
     // size; passes are fixed). Liquid Glass lenses light rather than
-    // scattering it, so it only softens the backdrop - shapes stay readable
-    // through it - and frosts more as the Clear/Tinted slider moves toward
-    // Tinted. Classic vibrancy is the old heavy frost.
-    readonly property int glassBlurSize: liquid ? Math.round(2 + 5 * Settings.glassTintLevel) : 9
-    readonly property int glassBlurPasses: liquid ? 2 : 3
+    // scattering it, so it frosts less than classic vibrancy - big shapes
+    // and colors still come through (macOS's controls look milky, not clear)
+    // - and more as the Clear/Tinted slider moves toward Tinted.
+    readonly property int glassBlurSize: liquid ? Math.round(3 + 4 * Settings.glassTintLevel) : 9
+    readonly property int glassBlurPasses: 3
     // About the radius of that blur in screen pixels, for the textures the
     // glass shader lenses (they must match it to meet the live blur seamlessly).
     readonly property real glassBlur: glassBlurSize * Math.pow(2, glassBlurPasses)

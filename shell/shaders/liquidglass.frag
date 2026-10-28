@@ -153,14 +153,15 @@ void main() {
     vec3 rgb = tintA * tint.rgb + (1.0 - tintA) * band * lens;
     float alpha = tintA + band - tintA * band;
 
-    // ---- edge definition ----------------------------------------------------
-    // The slab's far edge, turned away from the light, reads as a faint dark
-    // contour - in light mode it is what separates glass from a light
-    // backdrop (where the sheen alone would vanish).
+    // ---- bevel shading -------------------------------------------------------
+    // Like Apple's controls, the slab reads as a pillow: just inside the
+    // bright lip, the curved band turned away from the light falls into a
+    // soft shade (strongest along the bottom), and the top of the slab is a
+    // touch lighter than its bottom.
     vec2 toKey = light * itemSize - px;
     float away = max(-dot(outward, toKey / max(length(toKey), 1e-3)), 0.0);
-    float contour = (1.0 - smoothstep(0.6, 2.6, inset)) * (0.35 + 0.65 * away);
-    float shade = contour * mix(0.10, 0.18, dark) * grow;
+    float bandIn = smoothstep(0.8, 2.5, inset) * (1.0 - smoothstep(3.0, max(b * 0.55, 6.0), inset));
+    float shade = bandIn * (0.25 + 0.75 * away) * mix(0.13, 0.20, dark) * grow;
     rgb *= 1.0 - shade;
     alpha += shade * (1.0 - alpha);
 
@@ -171,13 +172,14 @@ void main() {
     vec2 ldir = toLight / max(length(toLight), 1e-3);
     float facing = dot(outward, ldir);
     float lit = pow(max(facing, 0.0), 1.5) + 0.55 * pow(max(-facing, 0.0), 1.8);
-    float lip = 1.0 - smoothstep(0.4, 1.9, inset);                     // crisp ~1.5px line
+    float lip = 1.0 - smoothstep(0.6, 2.2, inset);                     // crisp ~2px line
     float glow = pow(1.0 - smoothstep(0.0, b * 0.7, inset), 2.0);      // soft inner falloff
     // Light also enters the top of the slab: a faint sky gradient.
-    float sky = (1.0 - qt_TexCoord0.y) * 0.035 * (1.0 - dark);
-    // Apple's sheen is directional: bright where an edge faces the light,
-    // nearly gone where it doesn't (no even outline all the way round).
-    float sheen = lip * (0.08 + 0.92 * lit) + glow * 0.26 * lit + sky;
+    float sky = (1.0 - qt_TexCoord0.y) * mix(0.06, 0.03, dark);
+    // The lip catches light all the way round (Apple's glass has a clear
+    // bright rim), brightest where the edge faces the light and on the
+    // opposite corner, where light that crossed the slab comes back out.
+    float sheen = lip * (0.30 + 0.70 * lit) + glow * 0.26 * lit + sky;
     sheen *= rimLight * grow * mix(1.0, 0.75, dark);
 
     // Pressed glass lights up from within, starting under the pointer and

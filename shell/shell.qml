@@ -46,6 +46,15 @@ ShellRoot {
 
     LockScreen {}
 
+    // A dismissed Bluetooth Connection Request (Cancel, Escape, a click
+    // outside) is a "no" to the device.
+    Connections {
+        target: Panels
+        function onConfirmChanged() {
+            if (Panels.confirm !== "bluetooth" && Panels.bluetoothRequest) Panels.answerBluetooth(false);
+        }
+    }
+
     // Auto-lock and display sleep. Idle inhibitors (video playback, a
     // presentation) are respected, as on macOS. The monitors are recreated
     // whenever a timeout changes: an idle notification's timeout is fixed
@@ -187,6 +196,16 @@ ShellRoot {
         function forceQuit(): void { Panels.forceQuit = true; }
         function installer(): void { Panels.installer = true; }
         function setupAssistant(): void { Panels.setupAssistant = true; }
+        function bluetoothRequest(id: string, kind: string, name: string, code: string): void {
+            Panels.bluetoothRequest = { id: id, kind: kind, name: name, code: code };
+            Panels.confirm = "bluetooth";
+        }
+        function bluetoothRequestDone(id: string): void {
+            if (Panels.bluetoothRequest && (id === "0" || Panels.bluetoothRequest.id === id)) {
+                Panels.bluetoothRequest = null;
+                if (Panels.confirm === "bluetooth") Panels.confirm = "";
+            }
+        }
         function lock(): void { Lock.lock(); }
         function power(kind: string): void { Panels.confirm = kind; }
         function closeAll(): void { Panels.closeAll(); }
