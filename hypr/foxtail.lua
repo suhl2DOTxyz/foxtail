@@ -141,7 +141,9 @@ hl.config({
         lockdead_screen_delay = 6000,
     },
 
-    cursor = { inactive_timeout = 0 },
+    -- no_warps: focusing a window (the click handler below re-focuses the
+    -- active one) must never move the pointer; macOS never does.
+    cursor = { inactive_timeout = 0, no_warps = true },
     binds = { workspace_back_and_forth = false },
     ecosystem = { no_update_news = true, no_donation_nag = true },
 })
