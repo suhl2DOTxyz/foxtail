@@ -117,6 +117,7 @@
 ## v2.0.2
 - ✅ **Twemoji** is the emoji font (instead of Google's Noto). Apple's emoji font can't be shipped: its license only covers Apple devices
 - ✅ Selected text uses the accent color in every text field
+- ✅ Works with **Hyprland 0.57** (Arch's update from Oct 29) as well as 0.56: no config error banner after updating
 
 ## Daily driver (next)
 - [ ] Runs well on at least 5 real machines (Intel, AMD, NVIDIA, an older laptop), with every 🟡 above confirmed on real hardware

@@ -133,13 +133,11 @@ hl.config({
         focus_on_activate = true,
         animate_manual_resizes = false,
         animate_mouse_windowdragging = false,
-        -- Off: clicking a window must take keyboard focus back from the desktop
-        -- (an on-demand layer). Spotlight and dialogs grab focus exclusively.
-        layers_hog_keyboard_focus = false,
         -- If the shell crashes while locked, foxtail-shell restarts it and it
-        -- locks again; give it time before Hyprland shows its fallback screen.
+        -- locks again; give it time before Hyprland shows its fallback screen
+        -- (5 s is the most Hyprland 0.57 allows).
         allow_session_lock_restore = true,
-        lockdead_screen_delay = 6000,
+        lockdead_screen_delay = 5000,
     },
 
     -- no_warps: focusing a window (the click handler below re-focuses the
@@ -148,6 +146,17 @@ hl.config({
     binds = { workspace_back_and_forth = false },
     ecosystem = { no_update_news = true, no_donation_nag = true },
 })
+
+-- Off: clicking a window must take keyboard focus back from the desktop (an
+-- on-demand layer). Spotlight and dialogs grab focus exclusively. Hyprland
+-- 0.57 moved the option from misc to layers; set it wherever this version
+-- has it (an option it doesn't know reads as nil).
+local ok, hog = pcall(hl.get_config, "layers.layers_hog_keyboard_focus")
+if ok and hog ~= nil then
+    hl.config({ layers = { layers_hog_keyboard_focus = false } })
+else
+    hl.config({ misc = { layers_hog_keyboard_focus = false } })
+end
 
 -- Displays and keyboard as set in System Settings (written by the shell).
 pcall(dofile, HOME .. "/.config/foxtail/hypr/generated.lua")
