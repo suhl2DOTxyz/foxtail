@@ -81,6 +81,8 @@ FloatingWindow {
             color: Theme.control
             Icon { id: sicon; x: 8; anchors.verticalCenter: parent.verticalCenter; size: 12; name: "search"; color: Theme.textSecondary }
             TextInput {
+                selectionColor: Theme.accent
+                selectedTextColor: "white"
                 id: searchInput
                 anchors.left: sicon.right; anchors.leftMargin: 6
                 anchors.right: parent.right; anchors.rightMargin: 8

@@ -68,6 +68,8 @@ PanelWindow {
                 color: Qt.rgba(1, 1, 1, 0.8)
             }
             TextInput {
+                selectionColor: Theme.accent
+                selectedTextColor: "white"
                 id: search
                 anchors.left: mag.right
                 anchors.leftMargin: 6

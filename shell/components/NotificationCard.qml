@@ -136,6 +136,8 @@ Item {
             color: Theme.control
             border.color: reply.activeFocus ? Theme.accent : Theme.separator
             TextInput {
+                selectionColor: Theme.accent
+                selectedTextColor: "white"
                 id: reply
                 anchors.left: parent.left
                 anchors.leftMargin: 12

@@ -17,6 +17,8 @@ Rectangle {
     border.color: input.activeFocus ? Theme.accent : Theme.separator
     function focusInput() { input.forceActiveFocus(); }
     TextInput {
+        selectionColor: Theme.accent
+        selectedTextColor: "white"
         id: input
         anchors.fill: parent
         anchors.leftMargin: 10

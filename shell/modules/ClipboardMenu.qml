@@ -45,6 +45,8 @@ Item {
         height: 58
         Icon { id: icon; x: 20; anchors.verticalCenter: parent.verticalCenter; size: 20; name: "clipboard"; color: Theme.textSecondary }
         TextInput {
+            selectionColor: Theme.accent
+            selectedTextColor: "white"
             id: input
             anchors.left: icon.right
             anchors.leftMargin: 12

@@ -147,6 +147,8 @@ Item {
                 border.color: pw.activeFocus ? Theme.accent : "transparent"
                 border.width: 2
                 TextInput {
+                    selectionColor: Theme.accent
+                    selectedTextColor: "white"
                     id: pw
                     anchors.fill: parent
                     anchors.leftMargin: 8

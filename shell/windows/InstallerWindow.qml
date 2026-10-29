@@ -431,6 +431,8 @@ FloatingWindow {
                         width: parent.width; height: 26; radius: 7
                         color: Theme.control
                         TextInput {
+                            selectionColor: Theme.accent
+                            selectedTextColor: "white"
                             id: kbSearch
                             anchors.fill: parent
                             anchors.leftMargin: 9
@@ -461,6 +463,8 @@ FloatingWindow {
                 color: Theme.control
                 border.color: Theme.separator
                 TextInput {
+                    selectionColor: Theme.accent
+                    selectedTextColor: "white"
                     anchors.fill: parent
                     anchors.leftMargin: 9
                     verticalAlignment: TextInput.AlignVCenter
@@ -651,6 +655,8 @@ FloatingWindow {
             border.width: input.activeFocus ? 2 : 1
             border.color: input.activeFocus ? Theme.accent : Theme.separator
             TextInput {
+                selectionColor: Theme.accent
+                selectedTextColor: "white"
                 id: input
                 anchors.fill: parent
                 anchors.leftMargin: 9

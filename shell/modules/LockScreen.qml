@@ -145,6 +145,8 @@ Scope {
                     Connections { target: lock; function onShake() { shakeAnim.restart(); pw.text = ""; } }
 
                     TextInput {
+                        selectionColor: Theme.accent
+                        selectedTextColor: "white"
                         id: pw
                         anchors.fill: parent
                         anchors.leftMargin: 14
