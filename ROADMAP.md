@@ -121,7 +121,7 @@
 
 ## v2.0.3
 - ✅ **Administrator password prompts** come from Foxtail itself (“Foxtail wants to make changes”); the separate agent could crash at login and silently cancel Software Update
-- ✅ **Running out of memory:** the macOS “Your system has run out of application memory” window, with how much memory each app uses; if memory is about to run out, the app using the most is quit before the computer freezes, and a notification offers to reopen it (like KDE's “Memory Shortage Avoided”)
+- ✅ **Running out of memory:** the macOS “Your system has run out of application memory” window, with how much memory each app uses; if memory is about to run out (watched through swap, which runs out seconds before the kernel's own last-resort killer strikes), the app using the most is quit before the computer freezes, and a notification offers to reopen it (like KDE's “Memory Shortage Avoided”); an app the kernel quits gets the same notification
 
 ## Daily driver (next)
 - [ ] Runs well on at least 5 real machines (Intel, AMD, NVIDIA, an older laptop), with every 🟡 above confirmed on real hardware
