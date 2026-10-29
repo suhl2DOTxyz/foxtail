@@ -3,18 +3,31 @@ import Quickshell
 import qs.services
 import qs.components
 
-// Force Quit Applications (⌥⌘⎋).
+// Force Quit Applications (⌥⌘⎋). Also opened by Memory when the system runs
+// low on memory, with macOS's "run out of application memory" message; it
+// shows how much memory each app uses either way.
 FloatingWindow {
     id: win
 
     title: I18n.tr("Force Quit Applications")
     visible: Panels.forceQuit
-    onVisibleChanged: if (!visible) Panels.forceQuit = false
+    onVisibleChanged: if (!visible) { Panels.forceQuit = false; Memory.warning = false; }
     implicitWidth: 380
     implicitHeight: 400
     color: "transparent"
 
     property var selected: null
+
+    // Memory use per app, refreshed while the window is open.
+    Timer { interval: 3000; repeat: true; running: win.visible; triggeredOnStart: true; onTriggered: Memory.refreshApps() }
+    readonly property var usage: {
+        const u = {};
+        for (const a of Memory.apps) {
+            const id = Apps.idForToplevel({ appId: a.class }) || a.class;
+            u[id] = u[id] ? { kib: u[id].kib + a.kib, pids: u[id].pids.concat(a.pids) } : { kib: a.kib, pids: a.pids };
+        }
+        return u;
+    }
 
     readonly property var apps: {
         const seen = {};
@@ -23,8 +36,10 @@ FloatingWindow {
             const id = Apps.idForToplevel(t);
             if (!id || seen[id]) continue;
             seen[id] = true;
-            out.push({ id, name: Apps.nameFor(id), icon: Apps.iconFor(id) });
+            out.push({ id, name: Apps.nameFor(id), icon: Apps.iconFor(id), kib: usage[id]?.kib ?? 0 });
         }
+        // Low on memory: the biggest first, as on macOS.
+        if (Memory.warning) out.sort((a, b) => b.kib - a.kib);
         return out;
     }
 
@@ -42,14 +57,16 @@ FloatingWindow {
         width: parent.width - 40
         wrapMode: Text.Wrap
         elide: Text.ElideNone
-        text: I18n.tr("If an app doesn't respond for a while, select its name and click Force Quit.")
+        text: Memory.warning
+              ? I18n.tr("Your system has run out of application memory. To avoid problems with your computer, quit any applications you are not using.")
+              : I18n.tr("If an app doesn't respond for a while, select its name and click Force Quit.")
         font.pixelSize: Theme.px(12)
     }
 
     Rectangle {
-        x: 20; y: 84
+        x: 20; y: Memory.warning ? 104 : 84   // room for the longer message
         width: parent.width - 40
-        height: parent.height - 140
+        height: parent.height - y - 56
         radius: 6
         color: Theme.dark ? "#1C1C1E" : "white"
         border.color: Theme.separator
@@ -69,8 +86,19 @@ FloatingWindow {
                 Label {
                     x: 36
                     anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width - x - mem.width - 16
                     text: modelData.name
                     color: win.selected === modelData.id ? "white" : Theme.text
+                }
+                Label {
+                    id: mem
+                    anchors.right: parent.right
+                    anchors.rightMargin: 8
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: modelData.kib > 0
+                    text: Memory.formatKib(modelData.kib)
+                    font.pixelSize: Theme.px(11)
+                    color: win.selected === modelData.id ? "white" : Theme.textSecondary
                 }
                 MouseArea { anchors.fill: parent; onClicked: win.selected = modelData.id }
             }
@@ -89,8 +117,11 @@ FloatingWindow {
         MouseArea {
             anchors.fill: parent
             onClicked: if (win.selected) {
-                for (const w of Apps.windowsFor(win.selected)) w.close();
-                Quickshell.execDetached(["pkill", "-9", "-f", win.selected]);
+                // The app's own processes (and what it started), not
+                // everything whose command line happens to mention its name.
+                const pids = win.usage[win.selected]?.pids ?? [];
+                if (pids.length) Memory.quitPids(pids);
+                else for (const w of Apps.windowsFor(win.selected)) w.close();
                 win.selected = null;
             }
         }

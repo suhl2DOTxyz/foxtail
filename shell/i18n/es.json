@@ -515,5 +515,9 @@
  "Foxtail wants to make changes.": "Foxtail quiere hacer cambios.",
  "Enter your password to allow this.": "Introduce tu contraseña para permitirlo.",
  "Incorrect password. Try again.": "Contraseña incorrecta. Inténtalo de nuevo.",
- "OK": "Aceptar"
+ "OK": "Aceptar",
+ "Your system has run out of application memory. To avoid problems with your computer, quit any applications you are not using.": "El sistema se ha quedado sin memoria para aplicaciones. Para evitar problemas con el ordenador, cierra las aplicaciones que no estés usando.",
+ "Memory Shortage Avoided": "Falta de memoria evitada",
+ "%1 was quit because your computer ran out of memory.": "%1 se ha cerrado porque el ordenador se quedó sin memoria.",
+ "Reopen": "Volver a abrir"
 }

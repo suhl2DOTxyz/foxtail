@@ -1,0 +1,118 @@
+#!/usr/bin/env python3
+# How much memory each open app uses, and quitting one - for the shell's
+# "Your system has run out of application memory" window and its
+# low-memory safety net (shell/services/Memory.qml).
+#
+#   foxtail-memory apps          JSON list of open apps, largest first:
+#                                [{"class": ..., "pids": [...], "kib": ...}]
+#   foxtail-memory quit PID...   end those processes and everything they
+#                                started: TERM, then KILL after 3 s
+#
+# An app's memory counts its whole process tree (a browser's content
+# processes, the game a launcher started), measured as PSS so memory that
+# processes share is only counted once.
+import json
+import os
+import signal
+import subprocess
+import sys
+import time
+
+# Never quit these: the desktop itself.
+PROTECTED = {"Hyprland", "qs", "quickshell", "foxtail-shell", "sddm", "systemd", "Xwayland"}
+
+
+def children_map():
+    kids = {}
+    for d in os.listdir("/proc"):
+        if not d.isdigit():
+            continue
+        try:
+            with open(f"/proc/{d}/stat") as f:
+                ppid = int(f.read().rsplit(")", 1)[1].split()[1])
+        except (OSError, IndexError, ValueError):
+            continue
+        kids.setdefault(ppid, []).append(int(d))
+    return kids
+
+
+def tree(pid, kids):
+    out, todo = [], [pid]
+    while todo:
+        p = todo.pop()
+        out.append(p)
+        todo.extend(kids.get(p, []))
+    return out
+
+
+def pss_kib(pid):
+    try:
+        with open(f"/proc/{pid}/smaps_rollup") as f:
+            for line in f:
+                if line.startswith("Pss:"):
+                    return int(line.split()[1])
+    except OSError:
+        pass
+    try:  # smaps_rollup unreadable: fall back to resident size
+        with open(f"/proc/{pid}/status") as f:
+            for line in f:
+                if line.startswith("VmRSS:"):
+                    return int(line.split()[1])
+    except OSError:
+        pass
+    return 0
+
+
+def comm(pid):
+    try:
+        with open(f"/proc/{pid}/comm") as f:
+            return f.read().strip()
+    except OSError:
+        return ""
+
+
+def apps():
+    try:
+        clients = json.loads(subprocess.run(["hyprctl", "-j", "clients"], capture_output=True,
+                                            text=True, timeout=5).stdout or "[]")
+    except (OSError, ValueError, subprocess.TimeoutExpired):
+        clients = []
+    kids = children_map()
+    by_class = {}
+    for c in clients:
+        pid, cls = c.get("pid", -1), c.get("class") or c.get("initialClass") or ""
+        if pid <= 1 or not cls or comm(pid) in PROTECTED:
+            continue
+        by_class.setdefault(cls, set()).update(tree(pid, kids))
+    out = [{"class": cls, "pids": sorted(pids), "kib": sum(pss_kib(p) for p in pids)}
+           for cls, pids in by_class.items()]
+    out.sort(key=lambda a: -a["kib"])
+    return out
+
+
+def quit_pids(pids):
+    kids = children_map()
+    targets = []
+    for p in pids:
+        if comm(p) not in PROTECTED:
+            targets += tree(p, kids)
+    for sig in (signal.SIGTERM, signal.SIGKILL):
+        for p in targets:
+            try:
+                os.kill(p, sig)
+            except OSError:
+                pass
+        if sig == signal.SIGTERM:
+            deadline = time.time() + 3
+            while time.time() < deadline and any(os.path.exists(f"/proc/{p}") for p in targets):
+                time.sleep(0.2)
+
+
+if __name__ == "__main__":
+    if len(sys.argv) >= 2 and sys.argv[1] == "apps":
+        print(json.dumps(apps()))
+    elif len(sys.argv) >= 3 and sys.argv[1] == "quit":
+        quit_pids([int(p) for p in sys.argv[2:] if p.isdigit()])
+    else:
+        print("usage: foxtail-memory apps | quit PID...", file=sys.stderr)
+        sys.exit(2)

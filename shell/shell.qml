@@ -107,7 +107,7 @@ ShellRoot {
 
     // Services that work in the background (Night Shift, generated Hyprland
     // config, clipboard history) start with the shell, not on first use.
-    readonly property var backgroundServices: [HyprConfig, Displays, Keyboard, Clipboard, Capture]
+    readonly property var backgroundServices: [HyprConfig, Displays, Keyboard, Clipboard, Capture, Memory]
 
     // Global shortcuts bound in hypr/foxtail.lua with hl.dsp.global("foxtail:<name>").
     GlobalShortcut { appid: "foxtail"; name: "switcherNext"; onPressed: Switcher.step(1) }

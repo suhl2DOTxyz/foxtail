@@ -119,6 +119,10 @@
 - ✅ Selected text uses the accent color in every text field
 - ✅ Works with **Hyprland 0.57** (Arch's update from Oct 29) as well as 0.56: no config error banner after updating
 
+## v2.0.3
+- ✅ **Administrator password prompts** come from Foxtail itself (“Foxtail wants to make changes”); the separate agent could crash at login and silently cancel Software Update
+- ✅ **Running out of memory:** the macOS “Your system has run out of application memory” window, with how much memory each app uses; if memory is about to run out, the app using the most is quit before the computer freezes, and a notification offers to reopen it (like KDE's “Memory Shortage Avoided”)
+
 ## Daily driver (next)
 - [ ] Runs well on at least 5 real machines (Intel, AMD, NVIDIA, an older laptop), with every 🟡 above confirmed on real hardware
 - [ ] Fixed, reliable update cadence

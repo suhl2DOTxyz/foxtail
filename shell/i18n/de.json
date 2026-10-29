@@ -515,5 +515,9 @@
  "Foxtail wants to make changes.": "Foxtail möchte Änderungen vornehmen.",
  "Enter your password to allow this.": "Gib dein Passwort ein, um dies zu erlauben.",
  "Incorrect password. Try again.": "Falsches Passwort. Versuche es erneut.",
- "OK": "OK"
+ "OK": "OK",
+ "Your system has run out of application memory. To avoid problems with your computer, quit any applications you are not using.": "Dein System hat keinen Programmspeicher mehr. Beende Programme, die du nicht verwendest, um Probleme mit deinem Computer zu vermeiden.",
+ "Memory Shortage Avoided": "Speichermangel verhindert",
+ "%1 was quit because your computer ran out of memory.": "%1 wurde beendet, weil der Arbeitsspeicher deines Computers knapp wurde.",
+ "Reopen": "Erneut öffnen"
 }
