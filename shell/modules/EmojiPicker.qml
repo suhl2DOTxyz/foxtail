@@ -124,7 +124,7 @@ Item {
             Text {
                 anchors.centerIn: parent
                 text: cell.modelData[0]
-                font.family: "Noto Color Emoji"
+                font.family: "Twemoji"
                 font.pixelSize: Theme.px(26)
             }
             MouseArea {
@@ -156,7 +156,7 @@ Item {
                     visible: tab.modelData >= 0
                     anchors.centerIn: parent
                     text: root.icons[tab.modelData] ?? ""
-                    font.family: "Noto Color Emoji"
+                    font.family: "Twemoji"
                     font.pixelSize: Theme.px(16)
                     opacity: tab.on ? 1 : 0.6
                 }

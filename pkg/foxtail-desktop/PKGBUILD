@@ -24,6 +24,7 @@ depends=(
     'python-dbus' 'python-gobject'   # foxtail-bt-agent
     # look
     'adw-gtk-theme' 'inter-font' 'ttf-jetbrains-mono' 'noto-fonts' 'noto-fonts-emoji'
+    'ttf-twemoji'   # emoji (Noto Color Emoji stays as the fallback)
     'noto-fonts-cjk' 'whitesur-icon-theme' 'apple_cursor' 'fastfetch'
     # updates and snapshots
     'foxtail-keyring' 'pacman-contrib' 'fakeroot' 'flatpak' 'snapper' 'snap-pac'

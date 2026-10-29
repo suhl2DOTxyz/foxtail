@@ -6,7 +6,7 @@ cd "$(dirname "$0")/.."
 ROOT=$PWD
 REPO="$ROOT/build/repo"
 SRC="$ROOT/build/aur"
-PKGS=(whitesur-icon-theme apple_cursor)
+PKGS=(whitesur-icon-theme apple_cursor ttf-twemoji)
 
 [ "$(id -u)" -ne 0 ] || { echo "run build-aur.sh as a normal user" >&2; exit 1; }
 mkdir -p "$REPO" "$SRC"

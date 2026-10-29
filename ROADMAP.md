@@ -114,6 +114,10 @@
 - ✅ **Bluetooth pairing with phones:** a pairing agent shows the macOS “Bluetooth Connection Request” with the six-digit code to compare (phones wouldn't pair without one)
 - ✅ Clicking in a window no longer moves the pointer to the window's center
 
+## v2.0.2
+- ✅ **Twemoji** is the emoji font (instead of Google's Noto). Apple's emoji font can't be shipped: its license only covers Apple devices
+- ✅ Selected text uses the accent color in every text field
+
 ## Daily driver (next)
 - [ ] Runs well on at least 5 real machines (Intel, AMD, NVIDIA, an older laptop), with every 🟡 above confirmed on real hardware
 - [ ] Fixed, reliable update cadence
