@@ -51,12 +51,15 @@ Singleton {
         { id: "defaultapps", name: I18n.tr("Default Apps"), icon: "apps", color: "#FF7A1A", keywords: "browser mail open with" }
     ]
     // Pending power confirmation: "" | "restart" | "shutdown" | "logout" |
-    // "emptyTrash" | "bluetooth"
+    // "emptyTrash" | "bluetooth" | "auth"
     property string confirm: ""
     // Bluetooth Connection Request from foxtail-bt-agent: { id, kind, name, code },
     // kind "confirm" (codes must match), "authorize" or "display" (type the
     // code on the keyboard). Answered with answerBluetooth().
     property var bluetoothRequest: null
+    // The administrator password request in progress (a polkit AuthFlow
+    // from shell.qml's PolkitAgent), shown while confirm is "auth".
+    property var authFlow: null
     function answerBluetooth(yes) {
         const r = bluetoothRequest;
         if (!r) return;

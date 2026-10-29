@@ -6,6 +6,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Hyprland
+import Quickshell.Services.Polkit
 import qs.services
 import qs.modules
 import qs.windows
@@ -46,12 +47,24 @@ ShellRoot {
 
     LockScreen {}
 
-    // A dismissed Bluetooth Connection Request (Cancel, Escape, a click
-    // outside) is a "no" to the device.
+    // Foxtail's polkit agent: apps and Software Update ask for the
+    // administrator password in modules/AuthDialog.qml.
+    PolkitAgent {
+        id: polkit
+        onIsActiveChanged: {
+            if (isActive) Panels.confirm = "auth";
+            else if (Panels.confirm === "auth") Panels.confirm = "";
+        }
+    }
+    Binding { target: Panels; property: "authFlow"; value: polkit.flow }
+
+    // A dismissed Bluetooth Connection Request or password prompt (Cancel,
+    // Escape) is a "no".
     Connections {
         target: Panels
         function onConfirmChanged() {
             if (Panels.confirm !== "bluetooth" && Panels.bluetoothRequest) Panels.answerBluetooth(false);
+            if (Panels.confirm !== "auth" && polkit.flow && !polkit.flow.isCompleted) polkit.flow.cancelAuthenticationRequest();
         }
     }
 

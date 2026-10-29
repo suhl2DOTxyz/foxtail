@@ -511,5 +511,9 @@
  "Connect": "Conectar",
  "To pair “%1”, type this code on it, then press Return.": "Para enlazar “%1”, escribe este código en él y pulsa Retorno.",
  "“%1” would like to connect to this computer.": "“%1” quiere conectarse a este ordenador.",
- "“%1” would like to pair with this computer. Make sure the code shown on “%1” matches the code below.": "“%1” quiere enlazarse con este ordenador. Asegúrate de que el código que aparece en “%1” coincide con el de abajo."
+ "“%1” would like to pair with this computer. Make sure the code shown on “%1” matches the code below.": "“%1” quiere enlazarse con este ordenador. Asegúrate de que el código que aparece en “%1” coincide con el de abajo.",
+ "Foxtail wants to make changes.": "Foxtail quiere hacer cambios.",
+ "Enter your password to allow this.": "Introduce tu contraseña para permitirlo.",
+ "Incorrect password. Try again.": "Contraseña incorrecta. Inténtalo de nuevo.",
+ "OK": "Aceptar"
 }

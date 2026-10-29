@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import qs.services
 import qs.components
 
@@ -264,9 +265,20 @@ PanelWindow {
 
     // ---------- Restart / Shut Down / Log Out confirmation ----------
     Loader {
-        active: Panels.confirm !== ""
+        active: Panels.confirm !== "" && Panels.confirm !== "auth"
         anchors.centerIn: parent
         sourceComponent: ConfirmDialog {
+            screenSize: root.screenSize
+            windowOffset: root.origin
+        }
+    }
+
+    // ---------- administrator password (polkit) ----------
+    // On one screen only: the one with the pointer's focused monitor.
+    Loader {
+        active: Panels.confirm === "auth" && root.modelData === (Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0])
+        anchors.centerIn: parent
+        sourceComponent: AuthDialog {
             screenSize: root.screenSize
             windowOffset: root.origin
         }

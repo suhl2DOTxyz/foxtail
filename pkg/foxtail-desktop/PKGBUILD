@@ -16,7 +16,7 @@ backup=('etc/sddm.conf.d/foxtail.conf'
 depends=(
     # desktop
     'hyprland' 'quickshell' 'qt6-svg' 'qt6-wayland' 'qt6-5compat'
-    'xdg-desktop-portal-hyprland' 'xdg-desktop-portal-gtk' 'hyprpolkitagent'
+    'xdg-desktop-portal-hyprland' 'xdg-desktop-portal-gtk'
     'gnome-keyring' 'wtype' 'wl-clipboard' 'cliphist' 'grim' 'slurp' 'jq'
     'sushi'   # Quick Look: Space previews the selected file in Files
     'libnotify' 'brightnessctl' 'playerctl' 'xdg-user-dirs' 'xdg-utils'

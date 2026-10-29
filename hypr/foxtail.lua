@@ -53,7 +53,6 @@ hl.env("MOZ_ENABLE_WAYLAND", "1")
 hl.on("hyprland.start", function()
     hl.exec_cmd("dbus-update-activation-environment --systemd --all")
     hl.exec_cmd("foxtail-shell")
-    hl.exec_cmd("/usr/lib/hyprpolkitagent/hyprpolkitagent")
     hl.exec_cmd("foxtail-bt-agent")      -- Bluetooth pairing codes
     hl.exec_cmd("gnome-keyring-daemon --start --components=secrets")
     hl.exec_cmd("foxtail-firstboot")
