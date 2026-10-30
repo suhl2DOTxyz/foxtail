@@ -276,6 +276,36 @@ Singleton {
                 ]
             ]
         },
+        // Foxtail's Terminal (bin/foxtail-terminal), laid out like macOS's.
+        "org.foxtail.Terminal": {
+            titles: ["Shell", "Edit", "View"],
+            menus: [
+                [
+                    { text: I18n.tr("New Window"), shortcut: "⌘N", action: keys(["ctrl"], "n") },
+                    { text: I18n.tr("New Tab"), shortcut: "⌘T", action: keys(["ctrl"], "t") },
+                    { separator: true },
+                    { text: I18n.tr("Close Tab"), shortcut: "⌘W", action: keys(["ctrl"], "w") }
+                ],
+                [
+                    { text: I18n.tr("Copy"), shortcut: "⌘C", action: keys(["ctrl"], "c") },
+                    { text: I18n.tr("Paste"), shortcut: "⌘V", action: keys(["ctrl"], "v") },
+                    { text: I18n.tr("Select All"), shortcut: "⌘A", action: keys(["ctrl"], "a") },
+                    { separator: true },
+                    { text: I18n.tr("Find…"), shortcut: "⌘F", action: keys(["ctrl"], "f") },
+                    { text: I18n.tr("Clear to Start"), shortcut: "⌘K", action: keys(["ctrl"], "k") }
+                ],
+                zoomItems.concat([
+                    { separator: true },
+                    { text: I18n.tr("Profile"), submenu: ["Basic", "Clear Dark", "Clear Light", "Grass", "Homebrew", "Man Page",
+                                                         "Novel", "Ocean", "Pro", "Red Sands", "Silver Aerogel"].map(n => ({
+                        text: n,
+                        action: () => Quickshell.execDetached(["gapplication", "action", "org.foxtail.Terminal", "profile", `'${n}'`])
+                    })) },
+                    { separator: true },
+                    fullScreenItem
+                ])
+            ]
+        },
         "org.gnome.Ptyxis": {
             titles: ["Shell", "Edit", "View"],
             menus: [

@@ -92,7 +92,7 @@ Singleton {
     // Send a key chord to the focused app (used by the global menu bar items).
     // Terminals take Ctrl+Shift for copy/paste/tabs; plain Ctrl+C would
     // interrupt the running program. Mirrors TERMINALS in hypr/foxtail.lua.
-    readonly property var terminals: ["org.gnome.Ptyxis", "org.gnome.Console", "kitty",
+    readonly property var terminals: ["org.foxtail.Terminal", "org.gnome.Ptyxis", "org.gnome.Console", "kitty",
                                       "com.mitchellh.ghostty", "Alacritty", "foot",
                                       "org.wezfurlong.wezterm", "org.kde.konsole"]
 
@@ -109,7 +109,7 @@ Singleton {
     readonly property var terminalKeys: ({
         c: [["ctrl"], "Insert"], x: [["ctrl"], "Insert"], v: [["shift"], "Insert"],
         a: [["ctrl", "shift"], "a"], f: [["ctrl", "shift"], "f"], n: [["ctrl", "shift"], "n"],
-        t: [["ctrl", "shift"], "t"], w: [["ctrl", "shift"], "w"],
+        t: [["ctrl", "shift"], "t"], w: [["ctrl", "shift"], "w"], k: [["ctrl", "shift"], "k"],
         plus: [["ctrl"], "plus"], minus: [["ctrl"], "minus"], "0": [["ctrl"], "0"]
     })
 

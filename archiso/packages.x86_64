@@ -69,13 +69,14 @@ vulkan-radeon
 
 # ---- Foxtail desktop (pulls in Hyprland, Quickshell, themes, snapper, grub...) ----
 foxtail-desktop
+foxtail-apps
 foxtail-keyring
 
 # ---- apps ----
 firefox
 nautilus
 sushi
-ptyxis
+vte4
 gnome-text-editor
 gnome-calculator
 gnome-characters

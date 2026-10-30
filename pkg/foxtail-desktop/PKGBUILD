@@ -14,6 +14,7 @@ backup=('etc/sddm.conf.d/foxtail.conf'
         'etc/systemd/zram-generator.conf'
         'etc/mkinitcpio.conf.d/00-foxtail.conf')
 depends=(
+    'foxtail-apps'   # Mail, Calendar, Notes, Chess, Solitaire, ... (pkg/foxtail-apps)
     # desktop
     'hyprland' 'quickshell' 'qt6-svg' 'qt6-wayland' 'qt6-5compat'
     'xdg-desktop-portal-hyprland' 'xdg-desktop-portal-gtk'
@@ -22,6 +23,8 @@ depends=(
     'libnotify' 'brightnessctl' 'playerctl' 'xdg-user-dirs' 'xdg-utils'
     'sddm' 'plymouth' 'pipewire' 'wireplumber' 'networkmanager' 'bluez'
     'python-dbus' 'python-gobject'   # foxtail-bt-agent
+    'vte4' 'libadwaita'              # foxtail-terminal (Terminal)
+    'xdg-terminal-exec'              # "Open in Terminal" finds Terminal
     # look
     'adw-gtk-theme' 'inter-font' 'ttf-jetbrains-mono' 'noto-fonts' 'noto-fonts-emoji'
     'ttf-twemoji'   # emoji (Noto Color Emoji stays as the fallback)

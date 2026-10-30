@@ -33,6 +33,16 @@ if [ ! -f "$HOME/.config/foxtail/.font13-done" ]; then
     touch "$HOME/.config/foxtail/.font13-done"
 fi
 
+# 2.1: Foxtail's own Terminal replaces Ptyxis; move a Ptyxis Dock icon over once.
+if [ ! -f "$HOME/.config/foxtail/.terminal21-done" ]; then
+    f="$HOME/.config/foxtail/settings.json"
+    if [ -f "$f" ] && command -v jq >/dev/null; then
+        jq 'if (.pinnedApps | type) == "array" then .pinnedApps |= map(if . == "org.gnome.Ptyxis" then "org.foxtail.Terminal" else . end) else . end' "$f" > "$f.tmp" &&
+            mv "$f.tmp" "$f"
+    fi
+    touch "$HOME/.config/foxtail/.terminal21-done"
+fi
+
 [ -f "$stamp" ] && exit 0
 
 # Window controls on the left, macOS order.

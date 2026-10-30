@@ -519,5 +519,15 @@
  "Your system has run out of application memory. To avoid problems with your computer, quit any applications you are not using.": "Dein System hat keinen Programmspeicher mehr. Beende Programme, die du nicht verwendest, um Probleme mit deinem Computer zu vermeiden.",
  "Memory Shortage Avoided": "Speichermangel verhindert",
  "%1 was quit because your computer ran out of memory.": "%1 wurde beendet, weil der Arbeitsspeicher deines Computers knapp wurde.",
- "Reopen": "Erneut öffnen"
+ "Reopen": "Erneut öffnen",
+ "Reminders": "Erinnerungen",
+ "Books": "Bücher",
+ "Voice Memos": "Sprachmemos",
+ "Solitaire": "Solitär",
+ "Minesweeper": "Minesweeper",
+ "Font Book": "Schriftsammlung",
+ "Image Capture": "Digitale Bilder",
+ "Screen Sharing": "Bildschirmfreigabe",
+ "Clear to Start": "Bis zum Anfang löschen",
+ "Profile": "Profil"
 }

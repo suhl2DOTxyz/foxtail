@@ -8,7 +8,7 @@
 
 A macOS-style desktop on Arch Linux: a hand-built shell, orange through and through, wrapped in **Liquid Glass**.
 
-[![Version](https://img.shields.io/badge/version-2.0-FF7A1A?style=for-the-badge)](https://github.com/suhl2DOTxyz/foxtail/releases/latest)
+[![Version](https://img.shields.io/badge/version-2.1-FF7A1A?style=for-the-badge)](https://github.com/suhl2DOTxyz/foxtail/releases/latest)
 [![Arch Linux](https://img.shields.io/badge/based_on-Arch_Linux-1793D1?style=for-the-badge&logo=archlinux&logoColor=white)](https://archlinux.org)
 [![Hyprland](https://img.shields.io/badge/compositor-Hyprland-58E1FF?style=for-the-badge)](https://hyprland.org)
 [![Quickshell](https://img.shields.io/badge/shell-Quickshell_(QML)-41CD52?style=for-the-badge&logo=qt&logoColor=white)](https://quickshell.org)
@@ -74,6 +74,9 @@ Windows float and open centered. The traffic lights sit where you expect them, a
 
 ### ⚙️ No terminal needed
 System Settings covers Wi-Fi, Bluetooth, **Displays** (with "Keep these settings?"), Sound, Keyboard, Trackpad, Mouse, Users & Groups, Printers, Date & Time, Default Apps, Login Items and **Software Update**.
+
+### 📦 The apps a Mac comes with
+Mail, Calendar, Contacts, Reminders, Notes, Weather, Clock, Maps, Music, Podcasts, Books, Voice Memos, Chess, Solitaire and more, plus Foxtail's own **Terminal**, laid out like macOS's with its profiles.
 
 </td>
 <td valign="top">

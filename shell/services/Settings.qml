@@ -116,13 +116,19 @@ Singleton {
             property string wallpaper: "/usr/share/backgrounds/foxtail/foxtail-vixen-day.jpg"
             property bool dynamicWallpaper: true   // a light picture in Light mode, a dark one in Dark mode
             property string dynamicPair: "vixen"   // "vixen" (Foxtail 2.0) or "dunes" (Dawn and Dusk)
+            // A Mac's Dock, with Foxtail's apps (foxtail-apps); Terminal too.
             property list<string> pinnedApps: [
                 "org.gnome.Nautilus",
                 "firefox",
-                "org.gnome.Ptyxis",
-                "org.gnome.TextEditor",
-                "org.gnome.Calculator",
+                "org.gnome.Geary",
+                "org.gnome.Maps",
                 "org.gnome.Loupe",
+                "org.gnome.Calendar",
+                "org.gnome.Todo",
+                "org.gnome.Notes",
+                "org.gnome.Music",
+                "org.gnome.Software",
+                "org.foxtail.Terminal",
                 "foxtail-settings"
             ]
             property real dockIconSize: 54

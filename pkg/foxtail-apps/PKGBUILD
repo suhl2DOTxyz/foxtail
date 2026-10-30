@@ -1,0 +1,37 @@
+# The apps that come with Foxtail, like the ones that come with a Mac.
+# A metapackage: foxtail-desktop depends on it, so installed systems get new
+# apps through Software Update. Names in brackets are what Foxtail calls
+# them (shell/services/Apps.qml, macNames).
+pkgname=foxtail-apps
+pkgver=@VERSION@
+pkgrel=@PKGREL@
+pkgdesc="Apps that come with Foxtail OS"
+arch=('any')
+url="https://github.com/suhl2DOTxyz/foxtail"
+license=('GPL-3.0-or-later')
+depends=(
+    # everyday
+    'geary'                  # [Mail]
+    'gnome-calendar'         # Calendar
+    'gnome-contacts'         # Contacts
+    'endeavour'              # [Reminders] (Errands: python-caldav is broken in Arch, Oct 2026)
+    'gnome-notes'            # Notes
+    'gnome-weather'          # Weather
+    'gnome-clocks'           # [Clock]
+    'gnome-maps'             # Maps
+    # media
+    'gnome-music'            # Music
+    'gnome-podcasts'         # Podcasts
+    'foliate'                # [Books]
+    'gnome-sound-recorder'   # [Voice Memos]
+    # games
+    'gnome-chess' 'gnuchess' # Chess (and the engine it plays against)
+    'aisleriot'              # [Solitaire]
+    'gnome-mines'            # [Minesweeper]
+    'gnome-sudoku'           # Sudoku
+    'gnome-mahjongg'         # Mahjongg
+    # utilities
+    'gnome-font-viewer'      # [Font Book]
+    'simple-scan'            # [Image Capture]
+    'gnome-connections'      # [Screen Sharing]
+)

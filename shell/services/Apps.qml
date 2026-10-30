@@ -23,7 +23,18 @@ Singleton {
         "org.gnome.DiskUtility": "Disk Utility",
         "org.gnome.Software": "App Store",
         "org.gnome.FileRoller": "Archive Utility",
-        "org.gnome.Characters": "Character Viewer"
+        "org.gnome.Characters": "Character Viewer",
+        // foxtail-apps (2.1)
+        "org.gnome.Geary": "Mail",
+        "org.gnome.Todo": "Reminders",
+        "org.gnome.clocks": "Clock",
+        "com.github.johnfactotum.Foliate": "Books",
+        "org.gnome.SoundRecorder": "Voice Memos",
+        "sol": "Solitaire",
+        "org.gnome.Mines": "Minesweeper",
+        "org.gnome.font-viewer": "Font Book",
+        "org.gnome.SimpleScan": "Image Capture",
+        "org.gnome.Connections": "Screen Sharing"
     })
     function title(e) {
         if (!e) return "";

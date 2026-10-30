@@ -1,0 +1,484 @@
+#!/usr/bin/env python3
+# Terminal: Foxtail's terminal app, made to look and behave like macOS's.
+#
+#   - The title bar holds only the title, "user — process — 80×24", as on a
+#     Mac; tabs appear in a bar under it once there are two or more.
+#   - macOS Terminal's built-in profiles (Basic follows Light/Dark mode).
+#   - Opens 80×24 cells, closes a tab when its shell exits, and asks before
+#     closing a window that's still running something.
+#
+# Keys are the ones Foxtail's ⌘ shortcuts send to terminals (hypr/foxtail.lua,
+# TERMINAL_KEYS): Ctrl+Insert / Shift+Insert copy and paste, Ctrl+Shift+T/N/W
+# tabs and windows, Ctrl+Shift+A/F/K select all, find and clear, Ctrl+±/0 size.
+# The menu bar sets profiles through the app's actions (gapplication action).
+#
+#   foxtail-terminal [--working-directory DIR] [-e COMMAND [ARGS...]]
+import json
+import os
+import pwd
+import signal
+import sys
+
+import gi
+gi.require_version("Gtk", "4.0")
+gi.require_version("Adw", "1")
+gi.require_version("Vte", "3.91")
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk, Pango, Vte  # noqa: E402
+
+APP_ID = "org.foxtail.Terminal"
+CONFIG = os.path.join(GLib.get_user_config_dir(), "foxtail", "terminal.json")
+
+
+def rgba(s):
+    c = Gdk.RGBA()
+    c.parse(s)
+    return c
+
+
+# macOS Terminal's ANSI colours (the "Terminal.app" palette), shared by most
+# of its profiles.
+MAC_ANSI = ["#000000", "#990000", "#00A600", "#999900", "#0000B2", "#B200B2", "#00A6B2", "#BFBFBF",
+            "#666666", "#E50000", "#00D900", "#E5E500", "#0000FF", "#E500E5", "#00E5E5", "#E5E5E5"]
+
+# name: (background, foreground, cursor, opacity); Basic is chosen by the
+# appearance (light or dark).
+PROFILES = {
+    "Basic":          None,
+    "Clear Dark":     ("#000000", "#FFFFFF", "#929292", 0.75),
+    "Clear Light":    ("#FFFFFF", "#000000", "#929292", 0.75),
+    "Grass":          ("#13773D", "#FFF0A5", "#8C2800", 1.0),
+    "Homebrew":       ("#000000", "#28FE14", "#38FE27", 1.0),
+    "Man Page":       ("#FEF49C", "#000000", "#7F7F7F", 1.0),
+    "Novel":          ("#DFDBC3", "#3B2322", "#3A2322", 1.0),
+    "Ocean":          ("#224FBC", "#FFFFFF", "#7F7F7F", 1.0),
+    "Pro":            ("#000000", "#F2F2F2", "#4D4D4D", 0.9),
+    "Red Sands":      ("#7A251E", "#D7C9A7", "#FFFFFF", 1.0),
+    "Silver Aerogel": ("#929292", "#000000", "#D9D9D9", 0.9),
+}
+BASIC_LIGHT = ("#FFFFFF", "#000000", "#929292", 1.0)
+BASIC_DARK = ("#1E1E1E", "#FFFFFF", "#929292", 1.0)
+
+
+def load_config():
+    try:
+        with open(CONFIG) as f:
+            c = json.load(f)
+    except (OSError, ValueError):
+        c = {}
+    if c.get("profile") not in PROFILES:
+        c["profile"] = "Basic"
+    c["scale"] = min(3.0, max(0.5, float(c.get("scale", 1.0))))
+    return c
+
+
+def save_config(c):
+    try:
+        os.makedirs(os.path.dirname(CONFIG), exist_ok=True)
+        with open(CONFIG, "w") as f:
+            json.dump(c, f)
+    except OSError:
+        pass
+
+
+def monospace_font():
+    try:
+        s = Gio.Settings.new("org.gnome.desktop.interface")
+        name = s.get_string("monospace-font-name")
+        if name:
+            return name
+    except Exception:
+        pass
+    return "JetBrains Mono 11"
+
+
+def user_shell():
+    sh = os.environ.get("SHELL") or pwd.getpwuid(os.getuid()).pw_shell or "/bin/bash"
+    return sh if os.access(sh, os.X_OK) else "/bin/bash"
+
+
+def proc_name(pid):
+    try:
+        with open(f"/proc/{pid}/comm") as f:
+            return f.read().strip()
+    except OSError:
+        return ""
+
+
+class Tab:
+    """One shell: a VTE terminal in a scroller."""
+
+    def __init__(self, win, cwd=None, argv=None):
+        self.win = win
+        self.pid = -1
+        self.term = Vte.Terminal()
+        self.term.set_scrollback_lines(100000)
+        self.term.set_mouse_autohide(True)
+        self.term.set_cursor_blink_mode(Vte.CursorBlinkMode.ON)
+        self.term.set_enable_bidi(True)
+        self.term.set_font(Pango.FontDescription.from_string(monospace_font()))
+        self.term.set_font_scale(win.app.config["scale"])
+        self.term.set_size(80, 24)   # a new macOS Terminal window is 80×24
+        self.term.connect("child-exited", self.on_exit)
+        self.term.connect("window-title-changed", lambda *_: win.update_titles())
+        click = Gtk.GestureClick(button=3)
+        click.connect("pressed", self.on_right_click)
+        self.term.add_controller(click)
+        win.app.apply_profile(self.term)
+
+        self.scroller = Gtk.ScrolledWindow(child=self.term, hexpand=True, vexpand=True)
+        self.scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        # Report the terminal's 80×24 as the window's natural size.
+        self.scroller.set_propagate_natural_width(True)
+        self.scroller.set_propagate_natural_height(True)
+
+        shell = user_shell()
+        if argv:
+            args = argv
+        else:
+            args = [shell, "-l"]   # a login shell, as macOS Terminal opens
+        env = [f"{k}={v}" for k, v in os.environ.items()
+               if k not in ("TERM", "COLORTERM", "TERM_PROGRAM", "TERM_PROGRAM_VERSION")]
+        env += ["COLORTERM=truecolor", "TERM_PROGRAM=Foxtail_Terminal"]
+        self.term.spawn_async(Vte.PtyFlags.DEFAULT, cwd or os.path.expanduser("~"), args, env,
+                              GLib.SpawnFlags.SEARCH_PATH, None, None, -1, None, self.on_spawned)
+        self.shell_name = os.path.basename(args[0])
+
+    def on_spawned(self, term, pid, error):
+        if error is not None:
+            term.feed(f"\r\nCouldn't start {self.shell_name}: {error.message}\r\n".encode())
+            return
+        self.pid = pid
+        self.win.update_titles()
+
+    def on_exit(self, term, status):
+        # macOS's default: close when the shell exits.
+        self.win.close_tab(self)
+
+    def cwd(self):
+        uri = self.term.get_current_directory_uri()
+        if uri:
+            path = GLib.filename_from_uri(uri)[0]
+            if path and os.path.isdir(path):
+                return path
+        try:
+            return os.readlink(f"/proc/{self.pid}/cwd")
+        except OSError:
+            return None
+
+    # The program in the foreground: the shell, or what it's running.
+    def foreground(self):
+        pty = self.term.get_pty()
+        if pty is None:
+            return self.shell_name, False
+        try:
+            pgid = os.tcgetpgrp(pty.get_fd())
+        except OSError:
+            return self.shell_name, False
+        if pgid == self.pid or pgid <= 0:
+            return "-" + self.shell_name, False
+        return proc_name(pgid) or self.shell_name, True
+
+    def on_right_click(self, gesture, n, x, y):
+        menu = Gio.Menu()
+        edit = Gio.Menu()
+        edit.append("Copy", "win.copy")
+        edit.append("Paste", "win.paste")
+        edit.append("Select All", "win.select-all")
+        menu.append_section(None, edit)
+        more = Gio.Menu()
+        more.append("Clear Scrollback", "win.clear")
+        menu.append_section(None, more)
+        profiles = Gio.Menu()
+        for name in PROFILES:
+            profiles.append(name, f"app.profile::{name}")
+        menu.append_submenu("Profile", profiles)
+        pop = Gtk.PopoverMenu.new_from_model(menu)
+        pop.set_parent(self.term)
+        pop.set_has_arrow(False)
+        r = Gdk.Rectangle()
+        r.x, r.y, r.width, r.height = int(x), int(y), 1, 1
+        pop.set_pointing_to(r)
+        pop.connect("closed", lambda p: GLib.idle_add(p.unparent))
+        pop.popup()
+
+
+class Window(Adw.ApplicationWindow):
+    def __init__(self, app, cwd=None, argv=None):
+        super().__init__(application=app)
+        self.app = app
+        self.tabs = []
+
+        self.title = Adw.WindowTitle()
+        header = Adw.HeaderBar(title_widget=self.title)
+        self.view = Adw.TabView()
+        self.view.connect("notify::selected-page", lambda *_: self.on_switch())
+        self.view.connect("close-page", self.on_close_page)
+        bar = Adw.TabBar(view=self.view, autohide=True)
+
+        self.search_entry = Gtk.SearchEntry(placeholder_text="Find", hexpand=True)
+        self.search_entry.connect("search-changed", lambda e: self.find(0))
+        self.search_entry.connect("activate", lambda e: self.find(1))
+        self.search_entry.connect("stop-search", lambda e: self.search.set_search_mode(False))
+        self.search = Gtk.SearchBar(child=self.search_entry, show_close_button=True)
+        self.search.connect_entry(self.search_entry)
+
+        tv = Adw.ToolbarView(content=self.view)
+        tv.add_top_bar(header)
+        tv.add_top_bar(bar)
+        tv.add_top_bar(self.search)
+        self.set_content(tv)
+
+        for name, cb in [("new-tab", lambda *_: self.new_tab()),
+                         ("close-tab", lambda *_: self.close_current()),
+                         ("copy", lambda *_: self.current() and self.current().term.copy_clipboard_format(Vte.Format.TEXT)),
+                         ("paste", lambda *_: self.current() and self.current().term.paste_clipboard()),
+                         ("select-all", lambda *_: self.current() and self.current().term.select_all()),
+                         ("clear", lambda *_: self.clear()),
+                         ("find", lambda *_: self.search.set_search_mode(True)),
+                         ("zoom-in", lambda *_: app.zoom(1.1)),
+                         ("zoom-out", lambda *_: app.zoom(1 / 1.1)),
+                         ("zoom-reset", lambda *_: app.zoom(0)),
+                         ("next-tab", lambda *_: self.view.select_next_page()),
+                         ("prev-tab", lambda *_: self.view.select_previous_page())]:
+            a = Gio.SimpleAction.new(name, None)
+            a.connect("activate", cb)
+            self.add_action(a)
+
+        # Keys handled before the terminal sees them.
+        keys = Gtk.ShortcutController(propagation_phase=Gtk.PropagationPhase.CAPTURE)
+        for accel, action in [("<Control>Insert", "win.copy"), ("<Shift>Insert", "win.paste"),
+                              ("<Control><Shift>c", "win.copy"), ("<Control><Shift>v", "win.paste"),
+                              ("<Control><Shift>t", "win.new-tab"), ("<Control><Shift>w", "win.close-tab"),
+                              ("<Control><Shift>n", "app.new-window"), ("<Control><Shift>a", "win.select-all"),
+                              ("<Control><Shift>f", "win.find"), ("<Control><Shift>k", "win.clear"),
+                              ("<Control>plus", "win.zoom-in"), ("<Control>equal", "win.zoom-in"),
+                              ("<Control>minus", "win.zoom-out"), ("<Control>0", "win.zoom-reset"),
+                              ("<Control>Page_Down", "win.next-tab"), ("<Control>Page_Up", "win.prev-tab")]:
+            keys.add_shortcut(Gtk.Shortcut(trigger=Gtk.ShortcutTrigger.parse_string(accel),
+                                           action=Gtk.NamedAction.new(action)))
+        self.add_controller(keys)
+
+        self.connect("close-request", self.on_close_request)
+        self.new_tab(cwd, argv)
+        GLib.timeout_add(500, self.update_titles)
+
+    def current(self):
+        page = self.view.get_selected_page()
+        for t in self.tabs:
+            if page is not None and page.get_child() is t.scroller:
+                return t
+        return None
+
+    def new_tab(self, cwd=None, argv=None):
+        if cwd is None and self.current():
+            cwd = self.current().cwd()   # a new tab opens where you are, as on a Mac
+        t = Tab(self, cwd, argv)
+        self.tabs.append(t)
+        page = self.view.append(t.scroller)
+        self.view.set_selected_page(page)
+        t.term.grab_focus()
+        return t
+
+    def page_of(self, tab):
+        return self.view.get_page(tab.scroller)
+
+    def close_tab(self, tab):
+        if tab not in self.tabs:
+            return
+        self.tabs.remove(tab)
+        page = self.page_of(tab)
+        self._closing = True
+        self.view.close_page(page)
+        self._closing = False
+        if not self.tabs:
+            self.destroy()
+
+    def on_close_page(self, view, page):
+        tab = next((t for t in self.tabs if t.scroller is page.get_child()), None)
+        if tab is not None and not getattr(self, "_closing", False):
+            self.tabs.remove(tab)
+            if tab.pid > 0:
+                try:
+                    os.kill(tab.pid, signal.SIGHUP)
+                except OSError:
+                    pass
+            if not self.tabs:
+                GLib.idle_add(self.destroy)
+        view.close_page_finish(page, True)
+        return True
+
+    def close_current(self):
+        t = self.current()
+        if t is None:
+            return
+        name, busy = t.foreground()
+        if busy:
+            self.confirm([name], lambda: self.view.close_page(self.page_of(t)))
+        else:
+            self.view.close_page(self.page_of(t))
+
+    def on_close_request(self, *_):
+        running = [n for n, busy in (t.foreground() for t in self.tabs) if busy]
+        if not running or getattr(self, "_confirmed", False):
+            for t in self.tabs:
+                if t.pid > 0:
+                    try:
+                        os.kill(t.pid, signal.SIGHUP)
+                    except OSError:
+                        pass
+            return False
+        self.confirm(running, self.force_close)
+        return True
+
+    def force_close(self):
+        self._confirmed = True
+        self.close()
+
+    # macOS: "Do you want to terminate running processes in this window?"
+    def confirm(self, names, on_yes):
+        d = Adw.AlertDialog(heading="Do you want to terminate running processes in this window?",
+                            body="Closing this window will terminate the running processes: "
+                                 + ", ".join(sorted(set(names))) + ".")
+        d.add_response("cancel", "Cancel")
+        d.add_response("terminate", "Terminate")
+        d.set_response_appearance("terminate", Adw.ResponseAppearance.DESTRUCTIVE)
+        d.set_default_response("terminate")
+        d.connect("response", lambda d, r: on_yes() if r == "terminate" else None)
+        d.present(self)
+
+    def clear(self):
+        # ⌘K: clear the screen and the scrollback, and let the shell redraw.
+        t = self.current()
+        if t:
+            t.term.reset(True, True)
+            t.term.feed_child(b"\x0c")
+
+    def find(self, direction):
+        t = self.current()
+        if not t:
+            return
+        text = self.search_entry.get_text()
+        if not text:
+            t.term.search_set_regex(None, 0)
+            return
+        try:
+            regex = Vte.Regex.new_for_search(GLib.Regex.escape_string(text, -1), -1, 0x00000008)  # PCRE2_CASELESS
+        except GLib.Error:
+            return
+        t.term.search_set_regex(regex, 0)
+        t.term.search_set_wrap_around(True)
+        if direction >= 0:
+            t.term.search_find_next()
+        else:
+            t.term.search_find_previous()
+
+    def on_switch(self):
+        t = self.current()
+        if t:
+            t.term.grab_focus()
+        self.update_titles()
+
+    def update_titles(self):
+        user = GLib.get_user_name()
+        for t in self.tabs:
+            name, _ = t.foreground()
+            page = self.page_of(t)
+            if page is None:
+                continue
+            cwd = t.cwd()
+            here = "~" if cwd == os.path.expanduser("~") else os.path.basename(cwd or "") or "/"
+            page.set_title(f"{here} — {name}")
+            if t is self.current():
+                cols, rows = t.term.get_column_count(), t.term.get_row_count()
+                title = f"{user} — {name} — {cols}×{rows}"
+                self.title.set_title(title)
+                self.set_title(title)
+        return True
+
+
+class App(Adw.Application):
+    def __init__(self):
+        super().__init__(application_id=APP_ID, flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
+        self.config = load_config()
+        a = Gio.SimpleAction.new("new-window", None)
+        a.connect("activate", lambda *_: self.new_window())
+        self.add_action(a)
+        a = Gio.SimpleAction.new_stateful("profile", GLib.VariantType.new("s"),
+                                          GLib.Variant.new_string(self.config["profile"]))
+        a.connect("activate", self.on_profile)
+        self.add_action(a)
+        self.profile_action = a
+        Adw.StyleManager.get_default().connect("notify::dark", lambda *_: self.restyle())
+        self.provider = Gtk.CssProvider()
+        self.provider.load_from_string("vte-terminal { padding: 2px 4px; }")
+
+    def do_startup(self):
+        Adw.Application.do_startup(self)
+        Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), self.provider,
+                                                  Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+    def do_command_line(self, cmdline):
+        args = cmdline.get_arguments()[1:]
+        cwd, argv = cmdline.get_cwd() if args else None, None
+        i = 0
+        while i < len(args):
+            a = args[i]
+            if a in ("--working-directory", "-w") and i + 1 < len(args):
+                cwd = args[i + 1]
+                i += 2
+            elif a.startswith("--working-directory="):
+                cwd = a.split("=", 1)[1]
+                i += 1
+            elif a in ("-e", "-x", "--"):
+                argv = args[i + 1:] or None
+                break
+            else:
+                i += 1
+        self.new_window(cwd, argv)
+        return 0
+
+    def new_window(self, cwd=None, argv=None):
+        w = Window(self, cwd, argv)
+        w.present()
+        return w
+
+    def colors(self):
+        p = PROFILES[self.config["profile"]]
+        if p is None:
+            p = BASIC_DARK if Adw.StyleManager.get_default().get_dark() else BASIC_LIGHT
+        return p
+
+    def apply_profile(self, term):
+        bg, fg, cursor, opacity = self.colors()
+        b = rgba(bg)
+        b.alpha = opacity
+        term.set_colors(rgba(fg), b, [rgba(c) for c in MAC_ANSI])
+        term.set_color_cursor(rgba(cursor))
+        term.set_color_cursor_foreground(rgba(bg))
+        term.set_color_bold(None)
+
+    def restyle(self):
+        for w in self.get_windows():
+            for t in getattr(w, "tabs", []):
+                self.apply_profile(t.term)
+
+    def on_profile(self, action, value):
+        name = value.get_string()
+        if name not in PROFILES:
+            return
+        action.set_state(value)
+        self.config["profile"] = name
+        save_config(self.config)
+        self.restyle()
+
+    def zoom(self, factor):
+        s = 1.0 if factor == 0 else min(3.0, max(0.5, self.config["scale"] * factor))
+        self.config["scale"] = s
+        save_config(self.config)
+        for w in self.get_windows():
+            for t in getattr(w, "tabs", []):
+                t.term.set_font_scale(s)
+
+
+if __name__ == "__main__":
+    sys.exit(App().run(sys.argv))

@@ -519,5 +519,15 @@
  "Your system has run out of application memory. To avoid problems with your computer, quit any applications you are not using.": "Votre système ne dispose plus de mémoire d’application. Pour éviter des problèmes avec votre ordinateur, quittez les applications que vous n’utilisez pas.",
  "Memory Shortage Avoided": "Pénurie de mémoire évitée",
  "%1 was quit because your computer ran out of memory.": "%1 a été quitté, car votre ordinateur manquait de mémoire.",
- "Reopen": "Rouvrir"
+ "Reopen": "Rouvrir",
+ "Reminders": "Rappels",
+ "Books": "Livres",
+ "Voice Memos": "Dictaphone",
+ "Solitaire": "Solitaire",
+ "Minesweeper": "Démineur",
+ "Font Book": "Livre des polices",
+ "Image Capture": "Transfert d’images",
+ "Screen Sharing": "Partage d’écran",
+ "Clear to Start": "Effacer jusqu’au début",
+ "Profile": "Profil"
 }

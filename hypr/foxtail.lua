@@ -274,7 +274,7 @@ local CMD = "SUPER"
 local ipc = function(fn) return hl.dsp.exec_cmd("foxtail-ipc " .. fn) end
 
 local TERMINALS = {
-    ["org.gnome.Ptyxis"] = true, ["org.gnome.Console"] = true, ["kitty"] = true,
+    ["org.foxtail.Terminal"] = true, ["org.gnome.Ptyxis"] = true, ["org.gnome.Console"] = true, ["kitty"] = true,
     ["com.mitchellh.ghostty"] = true, ["Alacritty"] = true, ["foot"] = true,
     ["org.wezfurlong.wezterm"] = true, ["org.kde.konsole"] = true,
 }
@@ -292,7 +292,7 @@ end
 local TERMINAL_KEYS = {
     C = { "CTRL", "Insert" }, X = { "CTRL", "Insert" }, V = { "SHIFT", "Insert" },
     A = { "CTRL SHIFT", "A" }, F = { "CTRL SHIFT", "F" }, N = { "CTRL SHIFT", "N" },
-    T = { "CTRL SHIFT", "T" }, W = { "CTRL SHIFT", "W" },
+    T = { "CTRL SHIFT", "T" }, W = { "CTRL SHIFT", "W" }, K = { "CTRL SHIFT", "K" },
     plus = { "CTRL", "plus" }, equal = { "CTRL", "plus" }, minus = { "CTRL", "minus" }, ["0"] = { "CTRL", "0" },
 }
 

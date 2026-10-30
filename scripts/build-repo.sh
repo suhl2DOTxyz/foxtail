@@ -5,7 +5,7 @@
 #   FOXTAIL_PKGREL=2 ./scripts/...    hotfix: rebuild without a version bump
 #   FOXTAIL_UNSIGNED=1 ./scripts/...   test builds without the key (CI); never publish these
 #
-# Packages: foxtail-desktop, foxtail-keyring, plus the AUR themes Foxtail
+# Packages: foxtail-desktop, foxtail-apps, foxtail-keyring, plus the AUR themes Foxtail
 # depends on (built by build-aur.sh). Everything is signed with the Foxtail
 # key, as is the repo database.
 set -euo pipefail
@@ -28,7 +28,7 @@ SIGN=(--sign --key "$KEY"); [ "$UNSIGNED" = 1 ] && SIGN=()
 rm -rf "$WORK" "$OUT"
 mkdir -p "$WORK" "$OUT"
 
-for p in foxtail-keyring foxtail-desktop; do
+for p in foxtail-keyring foxtail-apps foxtail-desktop; do
     echo ":: building $p"
     cp -a "$ROOT/pkg/$p" "$WORK/$p"
     sed -i "s|^pkgver=@VERSION@|pkgver=$VERSION|; s|^pkgrel=@PKGREL@|pkgrel=$PKGREL|" "$WORK/$p/PKGBUILD"
