@@ -161,6 +161,12 @@ ShellRoot {
     }
 
     Component.onCompleted: {
+        // An installed shell (/usr/share/foxtail/shell) must not reload while
+        // Software Update is replacing its files: it would load them half
+        // written ("Config reload failed"). The new version starts at the
+        // next login, which Software Update asks for. A copy being worked on
+        // in ~/.config/foxtail/shell still reloads on save.
+        Quickshell.watchFiles = !Quickshell.shellDir.startsWith("/usr/");
         syncGtk();
         syncA11y();
         Sounds.startup();
