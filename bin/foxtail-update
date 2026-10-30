@@ -8,6 +8,7 @@
 # Prints "STAGE <name>" markers and "DONE" for the Settings app.
 set -e
 [ "$(id -u)" -eq 0 ] || { echo "foxtail-update must run as root" >&2; exit 1; }
+exec 2>&1   # pacman's errors reach Software Update along with its output
 
 echo "STAGE system"
 SNAP_PAC_PRE_DESCRIPTION="Before Software Update" \

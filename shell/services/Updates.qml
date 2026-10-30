@@ -53,12 +53,17 @@ Singleton {
         pacmanCheck.running = true;
     }
 
+    property bool pendingRelogin: false
+    // pacman's own explanation when an update fails ("error: ..." and the
+    // lines under it), to show instead of a bare exit code.
+    property string failure: ""
     function install() {
         if (installing) return;
         installing = true;
         log = "";
+        failure = "";
         stage = "";
-        needsRelogin = foxtailUpdate;
+        pendingRelogin = foxtailUpdate;   // shown only once the update succeeded
         installer.running = true;
     }
 
@@ -121,15 +126,24 @@ Singleton {
             onRead: line => {
                 if (line.startsWith("STAGE ")) root.stage = line.slice(6);
                 else if (line.startsWith("RESTART")) root.needsRestart = true;
-                else if (line !== "DONE") root.log = (root.log + "\n" + line).split("\n").slice(-6).join("\n");
+                else if (line !== "DONE") {
+                    root.log = (root.log + "\n" + line).split("\n").slice(-6).join("\n");
+                    // "error: failed to commit transaction (conflicting files)"
+                    // is followed by the files; keep the first few.
+                    if (line.startsWith("error:")) root.failure = line.slice(6).trim();
+                    else if (root.failure && /exists in filesystem$/.test(line) && root.failure.split("\n").length < 4)
+                        root.failure += "\n" + line.replace(/^[^:]+: /, "");
+                }
             }
         }
         onExited: code => {
             root.installing = false;
             root.stage = "";
             if (code === 126 || code === 127) root.error = "Authentication was cancelled.";
-            else if (code !== 0) root.error = "The update didn't finish (code " + code + "). Nothing was changed after the last snapshot.";
-            else root.available = [];
+            else if (code !== 0)
+                root.error = (root.failure ? "The update didn't finish: " + root.failure : "The update didn't finish (code " + code + ").")
+                           + "\nNothing was changed after the last snapshot.";
+            else { root.available = []; root.needsRelogin = root.pendingRelogin; }
             root.refreshSnapshots();
         }
     }
