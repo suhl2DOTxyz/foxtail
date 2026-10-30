@@ -6,8 +6,9 @@ passwd -d liveuser
 install -d -o liveuser -g liveuser /home/liveuser/.config/foxtail
 cat > /home/liveuser/.config/foxtail/settings.json <<'JSON'
 {
-    "pinnedApps": ["org.gnome.Nautilus", "foxtail-installer", "firefox", "org.gnome.Ptyxis",
-                   "org.gnome.TextEditor", "org.gnome.Calculator", "foxtail-settings"]
+    "pinnedApps": ["org.gnome.Nautilus", "foxtail-installer", "firefox", "org.gnome.Geary",
+                   "org.gnome.Notes", "org.gnome.Music", "org.gnome.Chess", "org.foxtail.Terminal",
+                   "foxtail-settings"]
 }
 JSON
 chown liveuser:liveuser /home/liveuser/.config/foxtail/settings.json
