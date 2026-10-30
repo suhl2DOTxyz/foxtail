@@ -13,7 +13,9 @@ Singleton {
                                    "gnome-system-monitor-kde", "avahi-discover", "bssh", "bvnc",
                                    "cmake-gui", "nm-connection-editor", "xgps", "xgpsspeed",
                                    "system-config-printer", "cups",
-                                   "qt5ct", "qt6ct"]   // Qt apps follow System Settings ▸ Appearance
+                                   "qt5ct", "qt6ct",   // Qt apps follow System Settings ▸ Appearance
+                                   // Replaced by Foxtail's own (2.1); updating doesn't remove them.
+                                   "org.gnome.Ptyxis", "io.github.mrvladus.List"]
 
     // The names macOS uses for the equivalent apps, in the user's language
     // (translated in shell/i18n like the rest of the shell).
